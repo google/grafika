@@ -384,6 +384,7 @@ public class CameraCaptureActivity extends Activity
 class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
     private static final String TAG = MainActivity.TAG;
     private static final boolean VERBOSE = false;
+    private static final boolean ROSE_COLORED_GLASSES = false;   // experiment
 
     private static final int RECORDING_OFF = 0;
     private static final int RECORDING_ON = 1;
@@ -455,7 +456,21 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
 
         mTextureRender = new TextureRender();
         mTextureRender.surfaceCreated();
-        Log.d(TAG, "ZZZ got " + mTextureRender.getTextureId());
+
+        if (ROSE_COLORED_GLASSES) {
+            String rosyFragment =
+                    "#extension GL_OES_EGL_image_external : require\n" +
+                    "precision mediump float;\n" +
+                    "varying vec2 vTextureCoord;\n" +
+                    "uniform samplerExternalOES sTexture;\n" +
+                    "void main() {\n" +
+                    "    vec4 tc = texture2D(sTexture, vTextureCoord);\n" +
+                    "    gl_FragColor.r = tc.r * 0.3 + tc.g * 0.59 + tc.b * 0.11;\n" +
+                    "}\n";
+            // assign value to gl_FragColor.g and .b as well to get simple B&W
+
+            mTextureRender.changeFragmentShader(rosyFragment);
+        }
 
         // Create a SurfaceTexture, with an external texture, in this EGL context.  We don't
         // have a Looper in this thread -- GLSurfaceView doesn't create one -- so the frame
