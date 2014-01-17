@@ -131,7 +131,8 @@ public class CameraCaptureActivity extends Activity
         fileText.setText(outputFile.toString());
 
         // Define a handler that receives camera-control messages from other threads.  All calls
-        // to Camera must be made on the same thread.
+        // to Camera must be made on the same thread.  Note we create this before the renderer
+        // thread, so we know the fully-constructed object will be visible.
         mCameraHandler = new CameraHandler(this);
 
         mRecordingEnabled = sVideoEncoder.isRecording();
@@ -148,7 +149,7 @@ public class CameraCaptureActivity extends Activity
     }
 
     @Override
-    public void onResume() {
+    protected void onResume() {
         Log.d(TAG, "onResume -- acquiring camera");
         super.onResume();
         updateControls();
@@ -158,7 +159,7 @@ public class CameraCaptureActivity extends Activity
     }
 
     @Override
-    public void onPause() {
+    protected void onPause() {
         Log.d(TAG, "onPause -- releasing camera");
         super.onPause();
         releaseCamera();
@@ -173,7 +174,7 @@ public class CameraCaptureActivity extends Activity
     }
 
     @Override
-    public void onDestroy() {
+    protected void onDestroy() {
         Log.d(TAG, "onDestroy");
         super.onDestroy();
         mCameraHandler.invalidateHandler();     // paranoia
@@ -281,13 +282,13 @@ public class CameraCaptureActivity extends Activity
         updateControls();
     }
 
-    /**
-     * onClick handler for "rebind" checkbox.
-     */
-    public void clickRebindCheckbox(View unused) {
-        CheckBox cb = (CheckBox) findViewById(R.id.rebindHack_checkbox);
-        TextureRender.sWorkAroundContextProblem = cb.isChecked();
-    }
+//    /**
+//     * onClick handler for "rebind" checkbox.
+//     */
+//    public void clickRebindCheckbox(View unused) {
+//        CheckBox cb = (CheckBox) findViewById(R.id.rebindHack_checkbox);
+//        TextureRender.sWorkAroundContextProblem = cb.isChecked();
+//    }
 
     /**
      * Updates the on-screen controls to reflect the current state of the app.
@@ -298,8 +299,8 @@ public class CameraCaptureActivity extends Activity
                 R.string.toggleRecordingOff : R.string.toggleRecordingOn;
         toggleRelease.setText(id);
 
-        CheckBox cb = (CheckBox) findViewById(R.id.rebindHack_checkbox);
-        cb.setChecked(TextureRender.sWorkAroundContextProblem);
+        //CheckBox cb = (CheckBox) findViewById(R.id.rebindHack_checkbox);
+        //cb.setChecked(TextureRender.sWorkAroundContextProblem);
     }
 
     /**
@@ -337,11 +338,13 @@ public class CameraCaptureActivity extends Activity
      * Handles camera operation requests from other threads.  Necessary because the Camera
      * must only be accessed from one thread.
      * <p>
-     * The handlers all run on the UI thread.
+     * The object is created on the UI thread, and all handlers run there.  Messages are
+     * sent from other threads, using sendMessage().
      */
     static class CameraHandler extends Handler {
         public static final int MSG_SET_SURFACE_TEXTURE = 0;
 
+        // Weak reference to the Activity; only access this from the UI thread.
         private WeakReference<CameraCaptureActivity> mWeakActivity;
 
         public CameraHandler(CameraCaptureActivity activity) {
@@ -356,7 +359,7 @@ public class CameraCaptureActivity extends Activity
             mWeakActivity.clear();
         }
 
-        @Override
+        @Override  // runs on UI thread
         public void handleMessage(Message inputMessage) {
             int what = inputMessage.what;
             Log.d(TAG, "CameraHandler [" + this + "]: what=" + what);
@@ -370,6 +373,9 @@ public class CameraCaptureActivity extends Activity
             switch (what) {
                 case MSG_SET_SURFACE_TEXTURE:
                     activity.handleSetSurfaceTexture((SurfaceTexture) inputMessage.obj);
+                    break;
+                default:
+                    throw new RuntimeException("unknown msg " + what);
             }
         }
     }
@@ -384,7 +390,6 @@ public class CameraCaptureActivity extends Activity
 class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
     private static final String TAG = MainActivity.TAG;
     private static final boolean VERBOSE = false;
-    private static final boolean ROSE_COLORED_GLASSES = false;   // experiment
 
     private static final int RECORDING_OFF = 0;
     private static final int RECORDING_ON = 1;
@@ -394,7 +399,11 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
     private TextureMovieEncoder mVideoEncoder;
     private File mOutputFile;
 
-    private TextureRender mTextureRender;
+    private FullFrameRect mFullScreen;
+
+    private final float[] mSTMatrix = new float[16];
+    private int mTextureId;
+
     private SurfaceTexture mSurfaceTexture;
     private boolean mRecordingEnabled;
     private int mRecordingStatus;
@@ -413,6 +422,8 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
         mCameraHandler = cameraHandler;
         mVideoEncoder = movieEncoder;
         mOutputFile = outputFile;
+
+        mTextureId = -1;
 
         mRecordingStatus = -1;
         mRecordingEnabled = false;
@@ -454,28 +465,20 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
             mRecordingStatus = RECORDING_OFF;
         }
 
-        mTextureRender = new TextureRender();
-        mTextureRender.surfaceCreated();
-
-        if (ROSE_COLORED_GLASSES) {
-            String rosyFragment =
-                    "#extension GL_OES_EGL_image_external : require\n" +
-                    "precision mediump float;\n" +
-                    "varying vec2 vTextureCoord;\n" +
-                    "uniform samplerExternalOES sTexture;\n" +
-                    "void main() {\n" +
-                    "    vec4 tc = texture2D(sTexture, vTextureCoord);\n" +
-                    "    gl_FragColor.r = tc.r * 0.3 + tc.g * 0.59 + tc.b * 0.11;\n" +
-                    "}\n";
-            // assign value to gl_FragColor.g and .b as well to get simple B&W
-
-            mTextureRender.changeFragmentShader(rosyFragment);
-        }
+        // Set up the texture blitter that will be used for on-screen display.  This
+        // is *not* applied to the recording, because that uses a separate shader.
+        //
+        // (In a previous version the TEXTURE_EXT_BW variant was enabled by a flag called
+        // ROSE_COLORED_GLASSES, because the shader set the red channel and set everything
+        // else to zero.)
+        mFullScreen = new FullFrameRect(Texture2dProgram.ProgramType.TEXTURE_EXT);
+        //mFullScreen = new FullScreen(Texture2dProgram.ProgramType.TEXTURE_EXT_BW);
+        mTextureId = mFullScreen.createTextureObject();
 
         // Create a SurfaceTexture, with an external texture, in this EGL context.  We don't
         // have a Looper in this thread -- GLSurfaceView doesn't create one -- so the frame
         // available messages will arrive on the main thread.
-        mSurfaceTexture = new SurfaceTexture(mTextureRender.getTextureId());
+        mSurfaceTexture = new SurfaceTexture(mTextureId);
 
         // Tell the UI thread to enable the camera preview.
         mCameraHandler.sendMessage(mCameraHandler.obtainMessage(
@@ -489,7 +492,7 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
 
     @Override
     public void onDrawFrame(GL10 unused) {
-        if (VERBOSE) Log.d(TAG, "onDrawFrame tex=" + mTextureRender.getTextureId());
+        if (VERBOSE) Log.d(TAG, "onDrawFrame tex=" + mTextureId);
         boolean showBox = false;
 
         // Latch the latest frame.  If there isn't anything new, we'll just re-use whatever
@@ -540,18 +543,16 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
         // current implementation it has to happen after the video encoder is started, so
         // we just do it here.
         //
-        // (We should probably be good GLES citizens and delete the initial texture name
-        // generated by TextureRender.  We'd want to do this right after calling startRecording.
-        // Or just be smarter about how TextureRender works with external textures.)
-        //
         // TODO: be less lame.
-        mVideoEncoder.setTextureId(mTextureRender.getTextureId());
+        mVideoEncoder.setTextureId(mTextureId);
 
+        // Tell the video encoder thread that a new frame is available.
         // This will be ignored if we're not actually recording.
         mVideoEncoder.frameAvailable(mSurfaceTexture);
 
         // Draw the video frame.
-        mTextureRender.drawFrame(mSurfaceTexture);
+        mSurfaceTexture.getTransformMatrix(mSTMatrix);
+        mFullScreen.drawFrame(mTextureId, mSTMatrix);
 
         // Draw a flashing box if we're recording.  This only appears on screen.
         showBox = (mRecordingStatus == RECORDING_ON);

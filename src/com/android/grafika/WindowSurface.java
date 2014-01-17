@@ -32,8 +32,8 @@ public class WindowSurface extends EglSurfaceBase {
      * Associates an EGL surface with the native window surface.  The Surface will be
      * owned by WindowSurface, and released when release() is called.
      */
-    public WindowSurface(EglCore eglBase, Surface surface) {
-        super(eglBase);
+    public WindowSurface(EglCore eglCore, Surface surface) {
+        super(eglCore);
         createWindowSurface(surface);
         mSurface = surface;
     }
@@ -41,8 +41,8 @@ public class WindowSurface extends EglSurfaceBase {
     /**
      * Associates an EGL surface with the SurfaceTexture.
      */
-    public WindowSurface(EglCore eglBase, SurfaceTexture surfaceTexture) {
-        super(eglBase);
+    public WindowSurface(EglCore eglCore, SurfaceTexture surfaceTexture) {
+        super(eglCore);
         createWindowSurface(surfaceTexture);
     }
 
@@ -70,11 +70,11 @@ public class WindowSurface extends EglSurfaceBase {
      * context somewhere, the create call will fail with complaints from the Surface
      * about already being connected.
      */
-    public void recreate(EglCore newEglBase) {
+    public void recreate(EglCore newEglCore) {
         if (mSurface == null) {
             throw new RuntimeException("not yet implemented for SurfaceTexture");
         }
-        mEglBase = newEglBase;          // switch to new context
+        mEglCore = newEglCore;          // switch to new context
         createWindowSurface(mSurface);  // create new surface
     }
 }

@@ -38,14 +38,14 @@ public class EglSurfaceBase {
     protected static final String TAG = MainActivity.TAG;
 
     // EglBase object we're associated with.  It may be associated with multiple surfaces.
-    protected EglCore mEglBase;
+    protected EglCore mEglCore;
 
     private EGLSurface mEGLSurface = EGL14.EGL_NO_SURFACE;
     private int mWidth = -1;
     private int mHeight = -1;
 
     protected EglSurfaceBase(EglCore eglBase) {
-        mEglBase = eglBase;
+        mEglCore = eglBase;
     }
 
     /**
@@ -57,9 +57,9 @@ public class EglSurfaceBase {
         if (mEGLSurface != EGL14.EGL_NO_SURFACE) {
             throw new IllegalStateException("surface already created");
         }
-        mEGLSurface = mEglBase.createWindowSurface(surface);
-        mWidth = mEglBase.querySurface(mEGLSurface, EGL14.EGL_WIDTH);
-        mHeight = mEglBase.querySurface(mEGLSurface, EGL14.EGL_HEIGHT);
+        mEGLSurface = mEglCore.createWindowSurface(surface);
+        mWidth = mEglCore.querySurface(mEGLSurface, EGL14.EGL_WIDTH);
+        mHeight = mEglCore.querySurface(mEGLSurface, EGL14.EGL_HEIGHT);
     }
 
     /**
@@ -69,7 +69,7 @@ public class EglSurfaceBase {
         if (mEGLSurface != EGL14.EGL_NO_SURFACE) {
             throw new IllegalStateException("surface already created");
         }
-        mEGLSurface = mEglBase.createOffscreenSurface(width, height);
+        mEGLSurface = mEglCore.createOffscreenSurface(width, height);
         mWidth = width;
         mHeight = height;
     }
@@ -92,7 +92,7 @@ public class EglSurfaceBase {
      * Release the EGL surface.
      */
     public void releaseEglSurface() {
-        mEglBase.releaseSurface(mEGLSurface);
+        mEglCore.releaseSurface(mEGLSurface);
         mEGLSurface = EGL14.EGL_NO_SURFACE;
         mWidth = mHeight = -1;
     }
@@ -101,7 +101,15 @@ public class EglSurfaceBase {
      * Makes our EGL context and surface current.
      */
     public void makeCurrent() {
-        mEglBase.makeCurrent(mEGLSurface);
+        mEglCore.makeCurrent(mEGLSurface);
+    }
+
+    /**
+     * Makes our EGL context and surface current for drawing, using the supplied surface
+     * for reading.
+     */
+    public void makeCurrentReadFrom(EglSurfaceBase readSurface) {
+        mEglCore.makeCurrent(mEGLSurface, readSurface.mEGLSurface);
     }
 
     /**
@@ -110,7 +118,11 @@ public class EglSurfaceBase {
      * @return false on failure
      */
     public boolean swapBuffers() {
-        return mEglBase.swapBuffers(mEGLSurface);
+        boolean result = mEglCore.swapBuffers(mEGLSurface);
+        if (!result) {
+            Log.d(TAG, "WARNING: swapBuffers() failed");
+        }
+        return result;
     }
 
     /**
@@ -119,7 +131,7 @@ public class EglSurfaceBase {
      * @param nsecs Timestamp, in nanoseconds.
      */
     public void setPresentationTime(long nsecs) {
-        mEglBase.setPresentationTime(mEGLSurface, nsecs);
+        mEglCore.setPresentationTime(mEGLSurface, nsecs);
     }
 
     /**
@@ -128,7 +140,7 @@ public class EglSurfaceBase {
      * Expects that this object's EGL surface is current.
      */
     public void saveFrame(File file) throws IOException {
-        if (!mEglBase.isCurrent(mEGLSurface)) {
+        if (!mEglCore.isCurrent(mEGLSurface)) {
             throw new RuntimeException("Expected EGL context/surface is not current");
         }
 

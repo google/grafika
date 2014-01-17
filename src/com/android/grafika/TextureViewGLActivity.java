@@ -17,6 +17,7 @@
 package com.android.grafika;
 
 import android.opengl.GLES20;
+import android.opengl.GLES30;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.TextureView;
@@ -35,6 +36,8 @@ import android.graphics.SurfaceTexture;
  */
 public class TextureViewGLActivity extends Activity {
     private static final String TAG = MainActivity.TAG;
+
+    private static final boolean TEST_BLIT_FRAMEBUFFER = false;
 
     // Experiment with allowing TextureView to release the SurfaceTexture from the callback vs.
     // releasing it explicitly ourselves from the draw loop.  The latter seems to be problematic
@@ -62,7 +65,7 @@ public class TextureViewGLActivity extends Activity {
     }
 
     @Override
-    public void onResume() {
+    protected void onResume() {
         super.onResume();
         updateControls();
     }
@@ -101,6 +104,7 @@ public class TextureViewGLActivity extends Activity {
     private static class Renderer extends Thread implements TextureView.SurfaceTextureListener {
         private Object mLock = new Object();        // guards mSurfaceTexture, mDone
         private SurfaceTexture mSurfaceTexture;
+        private EglCore mEglCore;
         private boolean mDone;
 
         public Renderer() {
@@ -133,15 +137,15 @@ public class TextureViewGLActivity extends Activity {
                 // wants to call updateTexImage().  Because we're the *producer*, i.e. the
                 // one generating the frames, we don't need to worry about being on the same
                 // thread.
-                EglCore eglCore = new EglCore(null, EglCore.FLAG_RECORDABLE);
-                WindowSurface windowSurface = new WindowSurface(eglCore, mSurfaceTexture);
+                mEglCore = new EglCore(null, EglCore.FLAG_TRY_GLES3);
+                WindowSurface windowSurface = new WindowSurface(mEglCore, mSurfaceTexture);
                 windowSurface.makeCurrent();
 
                 // Render frames until we're told to stop or the SurfaceTexture is destroyed.
                 doAnimation(windowSurface);
 
                 windowSurface.release();
-                eglCore.release();
+                mEglCore.release();
                 if (!sReleaseInCallback) {
                     Log.i(TAG, "Releasing SurfaceTexture in renderer thread");
                     surfaceTexture.release();
@@ -191,6 +195,20 @@ public class TextureViewGLActivity extends Activity {
                 GLES20.glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
                 GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
                 GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
+
+                if (TEST_BLIT_FRAMEBUFFER && mEglCore.getGlVersion() >= 3) {
+                    GlUtil.checkGlError("before glBlitFramebuffer");
+                    GLES30.glBlitFramebuffer(
+                            0, 0, 5, 5,
+                            10, 10, 15, 15,
+                            GLES30.GL_COLOR_BUFFER_BIT, GLES30.GL_NEAREST);
+                    int err = GLES30.glGetError();
+                    if (err != GLES30.GL_NO_ERROR) {
+                        Log.w(TAG, "glBlitFramebuffer failed: 0x" + Integer.toHexString(err));
+                    } else {
+                        Log.d(TAG, "glBlitFramebuffer OK");
+                    }
+                }
 
                 // Publish the frame.  If we overrun the consumer (which is likely), we will
                 // slow down due to back-pressure.  If the consumer stops acquiring buffers,

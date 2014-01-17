@@ -22,7 +22,7 @@
     <string name="regenerateContent_item">Regenerate content</string>
     <string name="selectTest_text">Select Test:</string>
     <string name="start_button">START</string>
-    <string name="about_buttom">About</string>
+    <string name="aboutButton_text">About</string>
     <string name="about_text">\nA random assortment of graphics and media hacks.\n\n
         [This is a perpetual work in progress.]\n\n
         Copyright 2013 Google Inc.  All rights reserved.</string>
@@ -51,15 +51,25 @@
     <string name="loopPlayback_checkbox">Loop playback</string>
     <string name="rebindHack_checkbox">rebind</string>
     <string name="hello_world">Hello, world!</string>
+    <string name="frameRateLabel">"Frame rate: "</string>
+    <string name="frameRateValue">"? FPS"</string>
+    <string name="glesVersionLabel">"GLES version: "</string>
+    <string name="glesVersionValue">"?"</string>
+    <string name="useBlitFramebuffer">Use glBlitFramebuffer() when recording</string>
+    <string name="nowRecording">" [RECORDING]"</string>
+    <string name="recDrawTwice">Rec: draw twice</string>
+    <string name="recOffscreen">Rec: FBO blit x2</string>
+    <string name="recFramebuffer">Rec: glBlitFramebuffer [hosed]</string>
     
     <!-- for spinner_testNames -->
     <string-array name="test_names">
+        <item>Record GL app with FBO</item>
         <item>Show + capture camera</item>
         <item>Play video (TextureView)</item>
-        <item>glReadPixels speed</item>
         <item>Basic GL in TextureView</item>
+        <item>glReadPixels speed test</item>
         <item>Live camera (TextureView)</item>
-        <item>Record app with FBO</item>
+        <item>(ignore) Chor test</item>
         </string-array>
 
     <string name="title_activity_camera_capture">Show + capture camera</string>
@@ -67,7 +77,8 @@
     <string name="title_activity_read_pixels">glReadPixels speed test</string>
     <string name="title_activity_texture_view_gl">Basic GL in TextureView</string>
     <string name="title_activity_live_camera">Live camera (TextureView)</string>
-    <string name="title_activity_record_fbo">Record app with FBO</string>
+    <string name="title_activity_record_fbo">Record GL app with FBO</string>
     <string name="action_settings">Settings</string>
-    
+    <string name="title_activity_chor_test">ChorTestActivity</string>
+
 </resources>
