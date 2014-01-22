@@ -15,7 +15,7 @@
         android:layout_alignLeft="@+id/toggleRecording_button"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/cameraOutputFile_text" />
+        android:layout_below="@+id/toggleRecording_button" />
 
     <Button
         android:id="@+id/toggleRecording_button"
@@ -25,12 +25,28 @@
         android:text="@string/toggleRecordingOn"
         android:onClick="clickToggleRecording" />
 
+    <Spinner
+        android:id="@+id/cameraFilter_spinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true" />
+
+    <!-- these overlap with the SurfaceView; by default, it's underneath the UI layer -->
+
+    <TextView
+        android:id="@+id/cameraParams_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/toggleRecording_button"
+        android:text="[?]"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
     <TextView
         android:id="@+id/cameraOutputFileLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/toggleRecording_button"
-        android:layout_below="@+id/toggleRecording_button"
+        android:layout_alignLeft="@+id/textView1"
+        android:layout_below="@+id/cameraParams_text"
         android:text="@string/cameraOutputFileLabel_text" />
 
     <TextView
@@ -42,29 +58,5 @@
         android:layout_toRightOf="@+id/cameraOutputFileLabel"
         android:paddingLeft="4dp"
         android:text="@string/cameraOutputFile_text" />
-
-    <TextView
-        android:id="@+id/cameraParams_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/toggleRecording_button"
-        android:layout_alignBottom="@+id/toggleRecording_button"
-        android:layout_toRightOf="@+id/toggleRecording_button"
-        android:paddingLeft="4dp"
-        android:text="[?]"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
-
-    <!-- these overlap with the SurfaceView; by default, it's underneath -->
-    
-    <!-- 
-    <CheckBox
-        android:id="@+id/rebindHack_checkbox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/cameraPreviewSurface"
-        android:layout_below="@+id/cameraOutputFile_text"
-        android:onClick="clickRebindCheckbox"
-        android:text="@string/rebindHack_checkbox" />
-    -->
 
 </RelativeLayout>

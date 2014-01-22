@@ -55,17 +55,19 @@ public class Flat2dProgram {
      */
     public Flat2dProgram() {
         mProgramHandle = GlUtil.createProgram(VERTEX_SHADER, FRAGMENT_SHADER);
-        GlUtil.checkGlError("createProgram");
+        if (mProgramHandle == 0) {
+            throw new RuntimeException("Unable to create program");
+        }
         Log.d(TAG, "Created program " + mProgramHandle);
 
         // get locations of attributes and uniforms
 
         maPositionLoc = GLES20.glGetAttribLocation(mProgramHandle, "aPosition");
-        GlUtil.checkGlError("glGetAttribLocation");
+        GlUtil.checkLocation(maPositionLoc, "aPosition");
         muMVPMatrixLoc = GLES20.glGetUniformLocation(mProgramHandle, "uMVPMatrix");
-        GlUtil.checkGlError("glGetUniformLocation");
+        GlUtil.checkLocation(muMVPMatrixLoc, "uMVPMatrix");
         muColorLoc = GLES20.glGetUniformLocation(mProgramHandle, "uColor");
-        GlUtil.checkGlError("glGetUniformLocation");
+        GlUtil.checkLocation(muColorLoc, "uColor");
     }
 
     /**

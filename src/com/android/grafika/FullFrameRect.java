@@ -43,10 +43,13 @@ public class FullFrameRect {
 
 
     /**
-     * Prepares the object.  Creates a new program in the current EGL context.
+     * Prepares the object.
+     *
+     * @param program The program to use.  FullFrameRect takes ownership, and will release
+     *     the program when no longer needed.
      */
-    public FullFrameRect(Texture2dProgram.ProgramType programType) {
-        mProgram = new Texture2dProgram(programType);
+    public FullFrameRect(Texture2dProgram program) {
+        mProgram = program;
 
         Matrix.setIdentityM(IDENTITY_MATRIX, 0);
     }
@@ -59,6 +62,21 @@ public class FullFrameRect {
             mProgram.release();
             mProgram = null;
         }
+    }
+
+    /**
+     * Returns the program currently in use.
+     */
+    public Texture2dProgram getProgram() {
+        return mProgram;
+    }
+
+    /**
+     * Changes the program.  The previous program will be released.
+     */
+    public void changeProgram(Texture2dProgram program) {
+        mProgram.release();
+        mProgram = program;
     }
 
     /**

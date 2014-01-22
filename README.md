@@ -39,15 +39,23 @@ Current features
   it will drop frames.
 - The encoder is fed every-other frame, so the recorded output will be ~30fps rather than ~60fps
   on a typical device.
-- The recording is letter- or pillar-boxed to maintain the proper aspect ratio.
+- The recording is letter- or pillar-boxed to maintain an aspect ratio that matches the
+  display, so you'll get different results from recording in landscape vs. portrait.  (Do
+  bear in mind that the built-in video player does *not* currently adjust the aspect ratio
+  to match the movie -- best to pull the mp4 file out of /data/data/com.android.grafika/files
+  and view it on the desktop.)
+- The output is a video-only MP4 file ("fbo-gl-recording.mp4").
 
 [Show + capture camera](src/com/android/grafika/CameraCaptureActivity.java).  Attempts to record at 720p from the front-facing camera, displaying the preview and recording it simultaneously.
 - Use the record button to toggle recording on and off.
 - Recording continues until stopped.  If you back out and return, recording will start again,
   with a real-time gap.  If you try to play the movie while it's recording, you will see
   an incomplete file (and probably cause the play movie activity to crash).
-- The preview frames are rendered to a `GLSurfaceView`.  You can tweak the shader to play with
-  image effects.  The aspect ratio will likely appear stretched.
+- The preview frames are rendered to a `GLSurfaceView`.  The aspect ratio will likely appear
+  stretched -- the View's size isn't adjusted.  Generally looks best in landscape.
+- You can select a filter to apply to the preview.  It does not get applied to the recording.
+  The shader used for the filters is not optimized, but seems to perform well on most devices
+  (the original Nexus 7 (2012) being a notable exception).
 - The output is a video-only MP4 file ("camera-test.mp4").
 
 [Play video (TextureView)](src/com/android/grafika/PlayMovieActivity.java).  Plays the video track from an MP4 file.
@@ -91,4 +99,5 @@ In no particular order.
 - Experiment with alternatives to glReadPixels().  Add a PBO speed test.  (Doesn't seem
   to be a way to play with eglCreateImageKHR from Java.)
 - Add a GL/EGL status page -- dump version info, have scrolling list of supported extensions.
+- Do something with ImageReader class (req API 19).
 

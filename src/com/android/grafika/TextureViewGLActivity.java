@@ -29,6 +29,17 @@ import android.graphics.SurfaceTexture;
 /**
  * Simple demonstration of using GLES to draw on a TextureView.
  * <p>
+ * Note that rendering is a multi-stage process:
+ * <ol>
+ * <li>Render thread draws with GL on its local EGLSurface, a window surface it created.  The
+ *     window surface is backed by the SurfaceTexture from TextureVIew.
+ * <li>The SurfaceTexture takes what is rendered onto it and makes it available as a GL texture.
+ * <li>TextureView takes the GL texture and renders it onto its EGLSurface.  That EGLSurface
+ *     is a window surface visible to the compositor.
+ * </ol>
+ * It's important to bear in mind that Surface and EGLSurface are related but very
+ * different things.
+ * <p>
  * Unlike GLSurfaceView, TextureView doesn't manage the EGL config or renderer thread, so we
  * take care of that ourselves.
  * <p>

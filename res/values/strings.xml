@@ -61,16 +61,26 @@
     <string name="recOffscreen">Rec: FBO blit x2</string>
     <string name="recFramebuffer">Rec: glBlitFramebuffer [hosed]</string>
     
-    <!-- for spinner_testNames -->
+    <!-- for selectTest_spinner; match with MainActivity.TEST_ACTIVITIES -->
     <string-array name="test_names">
-        <item>Record GL app with FBO</item>
         <item>Show + capture camera</item>
+        <item>Record GL app with FBO</item>
         <item>Play video (TextureView)</item>
         <item>Basic GL in TextureView</item>
         <item>glReadPixels speed test</item>
         <item>Live camera (TextureView)</item>
         <item>(ignore) Chor test</item>
-        </string-array>
+    </string-array>
+
+    <!-- for cameraFilter_spinner; match with CameraCaptureActivity constants -->
+    <string-array name="camera_filter_names">
+        <item>Normal</item>
+        <item>Black &amp; white</item>
+        <item>Filter: blur</item>
+        <item>Filter: sharpen</item>
+        <item>Filter: edge detect</item>
+        <item>Filter: emboss</item>
+    </string-array>
 
     <string name="title_activity_camera_capture">Show + capture camera</string>
     <string name="title_activity_play_movie">Play video (TextureView)</string>

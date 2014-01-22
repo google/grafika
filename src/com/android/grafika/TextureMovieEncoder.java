@@ -365,7 +365,8 @@ public class TextureMovieEncoder implements Runnable {
         mInputWindowSurface.makeCurrent();
 
         // Create new programs and such for the new context.
-        mFullScreen = new FullFrameRect(Texture2dProgram.ProgramType.TEXTURE_EXT);
+        mFullScreen = new FullFrameRect(
+                new Texture2dProgram(Texture2dProgram.ProgramType.TEXTURE_EXT));
     }
 
     private void prepareEncoder(EGLContext sharedContext, int width, int height, int bitRate,
@@ -375,8 +376,8 @@ public class TextureMovieEncoder implements Runnable {
         mInputWindowSurface = new WindowSurface(mEglCore, mVideoEncoder.getInputSurface());
         mInputWindowSurface.makeCurrent();
 
-        mFullScreen = new FullFrameRect(Texture2dProgram.ProgramType.TEXTURE_EXT);
-
+        mFullScreen = new FullFrameRect(
+                new Texture2dProgram(Texture2dProgram.ProgramType.TEXTURE_EXT));
     }
 
     private void releaseEncoder() {

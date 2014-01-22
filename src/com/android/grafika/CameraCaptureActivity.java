@@ -24,8 +24,12 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.app.Activity;
 import android.graphics.SurfaceTexture;
@@ -108,15 +112,25 @@ import javax.microedition.khronos.opengles.GL10;
  * is managed as a static property of the Activity.
  */
 public class CameraCaptureActivity extends Activity
-        implements SurfaceTexture.OnFrameAvailableListener {
+        implements SurfaceTexture.OnFrameAvailableListener, OnItemSelectedListener {
     private static final String TAG = MainActivity.TAG;
     private static final boolean VERBOSE = false;
+
+    // Camera filters; must match up with camera_filter_names in strings.xml
+    static final int FILTER_NONE = 0;
+    static final int FILTER_BLACK_WHITE = 1;
+    static final int FILTER_BLUR = 2;
+    static final int FILTER_SHARPEN = 3;
+    static final int FILTER_EDGE_DETECT = 4;
+    static final int FILTER_EMBOSS = 5;
 
     private GLSurfaceView mGLView;
     private CameraSurfaceRenderer mRenderer;
     private Camera mCamera;
     private CameraHandler mCameraHandler;
     private boolean mRecordingEnabled;      // controls button state
+
+    private int mCameraPreviewWidth, mCameraPreviewHeight;
 
     // this is static so it survives activity restarts
     private static TextureMovieEncoder sVideoEncoder = new TextureMovieEncoder();
@@ -129,6 +143,14 @@ public class CameraCaptureActivity extends Activity
         File outputFile = new File(getFilesDir(), "camera-test.mp4");
         TextView fileText = (TextView) findViewById(R.id.cameraOutputFile_text);
         fileText.setText(outputFile.toString());
+
+        Spinner spinner = (Spinner) findViewById(R.id.cameraFilter_spinner);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.camera_filter_names, android.R.layout.simple_spinner_item);
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner.
+        spinner.setAdapter(adapter);
+        spinner.setOnItemSelectedListener(this);
 
         // Define a handler that receives camera-control messages from other threads.  All calls
         // to Camera must be made on the same thread.  Note we create this before the renderer
@@ -153,8 +175,14 @@ public class CameraCaptureActivity extends Activity
         Log.d(TAG, "onResume -- acquiring camera");
         super.onResume();
         updateControls();
-        openCamera(1280, 720);
+        //openCamera(640, 480);      // updates mCameraPreviewWidth/Height
+        openCamera(1280, 720);      // updates mCameraPreviewWidth/Height
         mGLView.onResume();
+        mGLView.queueEvent(new Runnable() {
+            @Override public void run() {
+                mRenderer.setCameraPreviewSize(mCameraPreviewWidth, mCameraPreviewHeight);
+            }
+        });
         Log.d(TAG, "onResume complete: " + this);
     }
 
@@ -180,8 +208,27 @@ public class CameraCaptureActivity extends Activity
         mCameraHandler.invalidateHandler();     // paranoia
     }
 
+    // spinner selected
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+        Spinner spinner = (Spinner) parent;
+        final int filterNum = spinner.getSelectedItemPosition();
+
+        Log.d(TAG, "onItemSelected: " + filterNum);
+        mGLView.queueEvent(new Runnable() {
+            @Override public void run() {
+                // notify the renderer that we want to change the encoder's state
+                mRenderer.changeFilterMode(filterNum);
+            }
+        });
+    }
+
+    @Override public void onNothingSelected(AdapterView<?> parent) {}
+
     /**
      * Opens a camera, and attempts to establish preview mode at the specified width and height.
+     * <p>
+     * Sets mCameraPreviewWidth and mCameraPreviewHeight to the actual width/height of the preview.
      */
     private void openCamera(int desiredWidth, int desiredHeight) {
         if (mCamera != null) {
@@ -220,10 +267,14 @@ public class CameraCaptureActivity extends Activity
         if (fpsRange[0] == fpsRange[1]) {
             previewFacts += " @" + (fpsRange[0] / 1000.0) + "fps";
         } else {
-            previewFacts += " @" + (fpsRange[0] / 1000.0) + " - " + (fpsRange[1] / 1000.0) + "fps";
+            previewFacts += " @[" + (fpsRange[0] / 1000.0) +
+                    " - " + (fpsRange[1] / 1000.0) + "] fps";
         }
         TextView text = (TextView) findViewById(R.id.cameraParams_text);
         text.setText(previewFacts);
+
+        mCameraPreviewWidth = mCameraPreviewSize.width;
+        mCameraPreviewHeight = mCameraPreviewSize.height;
     }
 
     /**
@@ -241,6 +292,10 @@ public class CameraCaptureActivity extends Activity
             Log.d(TAG, "Camera preferred preview size for video is " +
                     ppsfv.width + "x" + ppsfv.height);
         }
+
+        //for (Camera.Size size : parms.getSupportedPreviewSizes()) {
+        //    Log.d(TAG, "supported: " + size.width + "x" + size.height);
+        //}
 
         for (Camera.Size size : parms.getSupportedPreviewSizes()) {
             if (size.width == width && size.height == height) {
@@ -409,6 +464,14 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
     private int mRecordingStatus;
     private int mFrameCount;
 
+    // width/height of the incoming camera preview frames
+    private boolean mIncomingSizeUpdated;
+    private int mIncomingWidth;
+    private int mIncomingHeight;
+
+    private int mCurrentFilter;
+    private int mNewFilter;;
+
 
     /**
      * Constructs CameraSurfaceRenderer.
@@ -428,6 +491,13 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
         mRecordingStatus = -1;
         mRecordingEnabled = false;
         mFrameCount = -1;
+
+        mIncomingSizeUpdated = false;
+        mIncomingWidth = mIncomingHeight = -1;
+
+        // We could preserve the old filter mode, but currently not bothering.
+        mCurrentFilter = -1;
+        mNewFilter = CameraCaptureActivity.FILTER_NONE;
     }
 
     /**
@@ -441,6 +511,11 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
             mSurfaceTexture.release();
             mSurfaceTexture = null;
         }
+        if (mFullScreen != null) {
+            mFullScreen.release();
+            mFullScreen = null;
+        }
+        mIncomingWidth = mIncomingHeight = -1;
     }
 
     /**
@@ -449,6 +524,95 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
     public void changeRecordingState(boolean isRecording) {
         Log.d(TAG, "changeRecordingState: was " + mRecordingEnabled + " now " + isRecording);
         mRecordingEnabled = isRecording;
+    }
+
+    /**
+     * Changes the filter that we're applying to the camera preview.
+     */
+    public void changeFilterMode(int filter) {
+        mNewFilter = filter;
+    }
+
+    /**
+     * Updates the filter program.
+     */
+    public void updateFilter() {
+        Texture2dProgram.ProgramType programType;
+        float[] kernel = null;
+        float colorAdj = 0.0f;
+
+        Log.d(TAG, "Updating filter to " + mNewFilter);
+        switch (mNewFilter) {
+            case CameraCaptureActivity.FILTER_NONE:
+                programType = Texture2dProgram.ProgramType.TEXTURE_EXT;
+                break;
+            case CameraCaptureActivity.FILTER_BLACK_WHITE:
+                // (In a previous version the TEXTURE_EXT_BW variant was enabled by a flag called
+                // ROSE_COLORED_GLASSES, because the shader set the red channel to the B&W color
+                // and green/blue to zero.)
+                programType = Texture2dProgram.ProgramType.TEXTURE_EXT_BW;
+                break;
+            case CameraCaptureActivity.FILTER_BLUR:
+                programType = Texture2dProgram.ProgramType.TEXTURE_EXT_FILT;
+                kernel = new float[] {
+                        1f/16f, 2f/16f, 1f/16f,
+                        2f/16f, 4f/16f, 2f/16f,
+                        1f/16f, 2f/16f, 1f/16f };
+                break;
+            case CameraCaptureActivity.FILTER_SHARPEN:
+                programType = Texture2dProgram.ProgramType.TEXTURE_EXT_FILT;
+                kernel = new float[] {
+                        0f, -1f, 0f,
+                        -1f, 5f, -1f,
+                        0f, -1f, 0f };
+                break;
+            case CameraCaptureActivity.FILTER_EDGE_DETECT:
+                programType = Texture2dProgram.ProgramType.TEXTURE_EXT_FILT;
+                kernel = new float[] {
+                        -1f, -1f, -1f,
+                        -1f, 8f, -1f,
+                        -1f, -1f, -1f };
+                break;
+            case CameraCaptureActivity.FILTER_EMBOSS:
+                programType = Texture2dProgram.ProgramType.TEXTURE_EXT_FILT;
+                kernel = new float[] {
+                        2f, 0f, 0f,
+                        0f, -1f, 0f,
+                        0f, 0f, -1f };
+                colorAdj = 0.5f;
+                break;
+            default:
+                throw new RuntimeException("Unknown filter mode " + mNewFilter);
+        }
+
+        // Do we need a whole new program?  (We want to avoid doing this if we don't have
+        // too -- compiling a program could be expensive.)
+        if (programType != mFullScreen.getProgram().getProgramType()) {
+            mFullScreen.changeProgram(new Texture2dProgram(programType));
+            // If we created a new program, we need to initialize the texture width/height.
+            mIncomingSizeUpdated = true;
+        }
+
+        // Update the filter kernel (if any).
+        if (kernel != null) {
+            mFullScreen.getProgram().setKernel(kernel, colorAdj);
+        }
+
+        mCurrentFilter = mNewFilter;
+    }
+
+    /**
+     * Records the size of the incoming camera preview frames.
+     * <p>
+     * It's not clear whether this is guaranteed to execute before or after onSurfaceCreated(),
+     * so we assume it could go either way.  (Fortunately they both run on the same thread,
+     * so we at least know that they won't execute concurrently.)
+     */
+    public void setCameraPreviewSize(int width, int height) {
+        Log.d(TAG, "setCameraPreviewSize");
+        mIncomingWidth = width;
+        mIncomingHeight = height;
+        mIncomingSizeUpdated = true;
     }
 
     @Override
@@ -467,12 +631,9 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
 
         // Set up the texture blitter that will be used for on-screen display.  This
         // is *not* applied to the recording, because that uses a separate shader.
-        //
-        // (In a previous version the TEXTURE_EXT_BW variant was enabled by a flag called
-        // ROSE_COLORED_GLASSES, because the shader set the red channel and set everything
-        // else to zero.)
-        mFullScreen = new FullFrameRect(Texture2dProgram.ProgramType.TEXTURE_EXT);
-        //mFullScreen = new FullScreen(Texture2dProgram.ProgramType.TEXTURE_EXT_BW);
+        mFullScreen = new FullFrameRect(
+                new Texture2dProgram(Texture2dProgram.ProgramType.TEXTURE_EXT));
+
         mTextureId = mFullScreen.createTextureObject();
 
         // Create a SurfaceTexture, with an external texture, in this EGL context.  We don't
@@ -549,6 +710,22 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
         // Tell the video encoder thread that a new frame is available.
         // This will be ignored if we're not actually recording.
         mVideoEncoder.frameAvailable(mSurfaceTexture);
+
+        if (mIncomingWidth <= 0 || mIncomingHeight <= 0) {
+            // Texture size isn't set yet.  This is only used for the filters, but to be
+            // safe we can just skip drawing while we wait for the various races to resolve.
+            // (This seems to happen if you toggle the screen off/on with power button.)
+            Log.i(TAG, "Drawing before incoming texture size set; skipping");
+            return;
+        }
+        // Update the filter, if necessary.
+        if (mCurrentFilter != mNewFilter) {
+            updateFilter();
+        }
+        if (mIncomingSizeUpdated) {
+            mFullScreen.getProgram().setTexSize(mIncomingWidth, mIncomingHeight);
+            mIncomingSizeUpdated = false;
+        }
 
         // Draw the video frame.
         mSurfaceTexture.getTransformMatrix(mSTMatrix);

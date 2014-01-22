@@ -447,8 +447,11 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
 
             prepareFramebuffer(width, height);
 
-            mFullScreen = new FullFrameRect(Texture2dProgram.ProgramType.TEXTURE_2D);
+            // Used for blitting texture to FBO.
+            mFullScreen = new FullFrameRect(
+                    new Texture2dProgram(Texture2dProgram.ProgramType.TEXTURE_2D));
 
+            // Program used for drawing onto the screen.
             mProgram = new Flat2dProgram();
 
             // Set the background color.

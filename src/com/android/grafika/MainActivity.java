@@ -35,8 +35,8 @@ public class MainActivity extends Activity implements OnItemSelectedListener {
     public static final String TAG = "Grafika";
     public static final Class[] TEST_ACTIVITIES = {
         // The content and order MUST match the "test_names" string-array.
-        RecordFBOActivity.class,
         CameraCaptureActivity.class,
+        RecordFBOActivity.class,
         PlayMovieActivity.class,
         TextureViewGLActivity.class,
         ReadPixelsActivity.class,

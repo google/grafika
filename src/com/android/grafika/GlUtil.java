@@ -105,6 +105,18 @@ public class GlUtil {
     }
 
     /**
+     * Checks to see if the location we obtained is valid.  GLES returns -1 if a label
+     * could not be found, but does not set the GL error.
+     * <p>
+     * Throws a RuntimeException if the location is invalid.
+     */
+    public static void checkLocation(int location, String label) {
+        if (location < 0) {
+            throw new RuntimeException("Unable to locate '" + label + "' in program");
+        }
+    }
+
+    /**
      * Allocates a direct float buffer, and populates it with the float array data.
      */
     public static FloatBuffer createFloatBuffer(float[] coords) {
