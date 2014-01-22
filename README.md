@@ -55,7 +55,8 @@ Current features
   stretched -- the View's size isn't adjusted.  Generally looks best in landscape.
 - You can select a filter to apply to the preview.  It does not get applied to the recording.
   The shader used for the filters is not optimized, but seems to perform well on most devices
-  (the original Nexus 7 (2012) being a notable exception).
+  (the original Nexus 7 (2012) being a notable exception).  Demo
+  here: http://www.youtube.com/watch?v=kH9kCP2T5Gg
 - The output is a video-only MP4 file ("camera-test.mp4").
 
 [Play video (TextureView)](src/com/android/grafika/PlayMovieActivity.java).  Plays the video track from an MP4 file.
