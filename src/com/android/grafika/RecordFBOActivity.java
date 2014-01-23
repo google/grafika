@@ -350,9 +350,6 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
      * Start the render thread after the Surface has been created.
      */
     private static class RenderThread extends Thread {
-        // If set, we render the scene twice instead of using an FBO.
-        private static boolean DRAW_TWICE = false;
-
         // Object must be created on render thread to get correct Looper, but is used from
         // UI thread, so we need to declare it volatile to ensure the UI thread sees a fully
         // constructed object.
@@ -380,6 +377,7 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
         private Sprite2d mTri;
         private Sprite2d mRect;
         private Sprite2d mEdges[];
+        private Sprite2d mRecordRect;
         private float mRectVelX, mRectVelY;     // velocity, in viewport units per second
         private float mInnerLeft, mInnerTop, mInnerRight, mInnerBottom;
 
@@ -427,6 +425,7 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
             for (int i = 0; i < mEdges.length; i++) {
                 mEdges[i] = new Sprite2d(mRectDrawable);
             }
+            mRecordRect = new Sprite2d(mRectDrawable);
         }
 
         /**
@@ -682,21 +681,25 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
 
             // left edge
             float edgeWidth = 1 + width / 64.0f;
-            mEdges[0].setColor(0.4f, 0.4f, 0.4f);
+            mEdges[0].setColor(0.5f, 0.5f, 0.5f);
             mEdges[0].setScale(edgeWidth, height);
             mEdges[0].setPosition(edgeWidth / 2.0f, height / 2.0f);
             // right edge
-            mEdges[1].setColor(0.4f, 0.4f, 0.4f);
+            mEdges[1].setColor(0.5f, 0.5f, 0.5f);
             mEdges[1].setScale(edgeWidth, height);
             mEdges[1].setPosition(width - edgeWidth / 2.0f, height / 2.0f);
             // top edge
-            mEdges[2].setColor(0.4f, 0.4f, 0.4f);
+            mEdges[2].setColor(0.5f, 0.5f, 0.5f);
             mEdges[2].setScale(width, edgeWidth);
             mEdges[2].setPosition(width / 2.0f, height - edgeWidth / 2.0f);
             // bottom edge
-            mEdges[3].setColor(0.4f, 0.4f, 0.4f);
+            mEdges[3].setColor(0.5f, 0.5f, 0.5f);
             mEdges[3].setScale(width, edgeWidth);
             mEdges[3].setPosition(width / 2.0f, edgeWidth / 2.0f);
+
+            mRecordRect.setColor(1.0f, 1.0f, 1.0f);
+            mRecordRect.setScale(edgeWidth * 2f, edgeWidth * 2f);
+            mRecordRect.setPosition(edgeWidth / 2.0f, edgeWidth / 2.0f);
 
             // Inner bounding rect, used to bounce objects off the walls.
             mInnerLeft = mInnerBottom = edgeWidth;
@@ -827,16 +830,25 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
                 // recording
                 if (mRecordMethod == RECMETHOD_DRAW_TWICE) {
                     //Log.d(TAG, "MODE: draw 2x");
+
                     // Draw for display, swap.
                     draw();
                     swapResult = mWindowSurface.swapBuffers();
 
                     // Draw for recording, swap.
+                    // If we don't set the scissor rect, the glClear() will draw outside the
+                    // viewport and muck up our letterboxing.  Might be better if we disabled
+                    // the test immediately after the glClear().  Of course, if we were
+                    // clearing to black it wouldn't matter.
                     mVideoEncoder.frameAvailableSoon();
                     mInputWindowSurface.makeCurrent();
                     GLES20.glViewport(mVideoRect.left, mVideoRect.top,
                             mVideoRect.width(), mVideoRect.height());
+                    GLES20.glEnable(GLES20.GL_SCISSOR_TEST);
+                    GLES20.glScissor(mVideoRect.left, mVideoRect.top,
+                            mVideoRect.width(), mVideoRect.height());
                     draw();
+                    GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
                     mInputWindowSurface.setPresentationTime(timeStampNanos);
                     mInputWindowSurface.swapBuffers();
 
@@ -853,11 +865,14 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
                     // Blit the frame to the encoder surface.
                     mVideoEncoder.frameAvailableSoon();
                     mInputWindowSurface.makeCurrentReadFrom(mWindowSurface);
-                    // TODO: adjust dst rect to mVideoRect
                     GlUtil.checkGlError("before glBlitFramebuffer");
+                    Log.v(TAG, "glBlitFramebuffer: 0,0," + mWindowSurface.getWidth() + "," +
+                            mWindowSurface.getHeight() + "  " + mVideoRect.left + "," +
+                            mVideoRect.top + "," + mVideoRect.right + "," + mVideoRect.bottom +
+                            "  COLOR_BUFFER GL_NEAREST");
                     GLES30.glBlitFramebuffer(
                             0, 0, mWindowSurface.getWidth(), mWindowSurface.getHeight(),
-                            0, 0, mInputWindowSurface.getWidth(), mInputWindowSurface.getHeight(),
+                            mVideoRect.left, mVideoRect.top, mVideoRect.right, mVideoRect.bottom,
                             GLES30.GL_COLOR_BUFFER_BIT, GLES30.GL_NEAREST);
                     int err;
                     if ((err = GLES30.glGetError()) != GLES30.GL_NO_ERROR) {
@@ -990,7 +1005,9 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
         private void draw() {
             GlUtil.checkGlError("draw start");
 
-            GLES20.glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+            // Clear to a non-black color to make the content easily differentiable from
+            // the pillar-/letter-boxing.
+            GLES20.glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
             GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
             mTri.draw(mProgram, mDisplayProjectionMatrix);
@@ -998,6 +1015,21 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
             for (int i = 0; i < 4; i++) {
                 mEdges[i].draw(mProgram, mDisplayProjectionMatrix);
             }
+
+            // Give a visual indication of the recording method.
+            switch (mRecordMethod) {
+                case RECMETHOD_DRAW_TWICE:
+                    mRecordRect.setColor(1.0f, 0.0f, 0.0f);
+                    break;
+                case RECMETHOD_FBO:
+                    mRecordRect.setColor(0.0f, 1.0f, 0.0f);
+                    break;
+                case RECMETHOD_BLIT_FRAMEBUFFER:
+                    mRecordRect.setColor(0.0f, 0.0f, 1.0f);
+                    break;
+                default:
+            }
+            mRecordRect.draw(mProgram, mDisplayProjectionMatrix);
 
             GlUtil.checkGlError("draw done");
         }

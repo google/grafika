@@ -101,4 +101,5 @@ In no particular order.
   to be a way to play with eglCreateImageKHR from Java.)
 - Add a GL/EGL status page -- dump version info, have scrolling list of supported extensions.
 - Do something with ImageReader class (req API 19).
+- Implement a continuous recorder that holds the last N seconds in a circular buffer.
 

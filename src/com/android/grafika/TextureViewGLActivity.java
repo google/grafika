@@ -48,8 +48,6 @@ import android.graphics.SurfaceTexture;
 public class TextureViewGLActivity extends Activity {
     private static final String TAG = MainActivity.TAG;
 
-    private static final boolean TEST_BLIT_FRAMEBUFFER = false;
-
     // Experiment with allowing TextureView to release the SurfaceTexture from the callback vs.
     // releasing it explicitly ourselves from the draw loop.  The latter seems to be problematic
     // in 4.4 (KK) -- set the flag to "false", rotate the screen a few times, then check the
@@ -206,20 +204,6 @@ public class TextureViewGLActivity extends Activity {
                 GLES20.glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
                 GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
                 GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
-
-                if (TEST_BLIT_FRAMEBUFFER && mEglCore.getGlVersion() >= 3) {
-                    GlUtil.checkGlError("before glBlitFramebuffer");
-                    GLES30.glBlitFramebuffer(
-                            0, 0, 5, 5,
-                            10, 10, 15, 15,
-                            GLES30.GL_COLOR_BUFFER_BIT, GLES30.GL_NEAREST);
-                    int err = GLES30.glGetError();
-                    if (err != GLES30.GL_NO_ERROR) {
-                        Log.w(TAG, "glBlitFramebuffer failed: 0x" + Integer.toHexString(err));
-                    } else {
-                        Log.d(TAG, "glBlitFramebuffer OK");
-                    }
-                }
 
                 // Publish the frame.  If we overrun the consumer (which is likely), we will
                 // slow down due to back-pressure.  If the consumer stops acquiring buffers,
