@@ -75,6 +75,14 @@ Current features
 - Uses the default (rear-facing) camera.  If the device has no default camera (e.g.
   Nexus 7 (2012)), the Activity will crash.
 
+[Double decode](src/com/android/grafika/DoubleDecodeActivity.java).  Decodes two video streams side-by-side to a pair of `TextureView`s.
+- What you're supposed to see is unbroken video when you rotate the screen.  Unfortunately,
+  due to an app framework bug, the video freezes when the screen is rotated.  The video is
+  actually still playing, but the updates are never picked up by the `TextureViews`.  (The
+  problem can be avoided by recreating the video decoders with the new surfaces instead of
+  trying to re-use the previous SurfaceTexture.)
+- Unlike most activities in Grafika, this provides different layouts for portrait and landscape.
+
 
 Feature ideas
 -------------

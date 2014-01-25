@@ -88,6 +88,9 @@ public class MoviePlayer {
 
     /**
      * Decodes the video stream, sending frames to the surface.
+     * <p>
+     * Does not return until video playback is complete, or we get a "stop" signal from
+     * frameCallback.
      */
     public void play(FrameCallback frameCallback) throws IOException {
         MediaExtractor extractor = null;

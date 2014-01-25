@@ -41,6 +41,7 @@ public class MainActivity extends Activity implements OnItemSelectedListener {
         TextureViewGLActivity.class,
         ReadPixelsActivity.class,
         LiveCameraActivity.class,
+        DoubleDecodeActivity.class,
 
         ChorTestActivity.class,
     };

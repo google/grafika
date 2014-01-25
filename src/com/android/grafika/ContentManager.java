@@ -182,7 +182,7 @@ public class ContentManager {
     /**
      * Returns the storage location for the specified item.
      */
-    private File getPath(int tag) {
+    public File getPath(int tag) {
         return new File(mFilesDir, getFileName(tag));
     }
 

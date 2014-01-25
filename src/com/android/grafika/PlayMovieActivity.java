@@ -99,6 +99,10 @@ public class PlayMovieActivity extends Activity implements OnItemSelectedListene
 
     /**
      * onClick handler for "play"/"stop" button.
+     * <p>
+     * We assume that the TextureView has had time to initialize its SurfaceTexture.  If
+     * something super-human is using the UI we'll need to start the play button disabled
+     * and then enable it after the TextureView callback announces the availability of the ST.
      */
     public void clickPlayStop(View unused) {
         if (mShowStopLabel) {

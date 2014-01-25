@@ -46,17 +46,21 @@ public class SpeedControlCallback implements MoviePlayer.FrameCallback {
     }
 
     /**
-     * Requests an immediate stop to playback.  May be called from an arbitrary thread.
+     * Requests an immediate stop to playback.
+     * <p>
+     * May be called from an arbitrary thread.
      */
     public void requestStop() {
         mState = STOPPING;
     }
 
+    // runs on decode thread
     @Override
     public boolean isStopRequested() {
         return mState != RUNNING;
     }
 
+    // runs on decode thread
     @Override
     public void preRender(long presentationTimeUsec) {
         // For the first frame, we grab the presentation time from the video
@@ -132,6 +136,7 @@ public class SpeedControlCallback implements MoviePlayer.FrameCallback {
         }
     }
 
+    // runs on decode thread
     @Override public void postRender() {}
 
     @Override

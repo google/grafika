@@ -17,7 +17,7 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.grafika"
-    android:versionCode="6"
+    android:versionCode="7"
     android:versionName="1.0" >
 
     <uses-sdk
@@ -76,6 +76,10 @@
         <activity
             android:name="com.android.grafika.ChorTestActivity"
             android:label="@string/title_activity_chor_test" >
+        </activity>
+        <activity
+            android:name="com.android.grafika.DoubleDecodeActivity"
+            android:label="@string/title_activity_double_decode" >
         </activity>
     </application>
 
