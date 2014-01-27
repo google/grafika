@@ -76,11 +76,10 @@ Current features
   Nexus 7 (2012)), the Activity will crash.
 
 [Double decode](src/com/android/grafika/DoubleDecodeActivity.java).  Decodes two video streams side-by-side to a pair of `TextureView`s.
-- What you're supposed to see is unbroken video when you rotate the screen.  Unfortunately,
-  due to an app framework bug, the video freezes when the screen is rotated.  The video is
-  actually still playing, but the updates are never picked up by the `TextureViews`.  (The
-  problem can be avoided by recreating the video decoders with the new surfaces instead of
-  trying to re-use the previous SurfaceTexture.)
+- The video decoders don't stop when the screen is rotated.  We retain the `SurfaceTexture`
+  and just attach it to the new `TextureView`.  Useful for avoiding expensive codec reconfigures.
+  The decoders *do* stop if you leave the activity, so we don't tie up hardware codec
+  resources indefinitely.
 - Unlike most activities in Grafika, this provides different layouts for portrait and landscape.
 
 

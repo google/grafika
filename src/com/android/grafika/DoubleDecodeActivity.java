@@ -33,10 +33,6 @@ import java.io.IOException;
  * to an orientation change.  This is to simulate playback of a real-time video stream.  If
  * the Activity is pausing because it's "finished" (indicating that we're leaving the Activity
  * for a nontrivial amount of time), the video decoders are shut down.
- * <p>
- * THIS IS CURRENTLY BROKEN as of Android 4.4 due to a framework bug (12725972) -- the
- * TextureView fails to set a listener on the SurfaceTexture, so incoming frames are simply
- * ignored after the screen is rotated.
  */
 public class DoubleDecodeActivity extends Activity {
     private static final String TAG = MainActivity.TAG;
@@ -129,6 +125,10 @@ public class DoubleDecodeActivity extends Activity {
             Log.d(LTAG, "recreateView: " + view);
             mTextureView = view;
             mTextureView.setSurfaceTextureListener(this);
+            if (mSavedSurfaceTexture != null) {
+                Log.d(LTAG, "using saved st=" + mSavedSurfaceTexture);
+                view.setSurfaceTexture(mSavedSurfaceTexture);
+            }
         }
 
         /**
@@ -160,8 +160,10 @@ public class DoubleDecodeActivity extends Activity {
                 File sliders = ContentManager.getInstance().getPath(mMovieTag);
                 mPlayThread = new PlayMovieThread(sliders, new Surface(st), mCallback);
             } else {
-                Log.d(LTAG, "using saved st=" + mSavedSurfaceTexture);
-                mTextureView.setSurfaceTexture(mSavedSurfaceTexture);
+                // Can't do it here in Android <= 4.4.  The TextureView doesn't add a
+                // listener on the new SurfaceTexture, so it never sees any updates.
+                //Log.d(LTAG, "using saved st=" + mSavedSurfaceTexture);
+                //mTextureView.setSurfaceTexture(mSavedSurfaceTexture);
             }
         }
 

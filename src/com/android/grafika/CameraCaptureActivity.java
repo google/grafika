@@ -282,7 +282,8 @@ public class CameraCaptureActivity extends Activity
      * specify the dimensions of the encoded video).  If it fails to find a match it just
      * uses the default preview size.
      * <p>
-     * TODO: should do a best-fit match.
+     * TODO: should do a best-fit match, e.g.
+     * https://github.com/commonsguy/cwac-camera/blob/master/camera/src/com/commonsware/cwac/camera/CameraUtils.java
      */
     private static void choosePreviewSize(Camera.Parameters parms, int width, int height) {
         // We should make sure that the requested MPEG size is less than the preferred
