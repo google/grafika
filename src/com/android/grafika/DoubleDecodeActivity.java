@@ -33,6 +33,8 @@ import java.io.IOException;
  * to an orientation change.  This is to simulate playback of a real-time video stream.  If
  * the Activity is pausing because it's "finished" (indicating that we're leaving the Activity
  * for a nontrivial amount of time), the video decoders are shut down.
+ * <p>
+ * TODO: consider shutting down when the screen is turned off, to preserve battery.
  */
 public class DoubleDecodeActivity extends Activity {
     private static final String TAG = MainActivity.TAG;

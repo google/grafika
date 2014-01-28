@@ -79,7 +79,9 @@ Current features
 - The video decoders don't stop when the screen is rotated.  We retain the `SurfaceTexture`
   and just attach it to the new `TextureView`.  Useful for avoiding expensive codec reconfigures.
   The decoders *do* stop if you leave the activity, so we don't tie up hardware codec
-  resources indefinitely.
+  resources indefinitely.  (It also doesn't stop if you turn the screen off with the power
+  button, which isn't good for the battery, but might be handy if you're feeding an external
+  display or your player also handles audio.)
 - Unlike most activities in Grafika, this provides different layouts for portrait and landscape.
 
 
@@ -88,16 +90,12 @@ Feature ideas
 
 In no particular order.
 
-- Render simple GLES with FBO (GLES2 / GLES3), toggle recording.
 - Add "Play video (SurfaceView)" to illustrate usage / differences vs. TextureView.  Include
-  a slide for random access and buttons for single-frame advance / rewind (requires
+  a slider for random access and buttons for single-frame advance / rewind (requires
   seeking to nearest sync frame and decoding frames until target is reached).
 - Capture audio from microphone, record + mux it.
 - Enable preview on front/back cameras simultaneously, display them side-by-side.  (Is
   this even possible?)
-- Send video playback to a SurfaceTexture, render the ST to TextureView.  Structure the
-  Activity so playback continues during rotation or other Activity restarts (requires
-  preventing the MediaCodec decoder output surface from resetting).
 - Convert a series of PNG images to video.
 - Use virtual displays to record app activity.
 - Create a MediaCodec encoder, get a surface with createInputSurface(), and then render it on
@@ -106,7 +104,9 @@ In no particular order.
 - Play continuous video from a series of MP4 files with different characteristics.
 - Experiment with alternatives to glReadPixels().  Add a PBO speed test.  (Doesn't seem
   to be a way to play with eglCreateImageKHR from Java.)
-- Add a GL/EGL status page -- dump version info, have scrolling list of supported extensions.
+- Add a GL/EGL info tool -- dump version info, have scrolling list of supported extensions.
 - Do something with ImageReader class (req API 19).
 - Implement a continuous recorder that holds the last N seconds in a circular buffer.
+- Update MoviePlayer#doExtract() to improve startup latency
+  (http://stackoverflow.com/questions/21440820/).
 
