@@ -195,6 +195,9 @@ public class Texture2dProgram {
 
     /**
      * Releases the program.
+     * <p>
+     * The appropriate EGL context must be current (i.e. the one that was used to create
+     * the program).
      */
     public void release() {
         Log.d(TAG, "deleting program " + mProgramHandle);

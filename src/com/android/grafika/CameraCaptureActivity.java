@@ -256,7 +256,7 @@ public class CameraCaptureActivity extends Activity
 
         Camera.Parameters parms = mCamera.getParameters();
 
-        choosePreviewSize(parms, desiredWidth, desiredHeight);
+        CameraUtils.choosePreviewSize(parms, desiredWidth, desiredHeight);
         // leave the frame rate set to default
         mCamera.setParameters(parms);
 
@@ -275,41 +275,6 @@ public class CameraCaptureActivity extends Activity
 
         mCameraPreviewWidth = mCameraPreviewSize.width;
         mCameraPreviewHeight = mCameraPreviewSize.height;
-    }
-
-    /**
-     * Attempts to find a preview size that matches the provided width and height (which
-     * specify the dimensions of the encoded video).  If it fails to find a match it just
-     * uses the default preview size.
-     * <p>
-     * TODO: should do a best-fit match, e.g.
-     * https://github.com/commonsguy/cwac-camera/blob/master/camera/src/com/commonsware/cwac/camera/CameraUtils.java
-     */
-    private static void choosePreviewSize(Camera.Parameters parms, int width, int height) {
-        // We should make sure that the requested MPEG size is less than the preferred
-        // size, and has the same aspect ratio.
-        Camera.Size ppsfv = parms.getPreferredPreviewSizeForVideo();
-        if (ppsfv != null) {
-            Log.d(TAG, "Camera preferred preview size for video is " +
-                    ppsfv.width + "x" + ppsfv.height);
-        }
-
-        //for (Camera.Size size : parms.getSupportedPreviewSizes()) {
-        //    Log.d(TAG, "supported: " + size.width + "x" + size.height);
-        //}
-
-        for (Camera.Size size : parms.getSupportedPreviewSizes()) {
-            if (size.width == width && size.height == height) {
-                parms.setPreviewSize(width, height);
-                return;
-            }
-        }
-
-        Log.w(TAG, "Unable to set preview size to " + width + "x" + height);
-        if (ppsfv != null) {
-            parms.setPreviewSize(ppsfv.width, ppsfv.height);
-        }
-        // else use whatever the default size is
     }
 
     /**
@@ -513,8 +478,8 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
             mSurfaceTexture = null;
         }
         if (mFullScreen != null) {
-            mFullScreen.release();
-            mFullScreen = null;
+            mFullScreen.release(false);     // assume the GLSurfaceView EGL context is about
+            mFullScreen = null;             //  to be destroyed
         }
         mIncomingWidth = mIncomingHeight = -1;
     }

@@ -93,7 +93,7 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
 
     private boolean mRecordingEnabled = false;          // controls button state
     private boolean mBlitFramebufferAllowed = false;    // requires GLES3
-    private int mSelectedRecordMethod;                            // current radio button
+    private int mSelectedRecordMethod;                  // current radio button
 
     private RenderThread mRenderThread;
 
@@ -570,7 +570,7 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
                 mDepthBuffer = -1;
             }
             if (mFullScreen != null) {
-                mFullScreen.release();
+                mFullScreen.release(false); // TODO: should be "true"; must make mEglCore current
                 mFullScreen = null;
             }
 
@@ -621,7 +621,8 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
         }
 
         /**
-         * Waits until the render thread is no longer ready to receive messages.
+         * Waits until the render thread is no longer ready to receive messages.  (This
+         * could also just be a Thread.join().)
          * <p>
          * Call from the UI thread.
          */
@@ -836,12 +837,24 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
                     swapResult = mWindowSurface.swapBuffers();
 
                     // Draw for recording, swap.
+                    mVideoEncoder.frameAvailableSoon();
+                    mInputWindowSurface.makeCurrent();
                     // If we don't set the scissor rect, the glClear() will draw outside the
                     // viewport and muck up our letterboxing.  Might be better if we disabled
                     // the test immediately after the glClear().  Of course, if we were
                     // clearing to black it wouldn't matter.
-                    mVideoEncoder.frameAvailableSoon();
-                    mInputWindowSurface.makeCurrent();
+                    //
+                    // We do still need to clear the pixels outside the scissor rect, of course,
+                    // or we'll get garbage at the edges of the recording.  We can either clear
+                    // the whole thing and accept that there will be a lot of overdraw, or we
+                    // can issue multiple scissor/clear calls.  Some GPUs may have a special
+                    // optimization for zero-clear.
+                    //
+                    // For now, be lazy and zero the whole thing.  At some point we need to
+                    // examine the performance here.
+                    GLES20.glClearColor(0f, 0f, 0f, 1f);
+                    GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+
                     GLES20.glViewport(mVideoRect.left, mVideoRect.top,
                             mVideoRect.width(), mVideoRect.height());
                     GLES20.glEnable(GLES20.GL_SCISSOR_TEST);

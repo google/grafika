@@ -48,6 +48,8 @@ public class WindowSurface extends EglSurfaceBase {
 
     /**
      * Releases any resources associated with the Surface and the EGL surface.
+     * <p>
+     * Does not require that the surface's EGL context be current.
      */
     public void release() {
         releaseEglSurface();

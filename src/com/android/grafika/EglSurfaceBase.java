@@ -37,15 +37,15 @@ import java.nio.ByteOrder;
 public class EglSurfaceBase {
     protected static final String TAG = MainActivity.TAG;
 
-    // EglBase object we're associated with.  It may be associated with multiple surfaces.
+    // EglCore object we're associated with.  It may be associated with multiple surfaces.
     protected EglCore mEglCore;
 
     private EGLSurface mEGLSurface = EGL14.EGL_NO_SURFACE;
     private int mWidth = -1;
     private int mHeight = -1;
 
-    protected EglSurfaceBase(EglCore eglBase) {
-        mEglCore = eglBase;
+    protected EglSurfaceBase(EglCore eglCore) {
+        mEglCore = eglCore;
     }
 
     /**

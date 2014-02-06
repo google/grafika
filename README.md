@@ -28,6 +28,18 @@ There is some overlap with the code on http://www.bigflake.com/mediacodec/.  The
 
 Features are added to Grafika as the need arises, often in response to developer complaints about correctness or performance problems in the platform (either to confirm that the problems exist, or demonstrate an approach that works).
 
+There are two areas where some amount of care is taken:
+- Thread safety.  It's really easy to get threads crossed in subtly dangerous ways when
+  working with the media classes.  (Read the
+  [Android SMP Primer](http://developer.android.com/training/articles/smp.html)
+  for a detailed introduction to the problem.)  GL/EGL's reliance on thread-local storage
+  doesn't help.  Threading issues are called out in comments in the source code.
+- Garbage collection.  Ideally, none of the activities will do any allocations while
+  in a "steady state".  Allocations may occur while changing modes, e.g. starting or
+  stopping recording.
+
+All code is written in the Java programming language -- the NDK is not used.
+
 
 Current features
 ----------------
@@ -84,15 +96,27 @@ Current features
   display or your player also handles audio.)
 - Unlike most activities in Grafika, this provides different layouts for portrait and landscape.
 
+[Constant capture](src/com/android/grafika/ConstantCaptureActivity.java).  Stores video in a circular buffer, saving it when you hit the "capture" button.
+- Currently hard-wired to try to capture 7 seconds of video at 6MB/sec, preferrably 15fps 720p.
+  That requires a buffer size of about 5MB.
+- The time span of frames currently held in the buffer is displayed.  The actual
+  time span saved when you hit "capture" will be slightly less than what is shown because
+  we have to start the output on a sync frame, which are configured to appear once per second.
+- Output is a video-only MP4 file ("constant-capture.mp4").
 
-Feature ideas
--------------
+
+Features & fixes
+----------------
 
 In no particular order.
 
-- Add "Play video (SurfaceView)" to illustrate usage / differences vs. TextureView.  Include
-  a slider for random access and buttons for single-frame advance / rewind (requires
-  seeking to nearest sync frame and decoding frames until target is reached).
+- Fix up the UI so you don't have to go through the spinner to get to different things.
+- Add "Play video (SurfaceView)" to illustrate usage / differences vs. TextureView.  Render
+  directly from MediaCodec#releaseBuffer() rather than routing through GL.  Show a blank
+  screen before the video starts playing (http://stackoverflow.com/questions/21526989/).
+- Add features to the video player, like a slider for random access, and buttons for
+  single-frame advance / rewind (requires seeking to nearest sync frame and decoding frames
+  until target is reached).
 - Capture audio from microphone, record + mux it.
 - Enable preview on front/back cameras simultaneously, display them side-by-side.  (Is
   this even possible?)
@@ -106,7 +130,10 @@ In no particular order.
   to be a way to play with eglCreateImageKHR from Java.)
 - Add a GL/EGL info tool -- dump version info, have scrolling list of supported extensions.
 - Do something with ImageReader class (req API 19).
-- Implement a continuous recorder that holds the last N seconds in a circular buffer.
 - Update MoviePlayer#doExtract() to improve startup latency
   (http://stackoverflow.com/questions/21440820/).
+- Cross-fade from one video to another, recording the result.
+- Figure out why "double decode" playback is janky.
+- Play with SurfaceHolder.setFixedSize().  Handle touch input.
+- Add a trivial glTexImage2D texture upload speed benchmark (maybe 512x512 RGBA).
 

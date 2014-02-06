@@ -17,7 +17,7 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.grafika"
-    android:versionCode="7"
+    android:versionCode="8"
     android:versionName="1.0" >
 
     <uses-sdk
@@ -80,6 +80,10 @@
         <activity
             android:name="com.android.grafika.DoubleDecodeActivity"
             android:label="@string/title_activity_double_decode" >
+        </activity>
+        <activity
+            android:name="com.android.grafika.ConstantCaptureActivity"
+            android:label="@string/title_activity_constant_capture" >
         </activity>
     </application>
 

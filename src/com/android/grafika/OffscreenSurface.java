@@ -25,8 +25,8 @@ public class OffscreenSurface extends EglSurfaceBase {
     /**
      * Creates an off-screen surface with the specified width and height.
      */
-    public OffscreenSurface(EglCore eglBase, int width, int height) {
-        super(eglBase);
+    public OffscreenSurface(EglCore eglCore, int width, int height) {
+        super(eglCore);
         createOffscreenSurface(width, height);
     }
 

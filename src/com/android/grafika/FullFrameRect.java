@@ -56,10 +56,17 @@ public class FullFrameRect {
 
     /**
      * Releases resources.
+     * <p>
+     * This must be called with the appropriate EGL context current (i.e. the one that was
+     * current when the constructor was called).  If we're about to destroy the EGL context,
+     * there's no value in making it current just to do the cleanup, so you can pass a flag
+     * that will tell this to skip any EGL-context-specific cleanup.
      */
-    public void release() {
+    public void release(boolean doEglCleanup) {
         if (mProgram != null) {
-            mProgram.release();
+            if (doEglCleanup) {
+                mProgram.release();
+            }
             mProgram = null;
         }
     }

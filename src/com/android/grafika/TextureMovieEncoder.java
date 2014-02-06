@@ -356,7 +356,7 @@ public class TextureMovieEncoder implements Runnable {
 
         // Release the EGLSurface and EGLContext.
         mInputWindowSurface.releaseEglSurface();
-        mFullScreen.release();
+        mFullScreen.release(false);
         mEglCore.release();
 
         // Create a new EGLContext and recreate the window surface.
@@ -387,7 +387,7 @@ public class TextureMovieEncoder implements Runnable {
             mInputWindowSurface = null;
         }
         if (mFullScreen != null) {
-            mFullScreen.release();
+            mFullScreen.release(false);
             mFullScreen = null;
         }
         if (mEglCore != null) {
