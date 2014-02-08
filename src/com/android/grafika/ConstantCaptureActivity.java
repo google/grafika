@@ -445,7 +445,7 @@ public class ConstantCaptureActivity extends Activity implements SurfaceHolder.C
             case 2:  GLES20.glClearColor(0.0f, 0.0f, 1.0f, 1.0f);   break;
         }
 
-        int xpos = (frameNum * 10) % width;
+        int xpos = (int) (width * ((frameNum % 100) / 100.0f));
         GLES20.glEnable(GLES20.GL_SCISSOR_TEST);
         GLES20.glScissor(xpos, 0, width / 32, height / 32);
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
