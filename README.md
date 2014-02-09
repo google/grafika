@@ -105,8 +105,8 @@ Current features
 - Output is a video-only MP4 file ("constant-capture.mp4").
 
 
-Features & fixes
-----------------
+Feature & fix ideas
+-------------------
 
 In no particular order.
 
