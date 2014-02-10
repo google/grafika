@@ -839,16 +839,17 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
                     // Draw for recording, swap.
                     mVideoEncoder.frameAvailableSoon();
                     mInputWindowSurface.makeCurrent();
-                    // If we don't set the scissor rect, the glClear() will draw outside the
-                    // viewport and muck up our letterboxing.  Might be better if we disabled
-                    // the test immediately after the glClear().  Of course, if we were
-                    // clearing to black it wouldn't matter.
+                    // If we don't set the scissor rect, the glClear() we use to draw the
+                    // light-grey background will draw outside the viewport and muck up our
+                    // letterboxing.  Might be better if we disabled the test immediately after
+                    // the glClear().  Of course, if we were clearing the frame background to
+                    // black it wouldn't matter.
                     //
                     // We do still need to clear the pixels outside the scissor rect, of course,
                     // or we'll get garbage at the edges of the recording.  We can either clear
                     // the whole thing and accept that there will be a lot of overdraw, or we
                     // can issue multiple scissor/clear calls.  Some GPUs may have a special
-                    // optimization for zero-clear.
+                    // optimization for zeroing out the color buffer.
                     //
                     // For now, be lazy and zero the whole thing.  At some point we need to
                     // examine the performance here.
@@ -875,9 +876,12 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
                     // Draw the frame, but don't swap it yet.
                     draw();
 
-                    // Blit the frame to the encoder surface.
                     mVideoEncoder.frameAvailableSoon();
                     mInputWindowSurface.makeCurrentReadFrom(mWindowSurface);
+                    // Clear the pixels we're not going to overwrite with the blit.  Once again,
+                    // this is excessive -- we don't need to clear the entire screen.
+                    GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+                    GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
                     GlUtil.checkGlError("before glBlitFramebuffer");
                     Log.v(TAG, "glBlitFramebuffer: 0,0," + mWindowSurface.getWidth() + "," +
                             mWindowSurface.getHeight() + "  " + mVideoRect.left + "," +
@@ -915,8 +919,8 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
                     // Blit to encoder.
                     mVideoEncoder.frameAvailableSoon();
                     mInputWindowSurface.makeCurrent();
-                    GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-                    GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+                    GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);    // again, only really need to
+                    GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);     //  clear pixels outside rect
                     GLES20.glViewport(mVideoRect.left, mVideoRect.top,
                             mVideoRect.width(), mVideoRect.height());
                     mFullScreen.drawFrame(mOffscreenTexture, mIdentityMatrix);
