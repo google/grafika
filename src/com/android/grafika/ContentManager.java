@@ -40,7 +40,8 @@ public class ContentManager {
 
     // Enumerated content tags.  These are used as indices into the mContent ArrayList,
     // so don't make them sparse.
-    // TODO: consider using String tags and a HashMap?
+    // TODO: consider using String tags and a HashMap?  prepare() is currently fragile,
+    //       depending on the movies being added in tag-order.  Could also just use a plain array.
     public static final int MOVIE_EIGHT_RECTS = 0;
     public static final int MOVIE_SLIDERS = 1;
 

@@ -144,21 +144,16 @@ public class EglSurfaceBase {
             throw new RuntimeException("Expected EGL context/surface is not current");
         }
 
-        // glReadPixels gives us a ByteBuffer filled with what is essentially big-endian RGBA
-        // data (i.e. a byte of red, followed by a byte of green...).  We need an int[] filled
-        // with little-endian ARGB data to feed to Bitmap.
+        // glReadPixels fills in a "direct" ByteBuffer with what is essentially big-endian RGBA
+        // data (i.e. a byte of red, followed by a byte of green...).  While the Bitmap
+        // constructor that takes an int[] wants little-endian ARGB (blue/red swapped), the
+        // Bitmap "copy pixels" method wants the same format GL provides.
         //
-        // If we implement this as a series of buf.get() calls, we can spend 2.5 seconds just
-        // copying data around for a 720p frame.  It's better to do a bulk get() and then
-        // rearrange the data in memory.  (For comparison, the PNG compress takes about 500ms
-        // for a trivial frame.)
-        //
-        // So... we set the ByteBuffer to little-endian, which should turn the bulk IntBuffer
-        // get() into a straight memcpy on most Android devices.  Our ints will hold ABGR data.
-        // Swapping B and R gives us ARGB.
+        // Ideally we'd have some way to re-use the ByteBuffer, especially if we're calling
+        // here often.
         //
         // Making this even more interesting is the upside-down nature of GL, which means
-        // our output will look upside-down relative to what appears on screen if the
+        // our output will look upside down relative to what appears on screen if the
         // typical GL conventions are used.
 
         String filename = file.toString();
@@ -169,18 +164,11 @@ public class EglSurfaceBase {
                 GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buf);
         buf.rewind();
 
-        int pixelCount = mWidth * mHeight;
-        int[] colors = new int[pixelCount];
-        buf.asIntBuffer().get(colors);
-        for (int i = 0; i < pixelCount; i++) {
-            int c = colors[i];
-            colors[i] = (c & 0xff00ff00) | ((c & 0x00ff0000) >> 16) | ((c & 0x000000ff) << 16);
-        }
-
         BufferedOutputStream bos = null;
         try {
             bos = new BufferedOutputStream(new FileOutputStream(filename));
-            Bitmap bmp = Bitmap.createBitmap(colors, mWidth, mHeight, Bitmap.Config.ARGB_8888);
+            Bitmap bmp = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.ARGB_8888);
+            bmp.copyPixelsFromBuffer(buf);
             bmp.compress(Bitmap.CompressFormat.PNG, 90, bos);
             bmp.recycle();
         } finally {
