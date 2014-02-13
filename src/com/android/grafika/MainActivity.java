@@ -74,8 +74,11 @@ public class MainActivity extends ListActivity {
             "Decodes two videos side-by-side",
             "DoubleDecodeActivity" },
         { "{ignore} Chor test",
-            "Demonstrates bug",
+            "Exercises bug",
             "ChorTestActivity" },
+        { "{ignore} Software input surface",
+            "Exercises bug",
+            "SoftInputSurfaceActivity" },
     };
 
     /**
@@ -140,7 +143,6 @@ public class MainActivity extends ListActivity {
 
     @Override
     protected void onListItemClick(ListView listView, View view, int position, long id) {
-        Log.d(TAG, "Clicked entry " + position);
         Map<String, Object> map = (Map<String, Object>)listView.getItemAtPosition(position);
         Intent intent = (Intent) map.get(CLASS_NAME);
         startActivity(intent);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Google Inc. All rights reserved.
+ * Copyright 2014 Google Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,68 +16,113 @@
 
 package com.android.grafika;
 
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
+import android.os.Bundle;
 import android.util.Log;
+import android.view.Surface;
+import android.widget.TextView;
+import android.app.Activity;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
- * Base class for generated movies.
+ * Generate a short movie using Surface input to MediaCodec, where the Surface is written to
+ * from software (lock() + unlockAndPost() rather than GLES).  This is NOT A SUPPORTED USE
+ * CASE, but as of API 19 the documentation says nothing to that effect.
+ *
+ * See also https://code.google.com/p/android/issues/detail?id=61194
  */
-public abstract class GeneratedMovie implements Content {
+public class SoftInputSurfaceActivity extends Activity {
     private static final String TAG = MainActivity.TAG;
-    private static final boolean VERBOSE = false;
+    private static final boolean VERBOSE = true;
 
+    private static final String MIME_TYPE = "video/avc";
+    private static final int WIDTH = 640;
+    private static final int HEIGHT = 480;
+    private static final int BIT_RATE = 4000000;
+    private static final int FRAMES_PER_SECOND = 4;
     private static final int IFRAME_INTERVAL = 5;
 
-    // set by sub-class to indicate that the movie has been generated
-    // TODO: remove this now?
-    protected boolean mMovieReady = false;
+    private static final int NUM_FRAMES = 8;
 
     // "live" state during recording
     private MediaCodec.BufferInfo mBufferInfo;
     private MediaCodec mEncoder;
     private MediaMuxer mMuxer;
-    private EglCore mEglCore;
-    private WindowSurface mInputSurface;
+    private Surface mInputSurface;
     private int mTrackIndex;
     private boolean mMuxerStarted;
+    private long mFakePts;
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_soft_input_surface);
+
+        TextView tv = (TextView) findViewById(R.id.softInputResult_text);
+
+        // Be VERY BAD and do the whole thing during onCreate().
+        Log.i(TAG, "Generating movie...");
+        try {
+            generateMovie(new File(getFilesDir(), "soft-input-surface.mp4"));
+            tv.setText(getString(R.string.succeeded));
+            Log.i(TAG, "Movie generation complete");
+        } catch (Exception ex) {
+            Log.e(TAG, "Movie generation FAILED", ex);
+            tv.setText(getString(R.string.failed));
+        }
+    }
+
+    private void generateMovie(File outputFile) {
+        try {
+            prepareEncoder(outputFile);
+
+            for (int i = 0; i < NUM_FRAMES; i++) {
+                // Drain any data from the encoder into the muxer.
+                drainEncoder(false);
+
+                // Generate a frame and submit it.
+                generateFrame(i);
+//                submitFrame(computePresentationTimeNsec(i));
+            }
+
+            // Send end-of-stream and drain remaining output.
+            drainEncoder(true);
+        } finally {
+            releaseEncoder();
+        }
+    }
 
     /**
-     * Creates the movie content.  Usually called from an async task thread.
+     * Prepares the video encoder, muxer, and an input surface.
      */
-    public abstract void create(File outputFile, ContentManager.ProgressUpdater prog);
-
-    /**
-     * Prepares the video encoder, muxer, and an EGL input surface.
-     */
-    protected void prepareEncoder(String mimeType, int width, int height, int bitRate,
-            int framesPerSecond, File outputFile) {
+    private void prepareEncoder(File outputFile) {
         mBufferInfo = new MediaCodec.BufferInfo();
 
-        MediaFormat format = MediaFormat.createVideoFormat(mimeType, width, height);
+        MediaFormat format = MediaFormat.createVideoFormat(MIME_TYPE, WIDTH, HEIGHT);
 
         // Set some properties.  Failing to specify some of these can cause the MediaCodec
         // configure() call to throw an unhelpful exception.
         format.setInteger(MediaFormat.KEY_COLOR_FORMAT,
                 MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);
-        format.setInteger(MediaFormat.KEY_BIT_RATE, bitRate);
-        format.setInteger(MediaFormat.KEY_FRAME_RATE, framesPerSecond);
+        format.setInteger(MediaFormat.KEY_BIT_RATE, BIT_RATE);
+        format.setInteger(MediaFormat.KEY_FRAME_RATE, FRAMES_PER_SECOND);
         format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, IFRAME_INTERVAL);
         if (VERBOSE) Log.d(TAG, "format: " + format);
 
         // Create a MediaCodec encoder, and configure it with our format.  Get a Surface
         // we can use for input and wrap it with a class that handles the EGL work.
-        mEncoder = MediaCodec.createEncoderByType(mimeType);
+        mEncoder = MediaCodec.createEncoderByType(MIME_TYPE);
         mEncoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
-        mEglCore = new EglCore(null, EglCore.FLAG_RECORDABLE);
-        mInputSurface = new WindowSurface(mEglCore, mEncoder.createInputSurface());
-        mInputSurface.makeCurrent();
+        mInputSurface = mEncoder.createInputSurface();
         mEncoder.start();
 
         // Create a MediaMuxer.  We can't add the video track and start() the muxer here,
@@ -101,7 +146,7 @@ public abstract class GeneratedMovie implements Content {
     /**
      * Releases encoder resources.  May be called after partial / failed initialization.
      */
-    protected void releaseEncoder() {
+    private void releaseEncoder() {
         if (VERBOSE) Log.d(TAG, "releasing encoder objects");
         if (mEncoder != null) {
             mEncoder.stop();
@@ -112,30 +157,11 @@ public abstract class GeneratedMovie implements Content {
             mInputSurface.release();
             mInputSurface = null;
         }
-        if (mEglCore != null) {
-            mEglCore.release();
-            mEglCore = null;
-        }
         if (mMuxer != null) {
             mMuxer.stop();
             mMuxer.release();
             mMuxer = null;
         }
-    }
-
-    /**
-     * Submits a frame to the encoder.
-     *
-     * @param presentationTimeNsec The presentation time stamp, in nanoseconds.
-     */
-    protected void submitFrame(long presentationTimeNsec) {
-        // The eglSwapBuffers call will block if the input is full, which would be bad if
-        // it stayed full until we dequeued an output buffer (which we can't do, since we're
-        // stuck here).  So long as the caller fully drains the encoder before supplying
-        // additional input, the system guarantees that we can supply another frame
-        // without blocking.
-        mInputSurface.setPresentationTime(presentationTimeNsec);
-        mInputSurface.swapBuffers();
     }
 
     /**
@@ -145,7 +171,7 @@ public abstract class GeneratedMovie implements Content {
      * is set, we send EOS to the encoder, and then iterate until we see EOS on the output.
      * Calling this with endOfStream set should be done once, right before stopping the muxer.
      */
-    protected void drainEncoder(boolean endOfStream) {
+    private void drainEncoder(boolean endOfStream) {
         final int TIMEOUT_USEC = 10000;
         if (VERBOSE) Log.d(TAG, "drainEncoder(" + endOfStream + ")");
 
@@ -205,6 +231,8 @@ public abstract class GeneratedMovie implements Content {
                     // adjust the ByteBuffer values to match BufferInfo
                     encodedData.position(mBufferInfo.offset);
                     encodedData.limit(mBufferInfo.offset + mBufferInfo.size);
+                    mBufferInfo.presentationTimeUs = mFakePts;
+                    mFakePts += 1000000L / FRAMES_PER_SECOND;
 
                     mMuxer.writeSampleData(mTrackIndex, encodedData, mBufferInfo);
                     if (VERBOSE) Log.d(TAG, "sent " + mBufferInfo.size + " bytes to muxer");
@@ -222,5 +250,41 @@ public abstract class GeneratedMovie implements Content {
                 }
             }
         }
+    }
+
+    /**
+     * Generates a frame, writing to the Surface via the "software" API (lock/unlock).
+     * <p>
+     * There's no way to set the time stamp.
+     */
+    private void generateFrame(int frameNum) {
+        Canvas canvas = mInputSurface.lockCanvas(null);
+        int width = canvas.getWidth();
+        int height = canvas.getHeight();
+
+        Paint paint = new Paint();
+        for (int i = 0; i < 8; i++) {
+            int color = 0xff000000;
+            if ((i & 0x01) != 0) {
+                color |= 0x00ff0000;
+            }
+            if ((i & 0x02) != 0) {
+                color |= 0x0000ff00;
+            }
+            if ((i & 0x04) != 0) {
+                color |= 0x000000ff;
+            }
+            paint.setColor(color);
+
+            float sliceWidth = width / 8;
+            canvas.drawRect(sliceWidth * i, 0, sliceWidth * (i+1), height, paint);
+        }
+
+        paint.setColor(0x80808080);
+        float sliceHeight = height / 8;
+        int frameMod = frameNum % 8;
+        canvas.drawRect(0, sliceHeight * frameMod, width, sliceHeight * (frameMod+1), paint);
+
+        mInputSurface.unlockCanvasAndPost(canvas);
     }
 }

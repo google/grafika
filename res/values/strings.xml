@@ -30,6 +30,8 @@
     <string name="cancel">Cancel</string>
     <string name="state_ready">[ready]</string>
     <string name="state_running">[running]</string>
+    <string name="succeeded">SUCCEEDED</string>
+    <string name="failed">FAILED</string>
     <string name="gfxRunTest_button">Run test</string>
     <string name="videoRunTest_button">Run test (video)</string>
     <string name="gfxResultLabel_text">"Result: "</string>
@@ -86,5 +88,6 @@
     <string name="title_activity_chor_test">ChorTestActivity</string>
     <string name="title_activity_double_decode">Double decode</string>
     <string name="title_activity_constant_capture">Constant capture</string>
+    <string name="title_activity_soft_input_surface">Software Input Surface</string>
 
 </resources>

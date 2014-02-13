@@ -17,7 +17,7 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.grafika"
-    android:versionCode="9"
+    android:versionCode="10"
     android:versionName="1.0" >
 
     <uses-sdk
@@ -84,6 +84,10 @@
         <activity
             android:name="com.android.grafika.ConstantCaptureActivity"
             android:label="@string/title_activity_constant_capture" >
+        </activity>
+        <activity
+            android:name="com.android.grafika.SoftInputSurfaceActivity"
+            android:label="@string/title_activity_soft_input_surface" >
         </activity>
     </application>
 

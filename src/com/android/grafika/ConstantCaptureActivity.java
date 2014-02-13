@@ -34,7 +34,6 @@ import android.app.Activity;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
-import java.util.Arrays;
 
 /**
  * Demonstrates capturing video into a ring buffer.  When the "capture" button is clicked,
