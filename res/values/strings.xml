@@ -66,19 +66,6 @@
     <string name="recordingSucceeded">Recording succeeded</string>
     <string name="recordingFailed">Recording FAILED (err=%1$d)</string>
 
-    <!-- for selectTest_spinner; match with MainActivity.TEST_ACTIVITIES -->
-    <string-array name="test_names">
-        <item>Constant capture</item>
-        <item>Show + capture camera</item>
-        <item>Record GL app with FBO</item>
-        <item>Play video (TextureView)</item>
-        <item>Basic GL in TextureView</item>
-        <item>glReadPixels speed test</item>
-        <item>Live camera (TextureView)</item>
-        <item>Double decode</item>
-        <item>(ignore) Chor test</item>
-    </string-array>
-
     <!-- for cameraFilter_spinner; match with CameraCaptureActivity constants -->
     <string-array name="camera_filter_names">
         <item>Normal</item>
@@ -94,7 +81,7 @@
     <string name="title_activity_read_pixels">glReadPixels speed test</string>
     <string name="title_activity_texture_view_gl">Basic GL in TextureView</string>
     <string name="title_activity_live_camera">Live camera (TextureView)</string>
-    <string name="title_activity_record_fbo">Record GL app with FBO</string>
+    <string name="title_activity_record_fbo">Record GL app</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_chor_test">ChorTestActivity</string>
     <string name="title_activity_double_decode">Double decode</string>

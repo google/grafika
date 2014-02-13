@@ -24,28 +24,13 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".MainActivity" >
 
-    <TextView
-        android:id="@+id/selectTest_text"
-        android:layout_width="wrap_content"
+    <ListView
+        android:id="@android:id/list"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/selectTest_text"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
-
-    <Spinner
-        android:id="@+id/selectTest_spinner"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/selectTest_text"
-        android:layout_below="@+id/selectTest_text" />
-
-    <Button
-        android:id="@+id/start_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/selectTest_spinner"
-        android:layout_below="@+id/selectTest_spinner"
-        android:layout_marginTop="28dp"
-        android:onClick="clickStart"
-        android:text="@string/start_button" />
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:fadeScrollbars="false" >
+    </ListView>
 
 </RelativeLayout>

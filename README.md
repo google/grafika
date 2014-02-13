@@ -110,7 +110,6 @@ Feature & fix ideas
 
 In no particular order.
 
-- Fix up the UI so you don't have to go through the spinner to get to different things.
 - Add "Play video (SurfaceView)" to illustrate usage / differences vs. TextureView.  Render
   directly from MediaCodec#releaseBuffer() rather than routing through GL.  Show a blank
   screen before the video starts playing (http://stackoverflow.com/questions/21526989/).
