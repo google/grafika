@@ -121,8 +121,6 @@ In no particular order.
   this even possible?)
 - Convert a series of PNG images to video.
 - Use virtual displays to record app activity.
-- Create a MediaCodec encoder, get a surface with createInputSurface(), and then render it on
-  with a Canvas.  Produces weird results on Nexus 10.  (See http://b.android.com/61194 .)
 - Record video in a continuous loop, grabbing a snapshot of the previous N seconds on request.
 - Play continuous video from a series of MP4 files with different characteristics.
 - Experiment with alternatives to glReadPixels().  Add a PBO speed test.  (Doesn't seem
