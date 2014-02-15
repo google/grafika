@@ -44,7 +44,36 @@ All code is written in the Java programming language -- the NDK is not used.
 Current features
 ----------------
 
-[Record GL app with FBO](src/com/android/grafika/RecordFBOActivity.java).  Simultaneously draws to the display and to a video encoder with OpenGL ES, using framebuffer objects to avoid re-rendering.
+[Constant capture](src/com/android/grafika/ConstantCaptureActivity.java).  Stores video in a circular buffer, saving it when you hit the "capture" button.
+- Currently hard-wired to try to capture 7 seconds of video at 6MB/sec, preferrably 15fps 720p.
+  That requires a buffer size of about 5MB.
+- The time span of frames currently held in the buffer is displayed.  The actual
+  time span saved when you hit "capture" will be slightly less than what is shown because
+  we have to start the output on a sync frame, which are configured to appear once per second.
+- Output is a video-only MP4 file ("constant-capture.mp4").
+
+[Double decode](src/com/android/grafika/DoubleDecodeActivity.java).  Decodes two video streams side-by-side to a pair of `TextureView`s.
+- The video decoders don't stop when the screen is rotated.  We retain the `SurfaceTexture`
+  and just attach it to the new `TextureView`.  Useful for avoiding expensive codec reconfigures.
+  The decoders *do* stop if you leave the activity, so we don't tie up hardware codec
+  resources indefinitely.  (It also doesn't stop if you turn the screen off with the power
+  button, which isn't good for the battery, but might be handy if you're feeding an external
+  display or your player also handles audio.)
+- Unlike most activities in Grafika, this provides different layouts for portrait and landscape.
+
+[Live camera (TextureView)](src/com/android/grafika/LiveCameraActivity.java).  Directs the camera preview to a `TextureView`.
+- This comes more or less verbatim from the `TextureView` documentation.
+- Uses the default (rear-facing) camera.  If the device has no default camera (e.g.
+  Nexus 7 (2012)), the Activity will crash.
+
+[Play video (TextureView)](src/com/android/grafika/PlayMovieActivity.java).  Plays the video track from an MP4 file.
+- Only sees files in `/data/data/com.android.grafika/files/`.
+- By default the video is played once, at the same rate it was recorded.  You can use the
+  checkboxes to loop playback and/or play the frames as quickly as possible.
+- Uses a `TextureView` for output.
+- Does not attempt to preserve the video's aspect ratio, so things will appear stretched.
+
+[Record GL app](src/com/android/grafika/RecordFBOActivity.java).  Simultaneously draws to the display and to a video encoder with OpenGL ES, using framebuffer objects to avoid re-rendering.
 - It can write to the video encoder three different ways: (1) draw twice; (2) draw offscreen and
   blit twice; (3) draw onscreen and blit framebuffer.  #3 doesn't work yet.
 - The renderer is trigged by Choreographer to update every vsync.  If we get too far behind,
@@ -54,7 +83,7 @@ Current features
 - The recording is letter- or pillar-boxed to maintain an aspect ratio that matches the
   display, so you'll get different results from recording in landscape vs. portrait.  (Do
   bear in mind that the built-in video player does *not* currently adjust the aspect ratio
-  to match the movie -- best to pull the mp4 file out of /data/data/com.android.grafika/files
+  to match the movie -- best to pull the mp4 file out of `/data/data/com.android.grafika/files`
   and view it on the desktop.)
 - The output is a video-only MP4 file ("fbo-gl-recording.mp4").
 
@@ -71,38 +100,9 @@ Current features
   here: http://www.youtube.com/watch?v=kH9kCP2T5Gg
 - The output is a video-only MP4 file ("camera-test.mp4").
 
-[Play video (TextureView)](src/com/android/grafika/PlayMovieActivity.java).  Plays the video track from an MP4 file.
-- Only sees files in `/data/data/com.android.grafika/files/`.
-- By default the video is played once, at the same rate it was recorded.  You can use the
-  checkboxes to loop playback and/or play the frames as quickly as possible.
-- Uses a `TextureView` for output.
-- Does not attempt to preserve the video's aspect ratio, so things will appear stretched.
+[Simple GL in TextureView](src/com/android/grafika/TextureViewGLActivity.java).  Simple use of GLES in a `TextureView`, rather than a `GLSurfaceView`.
 
-[Basic GL in TextureView](src/com/android/grafika/TextureViewGLActivity.java).  Simple use of GLES in a `TextureView`, rather than a `GLSurfaceView`.
-
-[glReadPixels speed](src/com/android/grafika/ReadPixelsActivity.java).  Simple, unscientific measurement of the time required for `glReadPixels()` to read a 720p frame.
-
-[Live camera (TextureView)](src/com/android/grafika/LiveCameraActivity.java).  Directs the camera preview to a `TextureView`.
-- This comes more or less verbatim from the `TextureView` documentation.
-- Uses the default (rear-facing) camera.  If the device has no default camera (e.g.
-  Nexus 7 (2012)), the Activity will crash.
-
-[Double decode](src/com/android/grafika/DoubleDecodeActivity.java).  Decodes two video streams side-by-side to a pair of `TextureView`s.
-- The video decoders don't stop when the screen is rotated.  We retain the `SurfaceTexture`
-  and just attach it to the new `TextureView`.  Useful for avoiding expensive codec reconfigures.
-  The decoders *do* stop if you leave the activity, so we don't tie up hardware codec
-  resources indefinitely.  (It also doesn't stop if you turn the screen off with the power
-  button, which isn't good for the battery, but might be handy if you're feeding an external
-  display or your player also handles audio.)
-- Unlike most activities in Grafika, this provides different layouts for portrait and landscape.
-
-[Constant capture](src/com/android/grafika/ConstantCaptureActivity.java).  Stores video in a circular buffer, saving it when you hit the "capture" button.
-- Currently hard-wired to try to capture 7 seconds of video at 6MB/sec, preferrably 15fps 720p.
-  That requires a buffer size of about 5MB.
-- The time span of frames currently held in the buffer is displayed.  The actual
-  time span saved when you hit "capture" will be slightly less than what is shown because
-  we have to start the output on a sync frame, which are configured to appear once per second.
-- Output is a video-only MP4 file ("constant-capture.mp4").
+[glReadPixels speed test](src/com/android/grafika/ReadPixelsActivity.java).  Simple, unscientific measurement of the time required for `glReadPixels()` to read a 720p frame.
 
 
 Feature & fix ideas
@@ -133,4 +133,6 @@ In no particular order.
 - Figure out why "double decode" playback is janky.
 - Play with SurfaceHolder.setFixedSize().  Handle touch input.
 - Add a trivial glTexImage2D texture upload speed benchmark (maybe 512x512 RGBA).
+- Add on-screen dropped frame indicator to "Record GL app", maybe to "Play video" as well
+  (esp. for 60fps playback).
 
