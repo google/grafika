@@ -49,6 +49,9 @@ public class MainActivity extends ListActivity {
      * the activity class.
      */
     private static final String[][] TESTS = {
+        { "* Play video (TextureView)",
+            "Plays .mp4 videos created by Grafika",
+            "PlayMovieActivity" },
         { "Constant capture",
             "Records camera continuously, saves a snapshot when requested",
             "ConstantCaptureActivity" },
@@ -58,9 +61,6 @@ public class MainActivity extends ListActivity {
         { "Record GL app",
             "Records GL app with FBO, re-render, or FB blit",
             "RecordFBOActivity" },
-        { "Play video (TextureView)",
-            "Plays videos created by Grafika",
-            "PlayMovieActivity" },
         { "Simple GL in TextureView",
             "Renders frames as fast as possible",
             "TextureViewGLActivity" },

@@ -44,6 +44,15 @@ All code is written in the Java programming language -- the NDK is not used.
 Current features
 ----------------
 
+[* Play video (TextureView)](src/com/android/grafika/PlayMovieActivity.java).  Plays the video track from an MP4 file.
+- Only sees files in `/data/data/com.android.grafika/files/`.  All of the activities that
+  create video leave their files there.
+- By default the video is played once, at the same rate it was recorded.  You can use the
+  checkboxes to loop playback and/or play the frames as quickly as possible.
+- Uses a `TextureView` for output.
+- Does not attempt to preserve the video's aspect ratio, so things will appear stretched.
+- Name starts with an asterisk so it's at the top of the list of activities.
+
 [Constant capture](src/com/android/grafika/ConstantCaptureActivity.java).  Stores video in a circular buffer, saving it when you hit the "capture" button.
 - Currently hard-wired to try to capture 7 seconds of video at 6MB/sec, preferrably 15fps 720p.
   That requires a buffer size of about 5MB.
@@ -65,13 +74,6 @@ Current features
 - This comes more or less verbatim from the `TextureView` documentation.
 - Uses the default (rear-facing) camera.  If the device has no default camera (e.g.
   Nexus 7 (2012)), the Activity will crash.
-
-[Play video (TextureView)](src/com/android/grafika/PlayMovieActivity.java).  Plays the video track from an MP4 file.
-- Only sees files in `/data/data/com.android.grafika/files/`.
-- By default the video is played once, at the same rate it was recorded.  You can use the
-  checkboxes to loop playback and/or play the frames as quickly as possible.
-- Uses a `TextureView` for output.
-- Does not attempt to preserve the video's aspect ratio, so things will appear stretched.
 
 [Record GL app](src/com/android/grafika/RecordFBOActivity.java).  Simultaneously draws to the display and to a video encoder with OpenGL ES, using framebuffer objects to avoid re-rendering.
 - It can write to the video encoder three different ways: (1) draw twice; (2) draw offscreen and
