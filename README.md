@@ -70,6 +70,14 @@ Current features
   display or your player also handles audio.)
 - Unlike most activities in Grafika, this provides different layouts for portrait and landscape.
 
+[Hardware scaler exerciser](src/com/android/grafika/HardwareScalerActivity.java).  GL rendering with on-the-fly surface size changes.
+- The motivation behind the feature this explores is described in a developer blog post:
+  http://android-developers.blogspot.com/2013/09/using-hardware-scaler-for-performance.html
+- You will see one frame rendered incorrectly when changing sizes.  This is because the
+  render size is adjusted in the "surface changed" callback, but the surface's size doesn't
+  actually change until we latch the next buffer.  This is straightforward to fix (left as
+  an exercise for the reader).
+
 [Live camera (TextureView)](src/com/android/grafika/LiveCameraActivity.java).  Directs the camera preview to a `TextureView`.
 - This comes more or less verbatim from the `TextureView` documentation.
 - Uses the default (rear-facing) camera.  If the device has no default camera (e.g.

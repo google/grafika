@@ -102,18 +102,26 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_record_fbo);
 
-        File outputFile = new File(getFilesDir(), "fbo-gl-recording.mp4");
-
-        ActivityHandler ah = new ActivityHandler(this);
-
-        SurfaceView sv = (SurfaceView) findViewById(R.id.fboActivity_surfaceView);
-        SurfaceHolder sh = sv.getHolder();
-        sh.addCallback(this);
-        mRenderThread = new RenderThread(sh, ah, outputFile);
-
         mSelectedRecordMethod = RECMETHOD_FBO;
         updateControls();
+
+        SurfaceView sv = (SurfaceView) findViewById(R.id.fboActivity_surfaceView);
+        sv.getHolder().addCallback(this);
+
         Log.d(TAG, "RecordFBOActivity: onCreate done");
+    }
+
+    @Override
+    protected void onResume() {
+        Log.d(TAG, "RecordFBOActivity: onResume");
+        super.onResume();
+
+        File outputFile = new File(getFilesDir(), "fbo-gl-recording.mp4");
+
+        SurfaceView sv = (SurfaceView) findViewById(R.id.fboActivity_surfaceView);
+        mRenderThread = new RenderThread(sv.getHolder(), new ActivityHandler(this), outputFile);
+
+        updateControls();
     }
 
     @Override
@@ -121,9 +129,10 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
         Log.d(TAG, "RecordFBOActivity: onPause");
         super.onPause();
 
-        // The Surface is destroyed between onPause() and onDestroy(), so we want to shut
-        // it down here.  We need to wait for the render thread to shut down because we
-        // don't want to yank the surface out from under it mid-render.
+        // If the Surface is being destroyed, it will disappear between onPause() and
+        // onDestroy(), so we want to shut the thread down here.  We need to wait for the
+        // render thread to shut down because we don't want to yank the surface out from
+        // under it mid-render.
         //
         // TODO: the RenderThread doesn't currently wait for the encoder / muxer to stop,
         //       so we can't use this as an indication that the .mp4 file is complete.  For
@@ -133,8 +142,16 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
         RenderHandler rh = mRenderThread.getHandler();
         if (rh != null) {
             rh.sendShutdown();
-            mRenderThread.waitUntilShutdown();
+            try {
+                mRenderThread.join();
+            } catch (InterruptedException ie) {
+                // not expected
+                throw new RuntimeException("join was interrupted", ie);
+            }
         }
+        mRenderThread = null;
+        mRecordingEnabled = false;
+
         Choreographer.getInstance().removeFrameCallback(this);
         Log.d(TAG, "onPause complete");
     }
@@ -146,6 +163,11 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
         mRenderThread.start();
         mRenderThread.waitUntilReady();
         mRenderThread.setRecordMethod(mSelectedRecordMethod);
+
+        RenderHandler rh = mRenderThread.getHandler();
+        if (rh != null) {
+            rh.sendSurfaceCreated();
+        }
 
         // start the draw events
         Choreographer.getInstance().postFrameCallback(this);
@@ -218,13 +240,6 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
             mRecordingEnabled = !mRecordingEnabled;
             updateControls();
             rh.setRecordingEnabled(mRecordingEnabled);
-
-            TextView tv = (TextView) findViewById(R.id.nowRecording_text);
-            if (mRecordingEnabled) {
-                tv.setText(getString(R.string.nowRecording));
-            } else {
-                tv.setText("");
-            }
         }
     }
 
@@ -276,6 +291,13 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
         rb = (RadioButton) findViewById(R.id.recFramebuffer_radio);
         rb.setChecked(mSelectedRecordMethod == RECMETHOD_BLIT_FRAMEBUFFER);
         rb.setEnabled(mBlitFramebufferAllowed);
+
+        TextView tv = (TextView) findViewById(R.id.nowRecording_text);
+        if (mRecordingEnabled) {
+            tv.setText(getString(R.string.nowRecording));
+        } else {
+            tv.setText("");
+        }
     }
 
 
@@ -362,10 +384,10 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
         private Object mStartLock = new Object();
         private boolean mReady = false;
 
-        private SurfaceHolder mSurfaceHolder;
+        private volatile SurfaceHolder mSurfaceHolder;  // may be updated by UI thread
         private EglCore mEglCore;
         private WindowSurface mWindowSurface;
-        private Flat2dProgram mProgram;
+        private FlatShadedProgram mProgram;
 
         // Orthographic projection matrix.
         private float[] mDisplayProjectionMatrix = new float[16];
@@ -429,29 +451,78 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
         }
 
         /**
-         * Prepares GL.  Called whenever the surface changes.
+         * Thread entry point.
+         * <p>
+         * The thread should not be started until the Surface associated with the SurfaceHolder
+         * has been created.  That way we don't have to wait for a separate "surface created"
+         * message to arrive.
          */
-        private void prepareGl(int width, int height) {
-            Log.d(TAG, "prepareGl");
-
-            Surface surface = mSurfaceHolder.getSurface();
-            mWindowSurface = new WindowSurface(mEglCore, surface);
-            mWindowSurface.makeCurrent();
-
-            // This should never happen.  Check just to see.
-            if (width != mWindowSurface.getWidth() || height != mWindowSurface.getHeight()) {
-                throw new RuntimeException("width/height mismatch: " + width + "x" + height +
-                        " vs. " + mWindowSurface.getWidth() + "x" + mWindowSurface.getHeight());
+        @Override
+        public void run() {
+            Looper.prepare();
+            mHandler = new RenderHandler(this);
+            mEglCore = new EglCore(null, EglCore.FLAG_RECORDABLE | EglCore.FLAG_TRY_GLES3);
+            synchronized (mStartLock) {
+                mReady = true;
+                mStartLock.notify();    // signal waitUntilReady()
             }
 
-            prepareFramebuffer(width, height);
+            Looper.loop();
+
+            Log.d(TAG, "looper quit");
+            releaseGl();
+            mEglCore.release();
+
+            synchronized (mStartLock) {
+                mReady = false;
+            }
+        }
+
+        /**
+         * Waits until the render thread is ready to receive messages.
+         * <p>
+         * Call from the UI thread.
+         */
+        public void waitUntilReady() {
+            synchronized (mStartLock) {
+                while (!mReady) {
+                    try {
+                        mStartLock.wait();
+                    } catch (InterruptedException ie) { /* not expected */ }
+                }
+            }
+        }
+
+        /**
+         * Returns the render thread's Handler.  This may be called from any thread.
+         */
+        public RenderHandler getHandler() {
+            return mHandler;
+        }
+
+        /**
+         * Prepares the surface.
+         */
+        private void surfaceCreated() {
+            Surface surface = mSurfaceHolder.getSurface();
+            prepareGl(surface);
+        }
+
+        /**
+         * Prepares window surface and GL state.
+         */
+        private void prepareGl(Surface surface) {
+            Log.d(TAG, "prepareGl");
+
+            mWindowSurface = new WindowSurface(mEglCore, surface);
+            mWindowSurface.makeCurrent();
 
             // Used for blitting texture to FBO.
             mFullScreen = new FullFrameRect(
                     new Texture2dProgram(Texture2dProgram.ProgramType.TEXTURE_2D));
 
             // Program used for drawing onto the screen.
-            mProgram = new Flat2dProgram();
+            mProgram = new FlatShadedProgram();
 
             // Set the background color.
             GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -464,6 +535,68 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
             GLES20.glDisable(GLES20.GL_CULL_FACE);
 
             mActivityHandler.sendGlesVersion(mEglCore.getGlVersion());
+        }
+
+       /**
+         * Handles changes to the size of the underlying surface.  Adjusts viewport as needed.
+         * Must be called before we start drawing.
+         * (Called from RenderHandler.)
+         */
+        private void surfaceChanged(int width, int height) {
+            Log.d(TAG, "surfaceChanged " + width + "x" + height);
+
+            prepareFramebuffer(width, height);
+
+            // Use full window.
+            GLES20.glViewport(0, 0, width, height);
+
+            // Simple orthographic projection, with (0,0) in lower-left corner.
+            Matrix.orthoM(mDisplayProjectionMatrix, 0, 0, width, 0, height, -1, 1);
+
+            int smallDim = Math.min(width, height);
+
+            // Set initial shape size / position / velocity based on window size.  Movement
+            // has the same "feel" on all devices, but the actual path will vary depending
+            // on the screen proportions.  We do it here, rather than defining fixed values
+            // and tweaking the projection matrix, so that our squares are square.
+            mTri.setColor(0.1f, 0.9f, 0.1f);
+            mTri.setScale(smallDim / 4.0f, smallDim / 4.0f);
+            mTri.setPosition(width / 2.0f, height / 2.0f);
+            mRect.setColor(0.9f, 0.1f, 0.1f);
+            mRect.setScale(smallDim / 8.0f, smallDim / 8.0f);
+            mRect.setPosition(width / 2.0f, height / 2.0f);
+            mRectVelX = 1 + smallDim / 4.0f;
+            mRectVelY = 1 + smallDim / 5.0f;
+
+            // left edge
+            float edgeWidth = 1 + width / 64.0f;
+            mEdges[0].setColor(0.5f, 0.5f, 0.5f);
+            mEdges[0].setScale(edgeWidth, height);
+            mEdges[0].setPosition(edgeWidth / 2.0f, height / 2.0f);
+            // right edge
+            mEdges[1].setColor(0.5f, 0.5f, 0.5f);
+            mEdges[1].setScale(edgeWidth, height);
+            mEdges[1].setPosition(width - edgeWidth / 2.0f, height / 2.0f);
+            // top edge
+            mEdges[2].setColor(0.5f, 0.5f, 0.5f);
+            mEdges[2].setScale(width, edgeWidth);
+            mEdges[2].setPosition(width / 2.0f, height - edgeWidth / 2.0f);
+            // bottom edge
+            mEdges[3].setColor(0.5f, 0.5f, 0.5f);
+            mEdges[3].setScale(width, edgeWidth);
+            mEdges[3].setPosition(width / 2.0f, edgeWidth / 2.0f);
+
+            mRecordRect.setColor(1.0f, 1.0f, 1.0f);
+            mRecordRect.setScale(edgeWidth * 2f, edgeWidth * 2f);
+            mRecordRect.setPosition(edgeWidth / 2.0f, edgeWidth / 2.0f);
+
+            // Inner bounding rect, used to bounce objects off the walls.
+            mInnerLeft = mInnerBottom = edgeWidth;
+            mInnerRight = width - 1 - edgeWidth;
+            mInnerTop = height - 1 - edgeWidth;
+
+            Log.d(TAG, "mTri: " + mTri);
+            Log.d(TAG, "mRect: " + mRect);
         }
 
         /**
@@ -570,145 +703,13 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
                 mDepthBuffer = -1;
             }
             if (mFullScreen != null) {
-                mFullScreen.release(false); // TODO: should be "true"; must make mEglCore current
+                mFullScreen.release(false); // TODO: should be "true"; must ensure mEglCore current
                 mFullScreen = null;
             }
 
             GlUtil.checkGlError("releaseGl done");
-        }
 
-        /**
-         * Thread entry point.
-         * <p>
-         * The thread should not be started until the Surface associated with the SurfaceHolder
-         * has been created.  That way we don't have to wait for a separate "surface created"
-         * message to arrive.
-         */
-        @Override
-        public void run() {
-            Looper.prepare();
-            mHandler = new RenderHandler(this);
-            mEglCore = new EglCore(null, EglCore.FLAG_RECORDABLE | EglCore.FLAG_TRY_GLES3);
-            synchronized (mStartLock) {
-                mReady = true;
-                mStartLock.notify();    // signal waitUntilReady()
-            }
-
-            Looper.loop();
-
-            Log.d(TAG, "looper quit");
-            mEglCore.release();
-
-            synchronized (mStartLock) {
-                mReady = false;
-                mStartLock.notify();    // signal waitUntilShutdown()
-            }
-        }
-
-        /**
-         * Waits until the render thread is ready to receive messages.
-         * <p>
-         * Call from the UI thread.
-         */
-        public void waitUntilReady() {
-            synchronized (mStartLock) {
-                while (!mReady) {
-                    try {
-                        mStartLock.wait();
-                    } catch (InterruptedException ie) { /* not expected */ }
-                }
-            }
-        }
-
-        /**
-         * Waits until the render thread is no longer ready to receive messages.  (This
-         * could also just be a Thread.join().)
-         * <p>
-         * Call from the UI thread.
-         */
-        public void waitUntilShutdown() {
-            synchronized (mStartLock) {
-                while (mReady) {
-                    try {
-                        mStartLock.wait();
-                    } catch (InterruptedException ie) { /* not expected */ }
-                }
-            }
-        }
-
-        /**
-         * Returns the render thread's Handler.  This may be called from any thread.
-         */
-        public RenderHandler getHandler() {
-            return mHandler;
-        }
-
-        /**
-         * Handles changes to the size of the underlying surface.  Adjusts viewport as needed.
-         * Must be called before we start drawing.
-         * (Called from RenderHandler.)
-         * <p>
-         * A change in the resolution is a fairly traumatic event, so we completely
-         * reset everything, including the video encoder.  (In practice this Activity
-         * doesn't change the format or resolution of the surface, so this doesn't happen.)
-         */
-        private void surfaceChanged(int width, int height) {
-            Log.d(TAG, "surfaceChanged " + width + "x" + height);
-
-            stopEncoder();
-            releaseGl();
-            prepareGl(width, height);
-
-            // Use full window.
-            GLES20.glViewport(0, 0, width, height);
-
-            // Simple orthographic projection, with (0,0) in lower-left corner.
-            Matrix.orthoM(mDisplayProjectionMatrix, 0, 0, width, 0, height, -1, 1);
-
-            int smallDim = Math.min(width, height);
-
-            // Set initial shape size / position / velocity based on window size.  Movement
-            // has the same "feel" on all devices, but the actual path will vary depending
-            // on the screen proportions.  We do it here, rather than defining fixed values
-            // and tweaking the projection matrix, so that our squares are square.
-            mTri.setColor(0.1f, 0.9f, 0.1f);
-            mTri.setScale(smallDim / 4.0f, smallDim / 4.0f);
-            mTri.setPosition(width / 2.0f, height / 2.0f);
-            mRect.setColor(0.9f, 0.1f, 0.1f);
-            mRect.setScale(smallDim / 8.0f, smallDim / 8.0f);
-            mRect.setPosition(width / 2.0f, height / 2.0f);
-            mRectVelX = 1 + smallDim / 4.0f;
-            mRectVelY = 1 + smallDim / 5.0f;
-
-            // left edge
-            float edgeWidth = 1 + width / 64.0f;
-            mEdges[0].setColor(0.5f, 0.5f, 0.5f);
-            mEdges[0].setScale(edgeWidth, height);
-            mEdges[0].setPosition(edgeWidth / 2.0f, height / 2.0f);
-            // right edge
-            mEdges[1].setColor(0.5f, 0.5f, 0.5f);
-            mEdges[1].setScale(edgeWidth, height);
-            mEdges[1].setPosition(width - edgeWidth / 2.0f, height / 2.0f);
-            // top edge
-            mEdges[2].setColor(0.5f, 0.5f, 0.5f);
-            mEdges[2].setScale(width, edgeWidth);
-            mEdges[2].setPosition(width / 2.0f, height - edgeWidth / 2.0f);
-            // bottom edge
-            mEdges[3].setColor(0.5f, 0.5f, 0.5f);
-            mEdges[3].setScale(width, edgeWidth);
-            mEdges[3].setPosition(width / 2.0f, edgeWidth / 2.0f);
-
-            mRecordRect.setColor(1.0f, 1.0f, 1.0f);
-            mRecordRect.setScale(edgeWidth * 2f, edgeWidth * 2f);
-            mRecordRect.setPosition(edgeWidth / 2.0f, edgeWidth / 2.0f);
-
-            // Inner bounding rect, used to bounce objects off the walls.
-            mInnerLeft = mInnerBottom = edgeWidth;
-            mInnerRight = width - 1 - edgeWidth;
-            mInnerTop = height - 1 - edgeWidth;
-
-            Log.d(TAG, "mTri: " + mTri);
-            Log.d(TAG, "mRect: " + mRect);
+            mEglCore.makeNothingCurrent();
         }
 
         /**
@@ -964,15 +965,6 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
         }
 
         /**
-         * Shuts everything down.
-         */
-        private void shutdown() {
-            Log.d(TAG, "shutdown");
-            stopEncoder();
-            Looper.myLooper().quit();
-        }
-
-        /**
          * We use the time delta from the previous event to determine how far everything
          * moves.  Ideally this will yield identical animation sequences regardless of
          * the device's actual refresh rate.
@@ -1006,11 +998,11 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
             xpos += mRectVelX * elapsedSeconds;
             ypos += mRectVelY * elapsedSeconds;
             if ((mRectVelX < 0 && xpos - xscale/2 < mInnerLeft) ||
-                    (mRectVelX > 0 && xpos + xscale/2 > mInnerRight)) {
+                    (mRectVelX > 0 && xpos + xscale/2 > mInnerRight+1)) {
                 mRectVelX = -mRectVelX;
             }
             if ((mRectVelY < 0 && ypos - yscale/2 < mInnerBottom) ||
-                    (mRectVelY > 0 && ypos + yscale/2 > mInnerTop)) {
+                    (mRectVelY > 0 && ypos + yscale/2 > mInnerTop+1)) {
                 mRectVelY = -mRectVelY;
             }
             mRect.setPosition(xpos, ypos);
@@ -1050,6 +1042,15 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
 
             GlUtil.checkGlError("draw done");
         }
+
+        /**
+         * Shuts everything down.
+         */
+        private void shutdown() {
+            Log.d(TAG, "shutdown");
+            stopEncoder();
+            Looper.myLooper().quit();
+        }
     }
 
     /**
@@ -1059,6 +1060,7 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
      * from the UI thread.
      */
     private static class RenderHandler extends Handler {
+        private static final int MSG_SURFACE_CREATED = 0;
         private static final int MSG_SURFACE_CHANGED = 1;
         private static final int MSG_DO_FRAME = 2;
         private static final int MSG_RECORDING_ENABLED = 3;
@@ -1074,6 +1076,16 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
          */
         public RenderHandler(RenderThread rt) {
             mWeakRenderThread = new WeakReference<RenderThread>(rt);
+        }
+
+        /**
+         * Sends the "surface created" message.
+         * <p>
+         * Call from UI thread.
+         */
+        public void sendSurfaceCreated() {
+            // ignore format
+            sendMessage(obtainMessage(RenderHandler.MSG_SURFACE_CREATED));
         }
 
         /**
@@ -1135,6 +1147,9 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
             }
 
             switch (what) {
+                case MSG_SURFACE_CREATED:
+                    renderThread.surfaceCreated();
+                    break;
                 case MSG_SURFACE_CHANGED:
                     renderThread.surfaceChanged(msg.arg1, msg.arg2);
                     break;

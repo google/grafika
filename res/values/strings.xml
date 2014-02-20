@@ -16,6 +16,7 @@
 -->
 
 <resources>
+    <!-- TODO: organize this a bit -->
 
     <string name="app_name">Grafika</string>
     <string name="about_item">About</string>
@@ -39,7 +40,7 @@
     <string name="workJobName_text">Working&#8230;</string>
     <string name="running_test">Running test&#8230;</string>
     <string name="did_not_complete">[did not complete]</string>
-    <string name="usec_per_iteration">us per iteration</string>
+    <string name="usec_per_iteration"> us per iteration</string>
     <string name="play_button_text">Play</string>
     <string name="stop_button_text">Stop</string>
     <string name="cameraOutputFileLabel_text">Output file:</string>
@@ -67,6 +68,11 @@
     <string name="secondsOfVideo">%1$.3f seconds of video</string>
     <string name="recordingSucceeded">Recording succeeded</string>
     <string name="recordingFailed">Recording FAILED (err=%1$d)</string>
+    <string name="viewSizeLabel">Initial view size:</string>
+    <string name="surfaceSizeTiny">[tiny]</string>
+    <string name="surfaceSizeSmall">[small]</string>
+    <string name="surfaceSizeMedium">[medium]</string>
+    <string name="surfaceSizeFull">[full]</string>
 
     <!-- for cameraFilter_spinner; match with CameraCaptureActivity constants -->
     <string-array name="camera_filter_names">
@@ -89,5 +95,6 @@
     <string name="title_activity_double_decode">Double decode</string>
     <string name="title_activity_constant_capture">Constant capture</string>
     <string name="title_activity_soft_input_surface">Software Input Surface</string>
+    <string name="title_activity_hardware_scaler">Hardware Scaler Activity</string>
 
 </resources>

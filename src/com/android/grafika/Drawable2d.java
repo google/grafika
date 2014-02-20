@@ -16,8 +16,6 @@
 
 package com.android.grafika;
 
-import android.opengl.Matrix;
-
 import java.nio.FloatBuffer;
 
 /**
@@ -25,12 +23,12 @@ import java.nio.FloatBuffer;
  */
 public class Drawable2d {
     /**
-     * Simple triangle (roughly equilateral, 1.0 per side).
+     * Simple equilateral triangle (1.0 per side).  Centered on (0,0).
      */
     private static final float TRIANGLE_COORDS[] = {
-         0.0f,  0.622008459f,   // top
-        -0.5f, -0.311004243f,   // bottom left
-         0.5f, -0.311004243f    // bottom right
+         0.0f,  0.577350269f,   // top
+        -0.5f, -0.288675135f,   // bottom left
+         0.5f, -0.288675135f    // bottom right
     };
     private static final FloatBuffer TRIANGLE_BUF = GlUtil.createFloatBuffer(TRIANGLE_COORDS);
 

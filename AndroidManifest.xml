@@ -17,7 +17,7 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.grafika"
-    android:versionCode="10"
+    android:versionCode="11"
     android:versionName="1.0" >
 
     <uses-sdk
@@ -88,6 +88,11 @@
         <activity
             android:name="com.android.grafika.SoftInputSurfaceActivity"
             android:label="@string/title_activity_soft_input_surface" >
+        </activity>
+        <activity
+            android:name="com.android.grafika.HardwareScalerActivity"
+            android:label="@string/title_activity_hardware_scaler"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
         </activity>
     </application>
 

@@ -17,16 +17,14 @@
 package com.android.grafika;
 
 import android.opengl.GLES20;
-import android.opengl.Matrix;
 import android.util.Log;
 
 import java.nio.FloatBuffer;
-import java.util.Arrays;
 
 /**
- * GL program and supporting functions for flat-shaded 2D shapes.
+ * GL program and supporting functions for flat-shaded rendering.
  */
-public class Flat2dProgram {
+public class FlatShadedProgram {
     private static final String TAG = MainActivity.TAG;
 
     private static final String VERTEX_SHADER =
@@ -53,7 +51,7 @@ public class Flat2dProgram {
     /**
      * Prepares the program in the current EGL context.
      */
-    public Flat2dProgram() {
+    public FlatShadedProgram() {
         mProgramHandle = GlUtil.createProgram(VERTEX_SHADER, FRAGMENT_SHADER);
         if (mProgramHandle == 0) {
             throw new RuntimeException("Unable to create program");

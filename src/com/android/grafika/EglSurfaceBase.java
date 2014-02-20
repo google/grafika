@@ -58,8 +58,11 @@ public class EglSurfaceBase {
             throw new IllegalStateException("surface already created");
         }
         mEGLSurface = mEglCore.createWindowSurface(surface);
-        mWidth = mEglCore.querySurface(mEGLSurface, EGL14.EGL_WIDTH);
-        mHeight = mEglCore.querySurface(mEGLSurface, EGL14.EGL_HEIGHT);
+
+        // Don't cache width/height here, because the size of the underlying surface can change
+        // out from under us (see e.g. HardwareScalerActivity).
+        //mWidth = mEglCore.querySurface(mEGLSurface, EGL14.EGL_WIDTH);
+        //mHeight = mEglCore.querySurface(mEGLSurface, EGL14.EGL_HEIGHT);
     }
 
     /**
@@ -76,16 +79,28 @@ public class EglSurfaceBase {
 
     /**
      * Returns the surface's width, in pixels.
+     * <p>
+     * If this is called on a window surface, and the underlying surface is in the process
+     * of changing size, we may not see the new size right away (e.g. in the "surfaceChanged"
+     * callback).  The size should match after the next buffer swap.
      */
     public int getWidth() {
-        return mWidth;
+        if (mWidth < 0) {
+            return mEglCore.querySurface(mEGLSurface, EGL14.EGL_WIDTH);
+        } else {
+            return mWidth;
+        }
     }
 
     /**
      * Returns the surface's height, in pixels.
      */
     public int getHeight() {
-        return mHeight;
+        if (mHeight < 0) {
+            return mEglCore.querySurface(mEGLSurface, EGL14.EGL_HEIGHT);
+        } else {
+            return mHeight;
+        }
     }
 
     /**
@@ -162,6 +177,7 @@ public class EglSurfaceBase {
         buf.order(ByteOrder.LITTLE_ENDIAN);
         GLES20.glReadPixels(0, 0, mWidth, mHeight,
                 GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buf);
+        GlUtil.checkGlError("glReadPixels");
         buf.rewind();
 
         BufferedOutputStream bos = null;

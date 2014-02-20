@@ -162,7 +162,7 @@ public class Sprite2d {
     /**
      * Draws the rectangle with the supplied program and projection matrix.
      */
-    public void draw(Flat2dProgram program, float[] projectionMatrix) {
+    public void draw(FlatShadedProgram program, float[] projectionMatrix) {
         // Compute model/view/projection matrix.
         Matrix.multiplyMM(mScratchMatrix, 0, projectionMatrix, 0, getModelViewMatrix(), 0);
 
