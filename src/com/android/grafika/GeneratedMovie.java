@@ -76,7 +76,7 @@ public abstract class GeneratedMovie implements Content {
         mEncoder = MediaCodec.createEncoderByType(mimeType);
         mEncoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
         mEglCore = new EglCore(null, EglCore.FLAG_RECORDABLE);
-        mInputSurface = new WindowSurface(mEglCore, mEncoder.createInputSurface());
+        mInputSurface = new WindowSurface(mEglCore, mEncoder.createInputSurface(), true);
         mInputSurface.makeCurrent();
         mEncoder.start();
 

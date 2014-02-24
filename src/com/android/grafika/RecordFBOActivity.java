@@ -116,44 +116,12 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
         Log.d(TAG, "RecordFBOActivity: onResume");
         super.onResume();
 
+        // Create the render thread object, but don't start it yet.
         File outputFile = new File(getFilesDir(), "fbo-gl-recording.mp4");
-
         SurfaceView sv = (SurfaceView) findViewById(R.id.fboActivity_surfaceView);
         mRenderThread = new RenderThread(sv.getHolder(), new ActivityHandler(this), outputFile);
 
         updateControls();
-    }
-
-    @Override
-    protected void onPause() {
-        Log.d(TAG, "RecordFBOActivity: onPause");
-        super.onPause();
-
-        // If the Surface is being destroyed, it will disappear between onPause() and
-        // onDestroy(), so we want to shut the thread down here.  We need to wait for the
-        // render thread to shut down because we don't want to yank the surface out from
-        // under it mid-render.
-        //
-        // TODO: the RenderThread doesn't currently wait for the encoder / muxer to stop,
-        //       so we can't use this as an indication that the .mp4 file is complete.  For
-        //       onPause(), it should be finished before the app manages to get to another
-        //       activity, so I'm not worried about it.
-
-        RenderHandler rh = mRenderThread.getHandler();
-        if (rh != null) {
-            rh.sendShutdown();
-            try {
-                mRenderThread.join();
-            } catch (InterruptedException ie) {
-                // not expected
-                throw new RuntimeException("join was interrupted", ie);
-            }
-        }
-        mRenderThread = null;
-        mRecordingEnabled = false;
-
-        Choreographer.getInstance().removeFrameCallback(this);
-        Log.d(TAG, "onPause complete");
     }
 
     @Override
@@ -186,6 +154,30 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         Log.d(TAG, "surfaceDestroyed holder=" + holder);
+
+        // We need to wait for the render thread to shut down because we don't want the
+        // Surface to disappear out from under it mid-render.
+        //
+        // TODO: the RenderThread doesn't currently wait for the encoder / muxer to stop,
+        //       so we can't use this as an indication that the .mp4 file is complete.
+
+        RenderHandler rh = mRenderThread.getHandler();
+        if (rh != null) {
+            rh.sendShutdown();
+            try {
+                mRenderThread.join();
+            } catch (InterruptedException ie) {
+                // not expected
+                throw new RuntimeException("join was interrupted", ie);
+            }
+        }
+        mRenderThread = null;
+        mRecordingEnabled = false;
+
+        // If the callback was posted, remove it.
+        Choreographer.getInstance().removeFrameCallback(this);
+        Log.d(TAG, "surfaceDestroyed() complete");
+
     }
 
     /*
@@ -514,7 +506,7 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
         private void prepareGl(Surface surface) {
             Log.d(TAG, "prepareGl");
 
-            mWindowSurface = new WindowSurface(mEglCore, surface);
+            mWindowSurface = new WindowSurface(mEglCore, surface, false);
             mWindowSurface.makeCurrent();
 
             // Used for blitting texture to FBO.
@@ -769,7 +761,7 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
 
             VideoEncoderCore encoderCore = new VideoEncoderCore(VIDEO_WIDTH, VIDEO_HEIGHT,
                     BIT_RATE, mOutputFile);
-            mInputWindowSurface = new WindowSurface(mEglCore, encoderCore.getInputSurface());
+            mInputWindowSurface = new WindowSurface(mEglCore, encoderCore.getInputSurface(), true);
             mVideoEncoder = new TextureMovieEncoder2(encoderCore);
         }
 

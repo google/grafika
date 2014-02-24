@@ -23,19 +23,24 @@ import android.view.Surface;
  * Recordable EGL window surface.
  * <p>
  * It's good practice to explicitly release() the surface, preferably from a "finally" block.
- * This object owns the Surface; releasing this object will release the Surface as well.
  */
 public class WindowSurface extends EglSurfaceBase {
     private Surface mSurface;
+    private boolean mReleaseSurface;
 
     /**
-     * Associates an EGL surface with the native window surface.  The Surface will be
-     * owned by WindowSurface, and released when release() is called.
+     * Associates an EGL surface with the native window surface.
+     * <p>
+     * Set releaseSurface to true if you want the Surface to be released when release() is
+     * called.  This is convenient, but can interfere with framework classes that expect to
+     * manage the Surface themselves (e.g. if you release a SurfaceView's Surface, the
+     * surfaceDestroyed() callback won't fire).
      */
-    public WindowSurface(EglCore eglCore, Surface surface) {
+    public WindowSurface(EglCore eglCore, Surface surface, boolean releaseSurface) {
         super(eglCore);
         createWindowSurface(surface);
         mSurface = surface;
+        mReleaseSurface = releaseSurface;
     }
 
     /**
@@ -47,14 +52,17 @@ public class WindowSurface extends EglSurfaceBase {
     }
 
     /**
-     * Releases any resources associated with the Surface and the EGL surface.
+     * Releases any resources associated with the EGL surface (and, if configured to do so,
+     * with the Surface as well).
      * <p>
      * Does not require that the surface's EGL context be current.
      */
     public void release() {
         releaseEglSurface();
         if (mSurface != null) {
-            mSurface.release();
+            if (mReleaseSurface) {
+                mSurface.release();
+            }
             mSurface = null;
         }
     }

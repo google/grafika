@@ -93,6 +93,7 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
         Log.d(TAG, "HardwareScalerActivity: onResume");
         super.onResume();
 
+        // Create the render thread object, but don't start it yet.
         SurfaceView sv = (SurfaceView) findViewById(R.id.hardwareScaler_surfaceView);
         mRenderThread = new RenderThread(sv.getHolder());
 
@@ -100,32 +101,6 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
         // surface doesn't exist yet, or the full (non-reduced) size if we've been
         // here before.
         //Log.d(TAG, "onResume: " + sv.getWidth() + "x" + sv.getHeight());
-    }
-
-    @Override
-    protected void onPause() {
-        Log.d(TAG, "HardwareScalerActivity: onPause");
-        super.onPause();
-
-        // If the Surface is being destroyed, it will disappear between onPause() and
-        // onDestroy(), so we want to shut the thread down here.  We need to wait for the
-        // render thread to shut down because we don't want to yank the surface out from
-        // under it mid-render.
-
-        RenderHandler rh = mRenderThread.getHandler();
-        if (rh != null) {
-            rh.sendShutdown();
-            try {
-                mRenderThread.join();
-            } catch (InterruptedException ie) {
-                // not expected
-                throw new RuntimeException("join was interrupted", ie);
-            }
-        }
-        mRenderThread = null;
-
-        Choreographer.getInstance().removeFrameCallback(this);
-        Log.d(TAG, "onPause complete");
     }
 
     @Override
@@ -157,6 +132,8 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
                 mWindowWidthHeight[i][1] = SURFACE_DIM[i];
             }
         }
+
+        // Some controls include text based on the view dimensions, so update now.
         updateControls();
 
         mRenderThread.setName("HardwareScaler GL render");
@@ -185,10 +162,26 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-        // TODO: this currently doesn't get called, because we're releasing the Surface
-        // when the WindowSurface gets cleaned up in the other thread.  This seems wrong --
-        // should let the framework clean up its own stuff.
         Log.d(TAG, "surfaceDestroyed holder=" + holder);
+
+        // We need to wait for the render thread to shut down because we don't want the
+        // Surface to disappear out from under it mid-render.
+
+        RenderHandler rh = mRenderThread.getHandler();
+        if (rh != null) {
+            rh.sendShutdown();
+            try {
+                mRenderThread.join();
+            } catch (InterruptedException ie) {
+                // not expected
+                throw new RuntimeException("join was interrupted", ie);
+            }
+        }
+        mRenderThread = null;
+
+        // If the callback was posted, remove it.
+        Choreographer.getInstance().removeFrameCallback(this);
+        Log.d(TAG, "surfaceDestroyed() complete");
     }
 
     /*
@@ -390,7 +383,7 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
         private void prepareGl(Surface surface) {
             Log.d(TAG, "prepareGl");
 
-            mWindowSurface = new WindowSurface(mEglCore, surface);
+            mWindowSurface = new WindowSurface(mEglCore, surface, false);
             mWindowSurface.makeCurrent();
 
             // Program used for drawing onto the screen.

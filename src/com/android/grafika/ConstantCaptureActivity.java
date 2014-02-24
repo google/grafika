@@ -345,7 +345,7 @@ public class ConstantCaptureActivity extends Activity implements SurfaceHolder.C
         // The display surface that we use for the SurfaceView and the encoder surface we
         // use for video use the same EGL context.
         mEglCore = new EglCore(null, EglCore.FLAG_RECORDABLE);
-        mDisplaySurface = new WindowSurface(mEglCore, holder.getSurface());
+        mDisplaySurface = new WindowSurface(mEglCore, holder.getSurface(), false);
         mDisplaySurface.makeCurrent();
 
         mFullFrameBlit = new FullFrameRect(
@@ -365,7 +365,7 @@ public class ConstantCaptureActivity extends Activity implements SurfaceHolder.C
         // TODO: adjust bit rate based on frame rate?
         mCircEncoder = new CircularEncoder(VIDEO_WIDTH, VIDEO_HEIGHT, 6000000,
                 mCameraPreviewThousandFps / 1000, 7, mHandler);
-        mEncoderSurface = new WindowSurface(mEglCore, mCircEncoder.getInputSurface());
+        mEncoderSurface = new WindowSurface(mEglCore, mCircEncoder.getInputSurface(), true);
 
         updateControls();
     }
