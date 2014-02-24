@@ -185,6 +185,9 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
+        // TODO: this currently doesn't get called, because we're releasing the Surface
+        // when the WindowSurface gets cleaned up in the other thread.  This seems wrong --
+        // should let the framework clean up its own stuff.
         Log.d(TAG, "surfaceDestroyed holder=" + holder);
     }
 
