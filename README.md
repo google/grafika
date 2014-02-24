@@ -79,7 +79,7 @@ Current features
   an exercise for the reader).
 
 [Live camera (TextureView)](src/com/android/grafika/LiveCameraActivity.java).  Directs the camera preview to a `TextureView`.
-- This comes more or less verbatim from the `TextureView` documentation.
+- This comes more or less verbatim from the [TextureView](http://developer.android.com/reference/android/view/TextureView.html) documentation.
 - Uses the default (rear-facing) camera.  If the device has no default camera (e.g.
   Nexus 7 (2012)), the Activity will crash.
 
@@ -141,7 +141,6 @@ In no particular order.
   (http://stackoverflow.com/questions/21440820/).
 - Cross-fade from one video to another, recording the result.
 - Figure out why "double decode" playback is janky.
-- Play with SurfaceHolder.setFixedSize().  Handle touch input.
 - Add a trivial glTexImage2D texture upload speed benchmark (maybe 512x512 RGBA).
 - Add on-screen dropped frame indicator to "Record GL app", maybe to "Play video" as well
   (esp. for 60fps playback).
