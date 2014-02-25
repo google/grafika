@@ -131,7 +131,6 @@ In no particular order.
   this even possible?)
 - Convert a series of PNG images to video.
 - Use virtual displays to record app activity.
-- Record video in a continuous loop, grabbing a snapshot of the previous N seconds on request.
 - Play continuous video from a series of MP4 files with different characteristics.
 - Experiment with alternatives to glReadPixels().  Add a PBO speed test.  (Doesn't seem
   to be a way to play with eglCreateImageKHR from Java.)

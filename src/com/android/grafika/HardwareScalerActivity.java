@@ -55,6 +55,66 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
         Choreographer.FrameCallback {
     private static final String TAG = MainActivity.TAG;
 
+    // A few thoughts about app life cycle and SurfaceView.
+    //
+    // There are two somewhat independent things going on:
+    // (1) Application onCreate / onResume / onPause
+    // (2) Surface created / changed / destroyed
+    //
+    // When the Activity starts, you get callbacks in this order:
+    //  onCreate
+    //  onResume
+    //  surfaceCreated
+    //  surfaceChanged
+    //
+    // If you hit "back", you get:
+    //  onPause
+    //  surfaceDestroyed (called just before the Surface goes away)
+    //
+    // If you rotate the screen, the Activity is torn down and recreated, so you get
+    // the full cycle.  (You can tell it's a "quick" restart by checking isFinishing().)
+    //
+    // If you tap the power button to blank the screen, however, you only get onPause() --
+    // no surfaceDestroyed().  The Surface remains alive, and rendering can continue (you
+    // even keep getting Choreographer events if you continue to request them).  If you have
+    // a lock screen that forces a specific orientation your Activity can get kicked, but
+    // if not you can come out of screen-blank with the same Surface you had before.
+    //
+    // This raises a fundamental question when using a separate renderer thread with
+    // SurfaceView: should the lifespan of the thread be tied to the Surface or to the
+    // Activity?  The answer is: it depends on what you want to have happen when the screen
+    // goes blank.  There are two basic approaches: (1) start/stop the thread on Activity
+    // start/stop; (2) start/stop the thread on Surface create/destroy.
+    //
+    // #1 interacts well with the app lifecycle.  We start the renderer thread in onResume() and
+    // stop it in onPause().  It gets a bit awkward when creating and configuring the thread
+    // because sometimes the Surface will already exist and sometimes it won't.  We can't simply
+    // forward the Surface callbacks to the thread, because they won't fire again if the
+    // Surface already exists.  So we need to query or cache the Surface state, and forward it
+    // to the renderer thread.  Note we have to be a little careful here passing  objects between
+    // threads -- best to pass the Surface or SurfaceHolder through a Handler message, rather
+    // than just stuffing it into the thread, to avoid issues on multi-core systems (cf.
+    // http://developer.android.com/training/articles/smp.html).
+    //
+    // #2 has a certain appeal because the Surface and the renderer are logically intertwined.
+    // We start the thread after the Surface has been created, which avoids the inter-thread
+    // communication concerns.  Surface created / changed messages are simply forwarded.  We
+    // need to make sure rendering stops when the screen goes blank, and resumes when it
+    // un-blanks; this could be a simple matter of telling Choreographer to stop invoking the
+    // frame draw callback.  Our onResume() will need to resume the callbacks if and only if
+    // the renderer thread is running.  It may not be so trivial though -- if we animate based
+    // on elapsed time between frames, we could have a *very* large gap when the next event
+    // arrives, so an explicit pause/resume message may be desirable.
+    //
+    // The above is primarily concerned with how the renderer thread is configured and whether
+    // it's executing.  A related concern is extracting state *from* the thread when the
+    // Activity is killed (in onPause() or onSaveInstanceState()).  Approach #1 will work
+    // best for that, because once the renderer thread has been joined its state can be
+    // accessed without synchronization primitives.
+    //
+    // This Activity uses approach #2 (Surface-driven).
+    //
+
     // Indexes into the data arrays.
     private static final int SURFACE_SIZE_TINY = 0;
     private static final int SURFACE_SIZE_SMALL = 1;
@@ -89,18 +149,25 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+
+        // If the callback was posted, remove it.  This stops the notifications.  Ideally we
+        // would send a message to the thread letting it know, so when it wakes up it can
+        // reset its notion of when the previous Choreographer event arrived.
+        Log.d(TAG, "onPause unhooking choreographer");
+        Choreographer.getInstance().removeFrameCallback(this);
+    }
+
+    @Override
     protected void onResume() {
-        Log.d(TAG, "HardwareScalerActivity: onResume");
         super.onResume();
 
-        // Create the render thread object, but don't start it yet.
-        SurfaceView sv = (SurfaceView) findViewById(R.id.hardwareScaler_surfaceView);
-        mRenderThread = new RenderThread(sv.getHolder());
-
-        // At this point, SurfaceView#getWidth() and getHeight() will return 0,0 if the
-        // surface doesn't exist yet, or the full (non-reduced) size if we've been
-        // here before.
-        //Log.d(TAG, "onResume: " + sv.getWidth() + "x" + sv.getHeight());
+        // If we already have a Surface, we just need to resume the frame notifications.
+        if (mRenderThread != null) {
+            Log.d(TAG, "onResume re-hooking choreographer");
+            Choreographer.getInstance().postFrameCallback(this);
+        }
     }
 
     @Override
@@ -136,6 +203,8 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
         // Some controls include text based on the view dimensions, so update now.
         updateControls();
 
+        SurfaceView sv = (SurfaceView) findViewById(R.id.hardwareScaler_surfaceView);
+        mRenderThread = new RenderThread(sv.getHolder());
         mRenderThread.setName("HardwareScaler GL render");
         mRenderThread.start();
         mRenderThread.waitUntilReady();
@@ -164,8 +233,10 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
     public void surfaceDestroyed(SurfaceHolder holder) {
         Log.d(TAG, "surfaceDestroyed holder=" + holder);
 
-        // We need to wait for the render thread to shut down because we don't want the
-        // Surface to disappear out from under it mid-render.
+        // We need to wait for the render thread to shut down before continuing because we
+        // don't want the Surface to disappear out from under it mid-render.  The frame
+        // notifications will have been stopped back in onPause(), but there might have
+        // been one in progress.
 
         RenderHandler rh = mRenderThread.getHandler();
         if (rh != null) {
@@ -179,9 +250,7 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
         }
         mRenderThread = null;
 
-        // If the callback was posted, remove it.
-        Choreographer.getInstance().removeFrameCallback(this);
-        Log.d(TAG, "surfaceDestroyed() complete");
+        Log.d(TAG, "surfaceDestroyed complete");
     }
 
     /*
@@ -229,6 +298,9 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
         mSelectedSize = newSize;
 
         int[] wh = mWindowWidthHeight[newSize];
+
+        // Update the Surface size.  This causes a "surface changed" event, but does not
+        // destroy and re-create the Surface.
         SurfaceView sv = (SurfaceView) findViewById(R.id.hardwareScaler_surfaceView);
         SurfaceHolder sh = sv.getHolder();
         Log.d(TAG, "setting size to " + wh[0] + "x" + wh[1]);
@@ -491,6 +563,8 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
         }
 
         private void doFrame(long timeStampNanos) {
+            //Log.d(TAG, "doFrame " + timeStampNanos);
+
             // If we're not keeping up 60fps -- maybe something in the system is busy, maybe
             // recording is too expensive, maybe the CPU frequency governor thinks we're
             // not doing and wants to drop the clock frequencies -- we need to drop frames
@@ -530,6 +604,16 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
                 intervalNanos = 0;
             } else {
                 intervalNanos = timeStampNanos - mPrevTimeNanos;
+
+                final long ONE_SECOND_NANOS = 1000000000L;
+                if (intervalNanos > ONE_SECOND_NANOS) {
+                    // A gap this big should only happen if something paused us.  We can
+                    // either cap the delta at one second, or just pretend like this is
+                    // the first frame and not advance at all.
+                    Log.d(TAG, "Time delta too large: " +
+                            (double) intervalNanos / ONE_SECOND_NANOS + " sec");
+                    intervalNanos = 0;
+                }
             }
             mPrevTimeNanos = timeStampNanos;
 

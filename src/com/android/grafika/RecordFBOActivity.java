@@ -87,6 +87,9 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
         Choreographer.FrameCallback {
     private static final String TAG = MainActivity.TAG;
 
+    // See the (lengthy) notes at the top of HardwareScalerActivity for thoughts about
+    // Activity / Surface lifecycle management.
+
     private static final int RECMETHOD_DRAW_TWICE = 0;
     private static final int RECMETHOD_FBO = 1;
     private static final int RECMETHOD_BLIT_FRAMEBUFFER = 2;
@@ -112,14 +115,29 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+
+        // TODO: we might want to stop recording here.  As it is, we continue "recording",
+        //       which is pretty boring since we're not outputting any frames (test this
+        //       by blanking the screen with the power button).
+
+        // If the callback was posted, remove it.  This stops the notifications.  Ideally we
+        // would send a message to the thread letting it know, so when it wakes up it can
+        // reset its notion of when the previous Choreographer event arrived.
+        Log.d(TAG, "onPause unhooking choreographer");
+        Choreographer.getInstance().removeFrameCallback(this);
+    }
+
+    @Override
     protected void onResume() {
-        Log.d(TAG, "RecordFBOActivity: onResume");
         super.onResume();
 
-        // Create the render thread object, but don't start it yet.
-        File outputFile = new File(getFilesDir(), "fbo-gl-recording.mp4");
-        SurfaceView sv = (SurfaceView) findViewById(R.id.fboActivity_surfaceView);
-        mRenderThread = new RenderThread(sv.getHolder(), new ActivityHandler(this), outputFile);
+        // If we already have a Surface, we just need to resume the frame notifications.
+        if (mRenderThread != null) {
+            Log.d(TAG, "onResume re-hooking choreographer");
+            Choreographer.getInstance().postFrameCallback(this);
+        }
 
         updateControls();
     }
@@ -127,6 +145,10 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
         Log.d(TAG, "surfaceCreated holder=" + holder);
+
+        File outputFile = new File(getFilesDir(), "fbo-gl-recording.mp4");
+        SurfaceView sv = (SurfaceView) findViewById(R.id.fboActivity_surfaceView);
+        mRenderThread = new RenderThread(sv.getHolder(), new ActivityHandler(this), outputFile);
         mRenderThread.setName("RecordFBO GL render");
         mRenderThread.start();
         mRenderThread.waitUntilReady();
@@ -155,8 +177,10 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
     public void surfaceDestroyed(SurfaceHolder holder) {
         Log.d(TAG, "surfaceDestroyed holder=" + holder);
 
-        // We need to wait for the render thread to shut down because we don't want the
-        // Surface to disappear out from under it mid-render.
+        // We need to wait for the render thread to shut down before continuing because we
+        // don't want the Surface to disappear out from under it mid-render.  The frame
+        // notifications will have been stopped back in onPause(), but there might have
+        // been one in progress.
         //
         // TODO: the RenderThread doesn't currently wait for the encoder / muxer to stop,
         //       so we can't use this as an indication that the .mp4 file is complete.
@@ -174,10 +198,10 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
         mRenderThread = null;
         mRecordingEnabled = false;
 
-        // If the callback was posted, remove it.
+        // If the callback was posted, remove it.  Without this, we could get one more
+        // call on doFrame().
         Choreographer.getInstance().removeFrameCallback(this);
-        Log.d(TAG, "surfaceDestroyed() complete");
-
+        Log.d(TAG, "surfaceDestroyed complete");
     }
 
     /*
@@ -968,6 +992,16 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
                 intervalNanos = 0;
             } else {
                 intervalNanos = timeStampNanos - mPrevTimeNanos;
+
+                final long ONE_SECOND_NANOS = 1000000000L;
+                if (intervalNanos > ONE_SECOND_NANOS) {
+                    // A gap this big should only happen if something paused us.  We can
+                    // either cap the delta at one second, or just pretend like this is
+                    // the first frame and not advance at all.
+                    Log.d(TAG, "Time delta too large: " +
+                            (double) intervalNanos / ONE_SECOND_NANOS + " sec");
+                    intervalNanos = 0;
+                }
             }
             mPrevTimeNanos = timeStampNanos;
 
