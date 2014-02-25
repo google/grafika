@@ -73,6 +73,8 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
     //
     // If you rotate the screen, the Activity is torn down and recreated, so you get
     // the full cycle.  (You can tell it's a "quick" restart by checking isFinishing().)
+    // It *might* be possible to start / stop an activity so quickly that surfaceCreated()
+    // might happen after onPause(), but I'm not sure about that.
     //
     // If you tap the power button to blank the screen, however, you only get onPause() --
     // no surfaceDestroyed().  The Surface remains alive, and rendering can continue (you
@@ -91,7 +93,7 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
     // because sometimes the Surface will already exist and sometimes it won't.  We can't simply
     // forward the Surface callbacks to the thread, because they won't fire again if the
     // Surface already exists.  So we need to query or cache the Surface state, and forward it
-    // to the renderer thread.  Note we have to be a little careful here passing  objects between
+    // to the renderer thread.  Note we have to be a little careful here passing objects between
     // threads -- best to pass the Surface or SurfaceHolder through a Handler message, rather
     // than just stuffing it into the thread, to avoid issues on multi-core systems (cf.
     // http://developer.android.com/training/articles/smp.html).
