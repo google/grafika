@@ -35,6 +35,15 @@ import android.widget.TextView;
 import android.app.Activity;
 import android.graphics.Rect;
 
+import com.android.grafika.gles.Drawable2d;
+import com.android.grafika.gles.EglCore;
+import com.android.grafika.gles.FlatShadedProgram;
+import com.android.grafika.gles.FullFrameRect;
+import com.android.grafika.gles.GlUtil;
+import com.android.grafika.gles.Sprite2d;
+import com.android.grafika.gles.Texture2dProgram;
+import com.android.grafika.gles.WindowSurface;
+
 import java.io.File;
 import java.lang.ref.WeakReference;
 

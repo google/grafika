@@ -24,6 +24,11 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
+import com.android.grafika.gles.EglCore;
+import com.android.grafika.gles.FullFrameRect;
+import com.android.grafika.gles.Texture2dProgram;
+import com.android.grafika.gles.WindowSurface;
+
 import java.io.File;
 import java.lang.ref.WeakReference;
 

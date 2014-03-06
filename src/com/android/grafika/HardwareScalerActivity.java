@@ -33,6 +33,15 @@ import android.widget.TextView;
 import android.app.Activity;
 import android.graphics.Rect;
 
+import com.android.grafika.gles.Drawable2d;
+import com.android.grafika.gles.EglCore;
+import com.android.grafika.gles.FlatShadedProgram;
+import com.android.grafika.gles.GeneratedTexture;
+import com.android.grafika.gles.GlUtil;
+import com.android.grafika.gles.Sprite2d;
+import com.android.grafika.gles.Texture2dProgram;
+import com.android.grafika.gles.WindowSurface;
+
 import java.lang.ref.WeakReference;
 
 
@@ -46,8 +55,6 @@ import java.lang.ref.WeakReference;
  * see the effects when we crank the resolution way down.  Normally the resolution would
  * be fixed, perhaps with minor tweaks (e.g. letterboxing) to match the device aspect
  * ratio, but here we make it variable.
- * <p>
- * TODO: draw something a bit more interesting
  * <p>
  * TODO: examine effects on touch input
  */

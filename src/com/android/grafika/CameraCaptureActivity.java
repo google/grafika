@@ -35,6 +35,9 @@ import android.app.Activity;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 
+import com.android.grafika.gles.FullFrameRect;
+import com.android.grafika.gles.Texture2dProgram;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;

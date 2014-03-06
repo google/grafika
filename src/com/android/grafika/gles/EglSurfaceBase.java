@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.grafika;
+package com.android.grafika.gles;
 
 import android.graphics.Bitmap;
 import android.opengl.EGL14;
@@ -35,7 +35,7 @@ import java.nio.ByteOrder;
  * There can be multiple surfaces associated with a single context.
  */
 public class EglSurfaceBase {
-    protected static final String TAG = MainActivity.TAG;
+    protected static final String TAG = GlUtil.TAG;
 
     // EglCore object we're associated with.  It may be associated with multiple surfaces.
     protected EglCore mEglCore;

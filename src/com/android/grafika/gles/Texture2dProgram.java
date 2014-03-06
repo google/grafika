@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.grafika;
+package com.android.grafika.gles;
 
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
@@ -26,7 +26,7 @@ import java.nio.FloatBuffer;
  * GL program and supporting functions for textured 2D shapes.
  */
 public class Texture2dProgram {
-    private static final String TAG = MainActivity.TAG;
+    private static final String TAG = GlUtil.TAG;
 
     public enum ProgramType {
         TEXTURE_2D, TEXTURE_EXT, TEXTURE_EXT_BW, TEXTURE_EXT_FILT

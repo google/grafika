@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.grafika;
+package com.android.grafika.gles;
 
 import android.opengl.Matrix;
 import android.util.Log;
@@ -23,7 +23,7 @@ import android.util.Log;
  * Base class for a 2d object.  Includes position, scale, rotation, and flat-shaded color.
  */
 public class Sprite2d {
-    private static final String TAG = MainActivity.TAG;
+    private static final String TAG = GlUtil.TAG;
 
     private static final float[] IDENTITY_MATRIX;
     static {

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.grafika;
+package com.android.grafika.gles;
 
 import android.opengl.GLES20;
 
@@ -24,7 +24,7 @@ import java.nio.ByteBuffer;
  * Code for generating images useful for testing textures.
  */
 public class GeneratedTexture {
-    //private static final String TAG = MainActivity.TAG;
+    //private static final String TAG = GlUtil.TAG;
 
     public enum Image { COARSE, FINE };
 

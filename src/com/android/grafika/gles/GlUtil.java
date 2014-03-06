@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.grafika;
+package com.android.grafika.gles;
 
 import android.opengl.GLES20;
 import android.opengl.GLES30;
@@ -28,7 +28,7 @@ import java.nio.FloatBuffer;
  * Some OpenGL utility functions.
  */
 public class GlUtil {
-    private static final String TAG = MainActivity.TAG;
+    public static final String TAG = "Grafika";
 
     private static final int SIZEOF_FLOAT = 4;
 

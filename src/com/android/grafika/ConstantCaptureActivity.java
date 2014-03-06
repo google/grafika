@@ -31,6 +31,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.app.Activity;
 
+import com.android.grafika.gles.EglCore;
+import com.android.grafika.gles.FullFrameRect;
+import com.android.grafika.gles.Texture2dProgram;
+import com.android.grafika.gles.WindowSurface;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;

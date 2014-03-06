@@ -29,6 +29,9 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.res.Resources;
 
+import com.android.grafika.gles.EglCore;
+import com.android.grafika.gles.OffscreenSurface;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;

@@ -22,6 +22,9 @@ import android.media.MediaFormat;
 import android.media.MediaMuxer;
 import android.util.Log;
 
+import com.android.grafika.gles.EglCore;
+import com.android.grafika.gles.WindowSurface;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;

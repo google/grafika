@@ -120,8 +120,6 @@ Feature & fix ideas
 
 In no particular order.
 
-- Rearrange the source code into packages so it's easier to find things.  Start by moving
-  all of the GL rendering stuff out.
 - Add "Play video (SurfaceView)" to illustrate usage / differences vs. TextureView.  Render
   directly from MediaCodec#releaseBuffer() rather than routing through GL.  Show a blank
   screen before the video starts playing (http://stackoverflow.com/questions/21526989/).
