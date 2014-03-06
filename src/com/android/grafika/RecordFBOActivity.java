@@ -246,9 +246,11 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
      * <p>
      * Called periodically from the render thread (via ActivityHandler).
      */
-    void handleUpdateFps(int tfps) {
+    void handleUpdateFps(int tfps, int dropped) {
+        String str = getString(R.string.frameRateFormat, tfps / 1000.0f, dropped);
         TextView tv = (TextView) findViewById(R.id.frameRateValue_text);
-        tv.setText((tfps / 1000.0f) + " FPS");
+        tv.setText(str);
+
     }
 
     /**
@@ -358,8 +360,8 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
          * <p>
          * Call from non-UI thread.
          */
-        public void sendFpsUpdate(int tfps) {
-            sendMessage(obtainMessage(MSG_UPDATE_FPS, tfps, 0));
+        public void sendFpsUpdate(int tfps, int dropped) {
+            sendMessage(obtainMessage(MSG_UPDATE_FPS, tfps, dropped));
         }
 
         @Override  // runs on UI thread
@@ -378,7 +380,7 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
                     activity.handleShowGlesVersion(msg.arg1);
                     break;
                 case MSG_UPDATE_FPS:
-                    activity.handleUpdateFps(msg.arg1);
+                    activity.handleUpdateFps(msg.arg1, msg.arg2);
                     break;
                 default:
                     throw new RuntimeException("unknown msg " + what);
@@ -433,9 +435,10 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
         // Previous frame time.
         private long mPrevTimeNanos;
 
-        // FPS counter.
+        // FPS / drop counter.
         private long mFpsCountStartNanos;
         private int mFpsCountFrame;
+        private int mDroppedFrames;
 
         // Used for off-screen rendering.
         private int mOffscreenTexture;
@@ -841,6 +844,7 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
                 // too much, drop a frame
                 Log.d(TAG, "diff is " + diff + ", skipping render");
                 mRecordedPrevious = false;
+                mDroppedFrames++;
                 return;
             }
 
@@ -980,7 +984,8 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
                 if (mFpsCountFrame == NUM_FRAMES) {
                     // compute thousands of frames per second
                     long elapsed = timeStampNanos - mFpsCountStartNanos;
-                    mActivityHandler.sendFpsUpdate((int)(NUM_FRAMES * ONE_TRILLION / elapsed));
+                    mActivityHandler.sendFpsUpdate((int)(NUM_FRAMES * ONE_TRILLION / elapsed),
+                            mDroppedFrames);
 
                     // reset
                     mFpsCountStartNanos = timeStampNanos;

@@ -82,7 +82,7 @@
         android:layout_alignBaseline="@+id/frameRateLabel_text"
         android:layout_alignBottom="@+id/frameRateLabel_text"
         android:layout_toRightOf="@+id/frameRateLabel_text"
-        android:text="@string/frameRateValue"
+        android:text="---"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <RadioGroup

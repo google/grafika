@@ -55,7 +55,7 @@
     <string name="rebindHack_checkbox">rebind</string>
     <string name="hello_world">Hello, world!</string>
     <string name="frameRateLabel">"Frame rate: "</string>
-    <string name="frameRateValue">"? FPS"</string>
+    <string name="frameRateFormat">"%1$.3f fps (%2$d dropped)"</string>
     <string name="glesVersionLabel">"GLES version: "</string>
     <string name="glesVersionValue">"?"</string>
     <string name="useBlitFramebuffer">Use glBlitFramebuffer() when recording</string>
