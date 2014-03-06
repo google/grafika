@@ -22,15 +22,25 @@ import java.nio.FloatBuffer;
  * Base class for stuff we like to draw.
  */
 public class Drawable2d {
+    private static final int SIZEOF_FLOAT = 4;
+
     /**
      * Simple equilateral triangle (1.0 per side).  Centered on (0,0).
      */
     private static final float TRIANGLE_COORDS[] = {
-         0.0f,  0.577350269f,   // top
-        -0.5f, -0.288675135f,   // bottom left
-         0.5f, -0.288675135f    // bottom right
+         0.0f,  0.577350269f,   // 0 top
+        -0.5f, -0.288675135f,   // 1 bottom left
+         0.5f, -0.288675135f    // 2 bottom right
     };
-    private static final FloatBuffer TRIANGLE_BUF = GlUtil.createFloatBuffer(TRIANGLE_COORDS);
+    private static final float TRIANGLE_TEX_COORDS[] = {
+        0.5f, 0.0f,     // 0 top center
+        0.0f, 1.0f,     // 1 bottom left
+        1.0f, 1.0f,     // 2 bottom right
+    };
+    private static final FloatBuffer TRIANGLE_BUF =
+            GlUtil.createFloatBuffer(TRIANGLE_COORDS);
+    private static final FloatBuffer TRIANGLE_TEX_BUF =
+            GlUtil.createFloatBuffer(TRIANGLE_TEX_COORDS);
 
     /**
      * Simple square, specified as a triangle strip.  The square is centered on (0,0) and has
@@ -44,13 +54,23 @@ public class Drawable2d {
         -0.5f,  0.5f,   // 2 top left
          0.5f,  0.5f,   // 3 top right
     };
-    private static final FloatBuffer RECTANGLE_BUF = GlUtil.createFloatBuffer(RECTANGLE_COORDS);
+    private static final float RECTANGLE_TEX_COORDS[] = {
+        0.0f, 1.0f,     // 0 bottom left
+        1.0f, 1.0f,     // 1 bottom right
+        0.0f, 0.0f,     // 2 top left
+        1.0f, 0.0f      // 3 top right
+    };
+    private static final FloatBuffer RECTANGLE_BUF =
+            GlUtil.createFloatBuffer(RECTANGLE_COORDS);
+    private static final FloatBuffer RECTANGLE_TEX_BUF =
+            GlUtil.createFloatBuffer(RECTANGLE_TEX_COORDS);
 
     /**
      * A "full" square, extending from -1 to +1 in both dimensions.  When the model/view/projection
      * matrix is identity, this will exactly cover the viewport.
      * <p>
-     * This has texture coordinates as well.
+     * The texture coordinates are Y-inverted relative to RECTANGLE.  (This seems to work out
+     * right with external textures from SurfaceTexture.)
      */
     private static final float FULL_RECTANGLE_COORDS[] = {
         -1.0f, -1.0f,   // 0 bottom left
@@ -58,15 +78,24 @@ public class Drawable2d {
         -1.0f,  1.0f,   // 2 top left
          1.0f,  1.0f,   // 3 top right
     };
+    private static final float FULL_RECTANGLE_TEX_COORDS[] = {
+        0.0f, 0.0f,     // 0 bottom left
+        1.0f, 0.0f,     // 1 bottom right
+        0.0f, 1.0f,     // 2 top left
+        1.0f, 1.0f      // 3 top right
+    };
     private static final FloatBuffer FULL_RECTANGLE_BUF =
             GlUtil.createFloatBuffer(FULL_RECTANGLE_COORDS);
+    private static final FloatBuffer FULL_RECTANGLE_TEX_BUF =
+            GlUtil.createFloatBuffer(FULL_RECTANGLE_TEX_COORDS);
 
-    private static final int SIZEOF_FLOAT = 4;
 
     private FloatBuffer mVertexArray;
+    private FloatBuffer mTexCoordArray;
     private int mVertexCount;
     private int mCoordsPerVertex;
     private int mVertexStride;
+    private int mTexCoordStride;
     private Prefab mPrefab;
 
     /**
@@ -85,18 +114,21 @@ public class Drawable2d {
         switch (shape) {
             case TRIANGLE:
                 mVertexArray = TRIANGLE_BUF;
+                mTexCoordArray = TRIANGLE_TEX_BUF;
                 mCoordsPerVertex = 2;
                 mVertexStride = mCoordsPerVertex * SIZEOF_FLOAT;
                 mVertexCount = TRIANGLE_COORDS.length / mCoordsPerVertex;
                 break;
             case RECTANGLE:
                 mVertexArray = RECTANGLE_BUF;
+                mTexCoordArray = RECTANGLE_TEX_BUF;
                 mCoordsPerVertex = 2;
                 mVertexStride = mCoordsPerVertex * SIZEOF_FLOAT;
                 mVertexCount = RECTANGLE_COORDS.length / mCoordsPerVertex;
                 break;
             case FULL_RECTANGLE:
                 mVertexArray = FULL_RECTANGLE_BUF;
+                mTexCoordArray = FULL_RECTANGLE_TEX_BUF;
                 mCoordsPerVertex = 2;
                 mVertexStride = mCoordsPerVertex * SIZEOF_FLOAT;
                 mVertexCount = FULL_RECTANGLE_COORDS.length / mCoordsPerVertex;
@@ -104,6 +136,7 @@ public class Drawable2d {
             default:
                 throw new RuntimeException("Unknown shape " + shape);
         }
+        mTexCoordStride = 2 * SIZEOF_FLOAT;
         mPrefab = shape;
     }
 
@@ -114,6 +147,15 @@ public class Drawable2d {
      */
     public FloatBuffer getVertexArray() {
         return mVertexArray;
+    }
+
+    /**
+     * Returns the array of texture coordinates.
+     * <p>
+     * To avoid allocations, this returns internal state.  The caller must not modify it.
+     */
+    public FloatBuffer getTexCoordArray() {
+        return mTexCoordArray;
     }
 
     /**
@@ -128,6 +170,13 @@ public class Drawable2d {
      */
     public int getVertexStride() {
         return mVertexStride;
+    }
+
+    /**
+     * Returns the width, in bytes, of the data for each texture coordinate.
+     */
+    public int getTexCoordStride() {
+        return mTexCoordStride;
     }
 
     /**

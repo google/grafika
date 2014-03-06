@@ -120,9 +120,12 @@ Feature & fix ideas
 
 In no particular order.
 
+- Rearrange the source code into packages so it's easier to find things.  Start by moving
+  all of the GL rendering stuff out.
 - Add "Play video (SurfaceView)" to illustrate usage / differences vs. TextureView.  Render
   directly from MediaCodec#releaseBuffer() rather than routing through GL.  Show a blank
   screen before the video starts playing (http://stackoverflow.com/questions/21526989/).
+  Use setFixedSize() and adjust the View size to maintain the aspect ratio.
 - Add features to the video player, like a slider for random access, and buttons for
   single-frame advance / rewind (requires seeking to nearest sync frame and decoding frames
   until target is reached).
@@ -143,4 +146,6 @@ In no particular order.
 - Add a trivial glTexImage2D texture upload speed benchmark (maybe 512x512 RGBA).
 - Add on-screen dropped frame indicator to "Record GL app", maybe to "Play video" as well
   (esp. for 60fps playback).
+- Add camera demo that sends preview to ST and then renders it in a small window that
+  can be moved around / scaled / rotated by touch.
 

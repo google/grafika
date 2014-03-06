@@ -21,7 +21,6 @@ import android.opengl.GLES20;
 import android.util.Log;
 
 import java.nio.FloatBuffer;
-import java.util.Arrays;
 
 /**
  * GL program and supporting functions for textured 2D shapes.
@@ -280,7 +279,8 @@ public class Texture2dProgram {
      * @param coordsPerVertex The number of coordinates per vertex (e.g. x,y is 2).
      * @param vertexStride Width, in bytes, of the position data for each vertex (often
      *        vertexCount * sizeof(float)).
-     * @param texMatrix A 4x4 transformation matrix for texture coords.
+     * @param texMatrix A 4x4 transformation matrix for texture coords.  (Primarily intended
+     *        for use with SurfaceTexture.)
      * @param texBuffer Buffer with vertex texture data.
      * @param texStride Width, in bytes, of the texture data for each vertex.
      */

@@ -18,8 +18,6 @@ package com.android.grafika;
 
 import android.opengl.Matrix;
 
-import java.nio.FloatBuffer;
-
 /**
  * This class essentially represents a viewport-sized sprite that will be rendered with
  * a texture, usually from an external source like the camera or video decoder.
@@ -28,19 +26,11 @@ public class FullFrameRect {
     private final Drawable2d mRectDrawable = new Drawable2d(Drawable2d.Prefab.FULL_RECTANGLE);
     private Texture2dProgram mProgram;
 
-    private static final int SIZEOF_FLOAT = 4;
-
-    private static final float[] IDENTITY_MATRIX = new float[16];
-
-    private static final float TEX_COORDS[] = {
-        0.0f, 0.0f,     // 0 bottom left
-        1.0f, 0.0f,     // 1 bottom right
-        0.0f, 1.0f,     // 2 top left
-        1.0f, 1.0f      // 3 top right
-    };
-    private static final FloatBuffer TEX_COORDS_BUF = GlUtil.createFloatBuffer(TEX_COORDS);
-    private static final int TEX_COORDS_STRIDE = 2 * SIZEOF_FLOAT;
-
+    private static final float[] IDENTITY_MATRIX;
+    static {
+        IDENTITY_MATRIX = new float[16];
+        Matrix.setIdentityM(IDENTITY_MATRIX, 0);
+    }
 
     /**
      * Prepares the object.
@@ -50,8 +40,6 @@ public class FullFrameRect {
      */
     public FullFrameRect(Texture2dProgram program) {
         mProgram = program;
-
-        Matrix.setIdentityM(IDENTITY_MATRIX, 0);
     }
 
     /**
@@ -59,8 +47,8 @@ public class FullFrameRect {
      * <p>
      * This must be called with the appropriate EGL context current (i.e. the one that was
      * current when the constructor was called).  If we're about to destroy the EGL context,
-     * there's no value in making it current just to do the cleanup, so you can pass a flag
-     * that will tell this to skip any EGL-context-specific cleanup.
+     * there's no value in having the caller make it current just to do this cleanup, so you
+     * can pass a flag that will tell this function to skip any EGL-context-specific cleanup.
      */
     public void release(boolean doEglCleanup) {
         if (mProgram != null) {
@@ -80,6 +68,8 @@ public class FullFrameRect {
 
     /**
      * Changes the program.  The previous program will be released.
+     * <p>
+     * The appropriate EGL context must be current.
      */
     public void changeProgram(Texture2dProgram program) {
         mProgram.release();
@@ -101,6 +91,7 @@ public class FullFrameRect {
         mProgram.draw(IDENTITY_MATRIX, mRectDrawable.getVertexArray(), 0,
                 mRectDrawable.getVertexCount(), mRectDrawable.getCoordsPerVertex(),
                 mRectDrawable.getVertexStride(),
-                texMatrix, TEX_COORDS_BUF, textureId, TEX_COORDS_STRIDE);
+                texMatrix, mRectDrawable.getTexCoordArray(), textureId,
+                mRectDrawable.getTexCoordStride());
     }
 }

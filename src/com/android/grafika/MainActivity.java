@@ -64,9 +64,6 @@ public class MainActivity extends ListActivity {
         { "Simple GL in TextureView",
             "Renders frames as fast as possible",
             "TextureViewGLActivity" },
-        { "glReadPixels speed test",
-            "Tests glReadPixels() performance with 720p frames",
-            "ReadPixelsActivity" },
         { "Live camera (TextureView)",
             "Trivially feeds the camera preview to a view",
             "LiveCameraActivity" },
@@ -76,6 +73,9 @@ public class MainActivity extends ListActivity {
         { "Hardware scaler exerciser",
             "Exercises SurfaceHolder#setFixedSize()",
             "HardwareScalerActivity" },
+        { "{bench} glReadPixels speed test",
+            "Tests glReadPixels() performance with 720p frames",
+            "ReadPixelsActivity" },
         { "{ignore} Chor test",
             "Exercises bug",
             "ChorTestActivity" },
@@ -161,14 +161,14 @@ public class MainActivity extends ListActivity {
     /**
      * onClick handler for "about" menu item.
      */
-    public void clickAbout(MenuItem unused) {
+    public void clickAbout(@SuppressWarnings("unused") MenuItem unused) {
         AboutBox.display(this);
     }
 
     /**
      * onClick handler for "regenerate content" menu item.
      */
-    public void clickRegenerateContent(MenuItem unused) {
+    public void clickRegenerateContent(@SuppressWarnings("unused") MenuItem unused) {
         ContentManager.getInstance().createAll(this);
     }
 }

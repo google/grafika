@@ -355,7 +355,10 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
         private volatile SurfaceHolder mSurfaceHolder;  // may be updated by UI thread
         private EglCore mEglCore;
         private WindowSurface mWindowSurface;
-        private FlatShadedProgram mProgram;
+        private FlatShadedProgram mFlatProgram;
+        private Texture2dProgram mTexProgram;
+        private int mCoarseTexture;
+        private int mFineTexture;
 
         // Orthographic projection matrix.
         private float[] mDisplayProjectionMatrix = new float[16];
@@ -460,8 +463,11 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
             mWindowSurface = new WindowSurface(mEglCore, surface, false);
             mWindowSurface.makeCurrent();
 
-            // Program used for drawing onto the screen.
-            mProgram = new FlatShadedProgram();
+            // Programs used for drawing onto the screen.
+            mFlatProgram = new FlatShadedProgram();
+            mTexProgram = new Texture2dProgram(Texture2dProgram.ProgramType.TEXTURE_2D);
+            mCoarseTexture = GeneratedTexture.createTestTexture(GeneratedTexture.Image.COARSE);
+            mFineTexture = GeneratedTexture.createTestTexture(GeneratedTexture.Image.FINE);
 
             // Set the background color.
             GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -508,9 +514,11 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
             // on the screen proportions.  We do it here, rather than defining fixed values
             // and tweaking the projection matrix, so that our squares are square.
             mTri.setColor(0.1f, 0.9f, 0.1f);
+            mTri.setTexture(mFineTexture);
             mTri.setScale(smallDim / 3.0f, smallDim / 3.0f);
             mTri.setPosition(width / 2.0f, height / 2.0f);
             mRect.setColor(0.9f, 0.1f, 0.1f);
+            mRect.setTexture(mCoarseTexture);
             mRect.setScale(smallDim / 5.0f, smallDim / 5.0f);
             mRect.setPosition(width / 2.0f, height / 2.0f);
             mRectVelX = 1 + smallDim / 4.0f;
@@ -555,9 +563,9 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
                 mWindowSurface.release();
                 mWindowSurface = null;
             }
-            if (mProgram != null) {
-                mProgram.release();
-                mProgram = null;
+            if (mFlatProgram != null) {
+                mFlatProgram.release();
+                mFlatProgram = null;
             }
             GlUtil.checkGlError("releaseGl done");
 
@@ -659,10 +667,15 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
             GLES20.glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
             GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
-            mTri.draw(mProgram, mDisplayProjectionMatrix);
-            mRect.draw(mProgram, mDisplayProjectionMatrix);
+            // Textures may include alpha, so turn blending on.
+            GLES20.glEnable(GLES20.GL_BLEND);
+            GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
+            mTri.draw(mTexProgram, mDisplayProjectionMatrix);
+            mRect.draw(mTexProgram, mDisplayProjectionMatrix);
+            GLES20.glDisable(GLES20.GL_BLEND);
+
             for (int i = 0; i < 4; i++) {
-                mEdges[i].draw(mProgram, mDisplayProjectionMatrix);
+                mEdges[i].draw(mFlatProgram, mDisplayProjectionMatrix);
             }
 
             GlUtil.checkGlError("draw done");

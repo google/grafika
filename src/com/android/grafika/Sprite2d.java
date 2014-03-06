@@ -25,8 +25,15 @@ import android.util.Log;
 public class Sprite2d {
     private static final String TAG = MainActivity.TAG;
 
+    private static final float[] IDENTITY_MATRIX;
+    static {
+        IDENTITY_MATRIX = new float[16];
+        Matrix.setIdentityM(IDENTITY_MATRIX, 0);
+    }
+
     private Drawable2d mDrawable;
     private float mColor[];
+    private int mTextureId;
     private float mAngle;
     private float mScaleX, mScaleY;
     private float mPosX, mPosY;
@@ -40,6 +47,7 @@ public class Sprite2d {
         mDrawable = drawable;
         mColor = new float[4];
         mColor[3] = 1.0f;
+        mTextureId = -1;
 
         mModelViewMatrix = new float[16];
         mMatrixReady = false;
@@ -142,12 +150,19 @@ public class Sprite2d {
     }
 
     /**
-     * Sets flat-shaded color.
+     * Sets color to use for flat-shaded rendering.  Has no effect on textured rendering.
      */
     public void setColor(float red, float green, float blue) {
         mColor[0] = red;
         mColor[1] = green;
         mColor[2] = blue;
+    }
+
+    /**
+     * Sets texture to use for textured rendering.  Has no effect on flat-shaded rendering.
+     */
+    public void setTexture(int textureId) {
+        mTextureId = textureId;
     }
 
     /**
@@ -169,6 +184,19 @@ public class Sprite2d {
         program.draw(mScratchMatrix, mColor, mDrawable.getVertexArray(), 0,
                 mDrawable.getVertexCount(), mDrawable.getCoordsPerVertex(),
                 mDrawable.getVertexStride());
+    }
+
+    /**
+     * Draws the rectangle with the supplied program and projection matrix.
+     */
+    public void draw(Texture2dProgram program, float[] projectionMatrix) {
+        // Compute model/view/projection matrix.
+        Matrix.multiplyMM(mScratchMatrix, 0, projectionMatrix, 0, getModelViewMatrix(), 0);
+
+        program.draw(mScratchMatrix, mDrawable.getVertexArray(), 0,
+                mDrawable.getVertexCount(), mDrawable.getCoordsPerVertex(),
+                mDrawable.getVertexStride(), IDENTITY_MATRIX, mDrawable.getTexCoordArray(),
+                mTextureId, mDrawable.getTexCoordStride());
     }
 
     @Override

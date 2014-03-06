@@ -28,6 +28,8 @@ import android.view.Surface;
 
 /**
  * Core EGL state (display, context, config).
+ * <p>
+ * The EGLContext must only be attached to one thread at a time.  This class is not thread-safe.
  */
 public final class EglCore {
     private static final String TAG = MainActivity.TAG;
@@ -325,7 +327,7 @@ public final class EglCore {
     }
 
     /**
-     * Returns the GLES version this context is configured for (2 or 3).
+     * Returns the GLES version this context is configured for (currently 2 or 3).
      */
     public int getGlVersion() {
         return mGlVersion;
@@ -347,7 +349,7 @@ public final class EglCore {
     }
 
     /**
-     * Checks for EGL errors.
+     * Checks for EGL errors.  Throws an exception if an error has been raised.
      */
     private void checkEglError(String msg) {
         int error;
