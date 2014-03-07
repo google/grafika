@@ -439,6 +439,7 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
         private long mFpsCountStartNanos;
         private int mFpsCountFrame;
         private int mDroppedFrames;
+        private boolean mPreviousWasDropped;
 
         // Used for off-screen rendering.
         private int mOffscreenTexture;
@@ -598,19 +599,15 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
 
             // left edge
             float edgeWidth = 1 + width / 64.0f;
-            mEdges[0].setColor(0.5f, 0.5f, 0.5f);
             mEdges[0].setScale(edgeWidth, height);
             mEdges[0].setPosition(edgeWidth / 2.0f, height / 2.0f);
             // right edge
-            mEdges[1].setColor(0.5f, 0.5f, 0.5f);
             mEdges[1].setScale(edgeWidth, height);
             mEdges[1].setPosition(width - edgeWidth / 2.0f, height / 2.0f);
             // top edge
-            mEdges[2].setColor(0.5f, 0.5f, 0.5f);
             mEdges[2].setScale(width, edgeWidth);
             mEdges[2].setPosition(width / 2.0f, height - edgeWidth / 2.0f);
             // bottom edge
-            mEdges[3].setColor(0.5f, 0.5f, 0.5f);
             mEdges[3].setScale(width, edgeWidth);
             mEdges[3].setPosition(width / 2.0f, edgeWidth / 2.0f);
 
@@ -844,6 +841,7 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
                 // too much, drop a frame
                 Log.d(TAG, "diff is " + diff + ", skipping render");
                 mRecordedPrevious = false;
+                mPreviousWasDropped = true;
                 mDroppedFrames++;
                 return;
             }
@@ -963,6 +961,8 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
                 }
             }
 
+            mPreviousWasDropped = false;
+
             if (!swapResult) {
                 // This can happen if the Activity stops without waiting for us to halt.
                 Log.w(TAG, "swapBuffers failed, killing renderer thread");
@@ -1062,6 +1062,11 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
             mTri.draw(mProgram, mDisplayProjectionMatrix);
             mRect.draw(mProgram, mDisplayProjectionMatrix);
             for (int i = 0; i < 4; i++) {
+                if (mPreviousWasDropped) {
+                    mEdges[i].setColor(1.0f, 0.0f, 0.0f);
+                } else {
+                    mEdges[i].setColor(0.5f, 0.5f, 0.5f);
+                }
                 mEdges[i].draw(mProgram, mDisplayProjectionMatrix);
             }
 

@@ -127,6 +127,7 @@ In no particular order.
 - Add features to the video player, like a slider for random access, and buttons for
   single-frame advance / rewind (requires seeking to nearest sync frame and decoding frames
   until target is reached).
+- Fix the aspect ratio in the video player.
 - Capture audio from microphone, record + mux it.
 - Enable preview on front/back cameras simultaneously, display them side-by-side.  (Is
   this even possible?)
@@ -145,5 +146,7 @@ In no particular order.
 - Add on-screen dropped frame indicator to "Record GL app", maybe to "Play video" as well
   (esp. for 60fps playback).
 - Add camera demo that sends preview to ST and then renders it in a small window that
-  can be moved around / scaled / rotated by touch.
+  can be flung around / scaled / rotated by touch.
+- Add a "fat bits" viewer for camera (single SurfaceView; left half has live camera feed
+  and a pan rect, right half has 8x pixels)
 
