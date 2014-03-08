@@ -835,7 +835,6 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
 
             update(timeStampNanos);
 
-            // TODO: add a dropped-frame counter
             long diff = (System.nanoTime() - timeStampNanos) / 1000000;
             if (diff > 15) {
                 // too much, drop a frame

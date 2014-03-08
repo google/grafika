@@ -43,10 +43,59 @@ public class MoviePlayer {
     private File mSourceFile;
     private Surface mOutputSurface;
     private boolean mLoop;
+    private int mVideoWidth;
+    private int mVideoHeight;
 
-    public MoviePlayer(File sourceFile, Surface outputSurface) {
+    /**
+     * Constructs a MoviePlayer.
+     *
+     * @param sourceFile The video file to open.
+     * @param outputSurface The Surface where frames will be sent.
+     * @throws IOException
+     */
+    public MoviePlayer(File sourceFile, Surface outputSurface) throws IOException {
         mSourceFile = sourceFile;
         mOutputSurface = outputSurface;
+
+        // Pop the file open and pull out the video characteristics.
+        // TODO: consider leaving the extractor open.  Should be able to just seek back to
+        //       the start after each iteration of play.  Need to rearrange the API a bit --
+        //       currently play() is taking an all-in-one open+work+release approach.
+        MediaExtractor extractor = null;
+        try {
+            extractor = new MediaExtractor();
+            extractor.setDataSource(sourceFile.toString());
+            int trackIndex = selectTrack(extractor);
+            if (trackIndex < 0) {
+                throw new RuntimeException("No video track found in " + mSourceFile);
+            }
+            extractor.selectTrack(trackIndex);
+
+            MediaFormat format = extractor.getTrackFormat(trackIndex);
+            mVideoWidth = format.getInteger(MediaFormat.KEY_WIDTH);
+            mVideoHeight = format.getInteger(MediaFormat.KEY_HEIGHT);
+            if (VERBOSE) {
+                Log.d(TAG, "Video size is " + mVideoWidth + "x" + mVideoHeight);
+            }
+        } finally {
+            if (extractor != null) {
+                extractor.release();
+            }
+        }
+    }
+
+    /**
+     * Returns the width, in pixels, of the video.
+     */
+    public int getVideoWidth() {
+        return mVideoWidth;
+    }
+
+    /**
+     * Returns the height, in pixels, of the video.
+     */
+    public int getVideoHeight() {
+        return mVideoHeight;
     }
 
     /**
@@ -112,10 +161,6 @@ public class MoviePlayer {
             extractor.selectTrack(trackIndex);
 
             MediaFormat format = extractor.getTrackFormat(trackIndex);
-            if (VERBOSE) {
-                Log.d(TAG, "Video size is " + format.getInteger(MediaFormat.KEY_WIDTH) + "x" +
-                        format.getInteger(MediaFormat.KEY_HEIGHT));
-            }
 
             // Create a MediaCodec decoder, and configure it with the MediaFormat from the
             // extractor.  It's very important to use the format from the extractor because

@@ -46,20 +46,21 @@ Current features
 
 [* Play video (TextureView)](src/com/android/grafika/PlayMovieActivity.java).  Plays the video track from an MP4 file.
 - Only sees files in `/data/data/com.android.grafika/files/`.  All of the activities that
-  create video leave their files there.
+  create video leave their files there.  You'll also find two automatically-generated videos
+  (gen-eight-rects.mp4 and gen-slides.mp4).
 - By default the video is played once, at the same rate it was recorded.  You can use the
   checkboxes to loop playback and/or play the frames as quickly as possible.
 - Uses a `TextureView` for output.
-- Does not attempt to preserve the video's aspect ratio, so things will appear stretched.
 - Name starts with an asterisk so it's at the top of the list of activities.
 
 [Constant capture](src/com/android/grafika/ConstantCaptureActivity.java).  Stores video in a circular buffer, saving it when you hit the "capture" button.
-- Currently hard-wired to try to capture 7 seconds of video at 6MB/sec, preferrably 15fps 720p.
-  That requires a buffer size of about 5MB.
+- Currently hard-wired to try to capture 7 seconds of video from the camera at 6MB/sec,
+  preferrably 15fps 720p.  That requires a buffer size of about 5MB.
 - The time span of frames currently held in the buffer is displayed.  The actual
   time span saved when you hit "capture" will be slightly less than what is shown because
   we have to start the output on a sync frame, which are configured to appear once per second.
-- Output is a video-only MP4 file ("constant-capture.mp4").
+- Output is a video-only MP4 file ("constant-capture.mp4").  Video is always 1280x720, which
+  usually matches what the camera provides.
 
 [Double decode](src/com/android/grafika/DoubleDecodeActivity.java).  Decodes two video streams side-by-side to a pair of `TextureView`s.
 - The video decoders don't stop when the screen is rotated.  We retain the `SurfaceTexture`
@@ -69,6 +70,7 @@ Current features
   button, which isn't good for the battery, but might be handy if you're feeding an external
   display or your player also handles audio.)
 - Unlike most activities in Grafika, this provides different layouts for portrait and landscape.
+  The videos are scaled to fit.
 
 [Hardware scaler exerciser](src/com/android/grafika/HardwareScalerActivity.java).  GL rendering with on-the-fly surface size changes.
 - The motivation behind the feature this explores is described in a developer blog post:
@@ -91,10 +93,7 @@ Current features
 - The encoder is fed every-other frame, so the recorded output will be ~30fps rather than ~60fps
   on a typical device.
 - The recording is letter- or pillar-boxed to maintain an aspect ratio that matches the
-  display, so you'll get different results from recording in landscape vs. portrait.  (Do
-  bear in mind that the built-in video player does *not* currently adjust the aspect ratio
-  to match the movie -- best to pull the mp4 file out of `/data/data/com.android.grafika/files`
-  and view it on the desktop.)
+  display, so you'll get different results from recording in landscape vs. portrait.
 - The output is a video-only MP4 file ("fbo-gl-recording.mp4").
 
 [Show + capture camera](src/com/android/grafika/CameraCaptureActivity.java).  Attempts to record at 720p from the front-facing camera, displaying the preview and recording it simultaneously.
@@ -103,7 +102,8 @@ Current features
   with a real-time gap.  If you try to play the movie while it's recording, you will see
   an incomplete file (and probably cause the play movie activity to crash).
 - The preview frames are rendered to a `GLSurfaceView`.  The aspect ratio will likely appear
-  stretched -- the View's size isn't adjusted.  Generally looks best in landscape.
+  stretched -- the View's size isn't adjusted.  Generally looks best in landscape.  The
+  recorded video is scaled to 640x480, so it will probably look squished.
 - You can select a filter to apply to the preview.  It does not get applied to the recording.
   The shader used for the filters is not optimized, but seems to perform well on most devices
   (the original Nexus 7 (2012) being a notable exception).  Demo
@@ -127,7 +127,6 @@ In no particular order.
 - Add features to the video player, like a slider for random access, and buttons for
   single-frame advance / rewind (requires seeking to nearest sync frame and decoding frames
   until target is reached).
-- Fix the aspect ratio in the video player.
 - Capture audio from microphone, record + mux it.
 - Enable preview on front/back cameras simultaneously, display them side-by-side.  (Is
   this even possible?)

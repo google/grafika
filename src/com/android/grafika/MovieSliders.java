@@ -28,8 +28,8 @@ public class MovieSliders extends GeneratedMovie {
     private static final String TAG = MainActivity.TAG;
 
     private static final String MIME_TYPE = "video/avc";
-    private static final int WIDTH = 640;
-    private static final int HEIGHT = 480;
+    private static final int WIDTH = 480;       // note 480x640, not 640x480
+    private static final int HEIGHT = 640;
     private static final int BIT_RATE = 5000000;
     private static final int FRAMES_PER_SECOND = 30;
 
