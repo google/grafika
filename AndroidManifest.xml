@@ -17,7 +17,7 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.grafika"
-    android:versionCode="16"
+    android:versionCode="17"
     android:versionName="1.0" >
 
     <uses-sdk
@@ -93,6 +93,10 @@
             android:name="com.android.grafika.HardwareScalerActivity"
             android:label="@string/title_activity_hardware_scaler"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
+        </activity>
+        <activity
+            android:name="com.android.grafika.GlesInfoActivity"
+            android:label="@string/title_activity_gles_info" >
         </activity>
     </application>
 

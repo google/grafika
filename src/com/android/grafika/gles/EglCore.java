@@ -176,12 +176,17 @@ public final class EglCore {
     }
 
     /**
-     * Discard all resources held by this class, notably the EGL context.
+     * Discards all resources held by this class, notably the EGL context.  This must be
+     * called from the thread where the context was created.
+     * <p>
+     * On completion, no context will be current.
      */
     public void release() {
         if (mEGLDisplay != EGL14.EGL_NO_DISPLAY) {
             // Android is unusual in that it uses a reference-counted EGLDisplay.  So for
             // every eglInitialize() we need an eglTerminate().
+            EGL14.eglMakeCurrent(mEGLDisplay, EGL14.EGL_NO_SURFACE, EGL14.EGL_NO_SURFACE,
+                    EGL14.EGL_NO_CONTEXT);
             EGL14.eglDestroyContext(mEGLDisplay, mEGLContext);
             EGL14.eglReleaseThread();
             EGL14.eglTerminate(mEGLDisplay);
@@ -324,6 +329,13 @@ public final class EglCore {
         int[] value = new int[1];
         EGL14.eglQuerySurface(mEGLDisplay, eglSurface, what, value, 0);
         return value[0];
+    }
+
+    /**
+     * Queries a string value.
+     */
+    public String queryString(int what) {
+        return EGL14.eglQueryString(mEGLDisplay, what);
     }
 
     /**

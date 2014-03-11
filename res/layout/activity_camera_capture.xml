@@ -61,7 +61,7 @@
         android:id="@+id/cameraOutputFileLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/textView1"
+        android:layout_alignLeft="@+id/cameraParams_text"
         android:layout_below="@+id/cameraParams_text"
         android:text="@string/cameraOutputFileLabel_text" />
 

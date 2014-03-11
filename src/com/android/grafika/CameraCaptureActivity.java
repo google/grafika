@@ -28,7 +28,6 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.app.Activity;
@@ -100,6 +99,11 @@ import javax.microedition.khronos.opengles.GL10;
  * means we need to make a synchronous call from the UI thread into the renderer thread, which
  * we don't really have full control over.  It's less scary to have the UI thread own Camera
  * and have the renderer call back into the UI thread through the standard Handler mechanism.
+ * <p>
+ * (The <a href="http://developer.android.com/training/camera/cameradirect.html#TaskOpenCamera">
+ * camera docs</a> recommend accessing the camera from a non-UI thread to avoid bogging the
+ * UI thread down.  Since the GLSurfaceView-managed renderer thread isn't a great choice,
+ * we might want to create a dedicated camera thread.  Not doing that here.)
  * <p>
  * With three threads working simultaneously (plus Camera causing periodic events as frames
  * arrive) we have to be very careful when communicating state changes.  In general we want

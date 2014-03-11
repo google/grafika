@@ -16,6 +16,7 @@
 -->
 
 <resources>
+
     <!-- TODO: organize this a bit -->
 
     <string name="app_name">Grafika</string>
@@ -29,6 +30,7 @@
         Copyright 2013-2014 Google Inc.  All rights reserved.</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
     <string name="state_ready">[ready]</string>
     <string name="state_running">[running]</string>
     <string name="succeeded">SUCCEEDED</string>
@@ -96,5 +98,6 @@
     <string name="title_activity_constant_capture">Constant capture</string>
     <string name="title_activity_soft_input_surface">Software Input Surface</string>
     <string name="title_activity_hardware_scaler">Hardware Scaler Activity</string>
+    <string name="title_activity_gles_info">OpenGL ES Info</string>
 
 </resources>

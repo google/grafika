@@ -72,7 +72,7 @@ Current features
 - Unlike most activities in Grafika, this provides different layouts for portrait and landscape.
   The videos are scaled to fit.
 
-[Hardware scaler exerciser](src/com/android/grafika/HardwareScalerActivity.java).  GL rendering with on-the-fly surface size changes.
+[Hardware scaler exerciser](src/com/android/grafika/HardwareScalerActivity.java).  Shows GL rendering with on-the-fly surface size changes.
 - The motivation behind the feature this explores is described in a developer blog post:
   http://android-developers.blogspot.com/2013/09/using-hardware-scaler-for-performance.html
 - You will see one frame rendered incorrectly when changing sizes.  This is because the
@@ -110,7 +110,12 @@ Current features
   here: http://www.youtube.com/watch?v=kH9kCP2T5Gg
 - The output is a video-only MP4 file ("camera-test.mp4").
 
-[Simple GL in TextureView](src/com/android/grafika/TextureViewGLActivity.java).  Simple use of GLES in a `TextureView`, rather than a `GLSurfaceView`.
+[Simple GL in TextureView](src/com/android/grafika/TextureViewGLActivity.java).  Demonstates simple use of GLES in a `TextureView`, rather than a `GLSurfaceView`.
+- Renders as quickly as possible.  On most devices it will exceed 60fps and flicker wildly,
+  but in 4.4 ("KitKat") a bug prevents the system from dropping frames.
+
+[OpenGL ES Info](src/com/android/grafika/GlesInfoActivity.java).  Dumps version info and extension lists.
+- The "Save" button writes a copy of the output to the app's file area.
 
 [glReadPixels speed test](src/com/android/grafika/ReadPixelsActivity.java).  Simple, unscientific measurement of the time required for `glReadPixels()` to read a 720p frame.
 
@@ -132,18 +137,17 @@ In no particular order.
   this even possible?)
 - Convert a series of PNG images to video.
 - Use virtual displays to record app activity.
-- Play continuous video from a series of MP4 files with different characteristics.
+- Play continuous video from a series of MP4 files with different characteristics.  Will
+  probably require "preloading" the next movie to keep playback seamless.
 - Experiment with alternatives to glReadPixels().  Add a PBO speed test.  (Doesn't seem
   to be a way to play with eglCreateImageKHR from Java.)
-- Add a GL/EGL info tool -- dump version info, have scrolling list of supported extensions.
 - Do something with ImageReader class (req API 19).
 - Update MoviePlayer#doExtract() to improve startup latency
   (http://stackoverflow.com/questions/21440820/).
 - Cross-fade from one video to another, recording the result.
 - Figure out why "double decode" playback is janky.
 - Add a trivial glTexImage2D texture upload speed benchmark (maybe 512x512 RGBA).
-- Add on-screen dropped frame indicator to "Record GL app", maybe to "Play video" as well
-  (esp. for 60fps playback).
+- Add fps indicator to "Simple GL in TextureView".
 - Add camera demo that sends preview to ST and then renders it in a small window that
   can be flung around / scaled / rotated by touch.
 - Add a "fat bits" viewer for camera (single SurfaceView; left half has live camera feed
