@@ -370,8 +370,12 @@ public class ConstantCaptureActivity extends Activity implements SurfaceHolder.C
         // TODO: adjust bit rate based on frame rate?
         // TODO: adjust video width/height based on what we're getting from the camera preview?
         //       (can we guarantee that camera preview size is compatible with AVC video encoder?)
-        mCircEncoder = new CircularEncoder(VIDEO_WIDTH, VIDEO_HEIGHT, 6000000,
-                mCameraPreviewThousandFps / 1000, 7, mHandler);
+        try {
+            mCircEncoder = new CircularEncoder(VIDEO_WIDTH, VIDEO_HEIGHT, 6000000,
+                    mCameraPreviewThousandFps / 1000, 7, mHandler);
+        } catch (IOException ioe) {
+            throw new RuntimeException(ioe);
+        }
         mEncoderSurface = new WindowSurface(mEglCore, mCircEncoder.getInputSurface(), true);
 
         updateControls();

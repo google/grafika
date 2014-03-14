@@ -99,5 +99,6 @@
     <string name="title_activity_soft_input_surface">Software Input Surface</string>
     <string name="title_activity_hardware_scaler">Hardware Scaler Activity</string>
     <string name="title_activity_gles_info">OpenGL ES Info</string>
+    <string name="title_activity_play_movie_surface">Play Movie (SurfaceView)</string>
 
 </resources>

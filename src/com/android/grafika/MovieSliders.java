@@ -20,6 +20,7 @@ import android.opengl.GLES20;
 import android.util.Log;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Generates a simple movie, featuring two small rectangles that slide across the screen.
@@ -57,6 +58,8 @@ public class MovieSliders extends GeneratedMovie {
 
             // Send end-of-stream and drain remaining output.
             drainEncoder(true);
+        } catch (IOException ioe) {
+            throw new RuntimeException(ioe);
         } finally {
             releaseEncoder();
         }

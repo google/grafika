@@ -96,6 +96,8 @@ public class SoftInputSurfaceActivity extends Activity {
 
             // Send end-of-stream and drain remaining output.
             drainEncoder(true);
+        } catch (IOException ioe) {
+            throw new RuntimeException(ioe);
         } finally {
             releaseEncoder();
         }
@@ -104,7 +106,7 @@ public class SoftInputSurfaceActivity extends Activity {
     /**
      * Prepares the video encoder, muxer, and an input surface.
      */
-    private void prepareEncoder(File outputFile) {
+    private void prepareEncoder(File outputFile) throws IOException {
         mBufferInfo = new MediaCodec.BufferInfo();
 
         MediaFormat format = MediaFormat.createVideoFormat(MIME_TYPE, WIDTH, HEIGHT);
@@ -131,13 +133,9 @@ public class SoftInputSurfaceActivity extends Activity {
         //
         // We're not actually interested in multiplexing audio.  We just want to convert
         // the raw H.264 elementary stream we get from MediaCodec into a .mp4 file.
-        try {
-            if (VERBOSE) Log.d(TAG, "output will go to " + outputFile);
-            mMuxer = new MediaMuxer(outputFile.toString(),
-                    MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
-        } catch (IOException ioe) {
-            throw new RuntimeException("MediaMuxer creation failed", ioe);
-        }
+        if (VERBOSE) Log.d(TAG, "output will go to " + outputFile);
+        mMuxer = new MediaMuxer(outputFile.toString(),
+                MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
 
         mTrackIndex = -1;
         mMuxerStarted = false;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Google Inc. All rights reserved.
+ * Copyright 2014 Google Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,55 +16,78 @@
 
 package com.android.grafika;
 
+import android.opengl.GLES20;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.app.Activity;
-import android.graphics.Matrix;
-import android.graphics.SurfaceTexture;
 import android.util.Log;
 import android.view.Surface;
-import android.view.TextureView;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.Spinner;
 import android.widget.AdapterView.OnItemSelectedListener;
+import android.app.Activity;
+
+import com.android.grafika.gles.EglCore;
+import com.android.grafika.gles.WindowSurface;
 
 import java.io.File;
 import java.io.IOException;
 
 /**
- * Play a movie from a file on disk.  Output goes to a TextureView.
+ * Play a movie from a file on disk.  Output goes to a SurfaceView.
  * <p>
- * Currently video-only.
+ * This is very similar to PlayMovieActivity, but the output goes to a SurfaceView instead of
+ * a TextureView.  There are some important differences:
+ * <ul>
+ *   <li> TextureViews behave like normal views.  SurfaceViews don't.  A SurfaceView has
+ *        a transparent "hole" in the UI through which an independent Surface layer can
+ *        be seen.  This Surface is sent directly to the system graphics compositor.
+ *   <li> Because the video is being composited with the UI by the system compositor,
+ *        rather than the application, it can often be done more efficiently (e.g. using
+ *        a hardware composer "overlay").  This can lead to significant battery savings
+ *        when playing a long movie.
+ *   <li> On the other hand, the TextureView contents can be freely scaled and rotated
+ *        with a simple matrix.  The SurfaceView output is limited to scaling, and it's
+ *        more awkward to do.
+ *   <li> DRM-protected content can't be touched by the app (or even the system compositor).
+ *        We have to point the MediaCodec decoder at a Surface that is composited by a
+ *        hardware composer overlay.  The only way to do the app side of this is with
+ *        SurfaceView.
+ * </ul>
  * <p>
- * Contrast with PlayMovieSurfaceActivity, which uses a SurfaceView.  Much of the code is
- * the same, but here we can handle the aspect ratio adjustment with a simple matrix,
- * rather than a custom layout.
+ * The output from the MediaCodec decoder won't be scaled.  If we create a SurfaceView whose
+ * Surface dimensions match the View dimensions, rather than the video dimensions, we're likely
+ * to see a shrunk-down video or one corner of a blown-up video.  What we need to do is set
+ * the Surface dimensions to match the video size (using SurfaceHolder#setFixedSize()), and
+ * let the hardware scaler do any required scaling to match the View size.  To preserve the
+ * original aspect ratio, we need to adjust the size of the View, which we can do with a
+ * custom layout.
  * <p>
- * TODO: investigate crash when screen is rotated while movie is playing (need
- *       to have onPause() wait for playback to stop)
+ * The actual playback of the video -- sending frames to a Surface -- is the same for
+ * TextureView and SurfaceView.
  */
-public class PlayMovieActivity extends Activity implements OnItemSelectedListener,
-        TextureView.SurfaceTextureListener {
+public class PlayMovieSurfaceActivity extends Activity implements OnItemSelectedListener,
+        SurfaceHolder.Callback {
     private static final String TAG = MainActivity.TAG;
 
-    private TextureView mTextureView;
+    private SurfaceView mSurfaceView;
     private String[] mMovieFiles;
     private int mSelectedMovie;
     private boolean mShowStopLabel;
     private PlayMovieTask mPlayTask;
-    private boolean mSurfaceTextureReady = false;
+    private boolean mSurfaceHolderReady = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_play_movie);
+        setContentView(R.layout.activity_play_movie_surface);
 
-        mTextureView = (TextureView) findViewById(R.id.movie_texture_view);
-        mTextureView.setSurfaceTextureListener(this);
+        mSurfaceView = (SurfaceView) findViewById(R.id.playMovie_surface);
+        mSurfaceView.getHolder().addCallback(this);
 
         // Populate file-selection spinner.
         Spinner spinner = (Spinner) findViewById(R.id.playMovieFile_spinner);
@@ -83,13 +106,13 @@ public class PlayMovieActivity extends Activity implements OnItemSelectedListene
 
     @Override
     protected void onResume() {
-        Log.d(TAG, "PlayMovieActivity onResume");
+        Log.d(TAG, "PlayMovieSurfaceActivity onResume");
         super.onResume();
     }
 
     @Override
     protected void onPause() {
-        Log.d(TAG, "PlayMovieActivity onPause");
+        Log.d(TAG, "PlayMovieSurfaceActivity onPause");
         super.onPause();
         // We're not keeping track of the state in static fields, so we need to shut the
         // playback down.  Ideally we'd preserve the state so that the player would continue
@@ -98,31 +121,26 @@ public class PlayMovieActivity extends Activity implements OnItemSelectedListene
     }
 
     @Override
-    public void onSurfaceTextureAvailable(SurfaceTexture st, int width, int height) {
+    public void surfaceCreated(SurfaceHolder holder) {
         // There's a short delay between the start of the activity and the initialization
-        // of the SurfaceTexture that backs the TextureView.  We don't want to try to
-        // send a video stream to the TextureView before it has initialized, so we disable
+        // of the SurfaceHolder that backs the SurfaceView.  We don't want to try to
+        // send a video stream to the SurfaceView before it has initialized, so we disable
         // the "play" button until this callback fires.
-        Log.d(TAG, "SurfaceTexture ready (" + width + "x" + height + ")");
-        mSurfaceTextureReady = true;
+        Log.d(TAG, "surfaceCreated");
+        mSurfaceHolderReady = true;
         updateControls();
     }
 
     @Override
-    public void onSurfaceTextureSizeChanged(SurfaceTexture st, int width, int height) {
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
         // ignore
+        Log.d(TAG, "surfaceChanged fmt=" + format + " size=" + width + "x" + height);
     }
 
     @Override
-    public boolean onSurfaceTextureDestroyed(SurfaceTexture st) {
-        mSurfaceTextureReady = false;
-        // assume activity is pausing, so don't need to update controls
-        return true;    // caller should release ST
-    }
-
-    @Override
-    public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+    public void surfaceDestroyed(SurfaceHolder holder) {
         // ignore
+        Log.d(TAG, "Surface destroyed");
     }
 
     /*
@@ -154,13 +172,16 @@ public class PlayMovieActivity extends Activity implements OnItemSelectedListene
                 Log.w(TAG, "movie already playing");
                 return;
             }
+
             Log.d(TAG, "starting movie");
             SpeedControlCallback callback = new SpeedControlCallback();
-            if (((CheckBox) findViewById(R.id.locked60fps_checkbox)).isChecked()) {
-                callback.setFixedPlaybackRate(60);
-            }
-            SurfaceTexture st = mTextureView.getSurfaceTexture();
-            Surface surface = new Surface(st);
+            SurfaceHolder holder = mSurfaceView.getHolder();
+            Surface surface = holder.getSurface();
+
+            // Don't leave the last frame of the previous video hanging on the screen.
+            // Looks weird if the aspect ratio changes.
+            clearSurface(surface);
+
             MoviePlayer player = null;
             try {
                  player = new MoviePlayer(
@@ -170,11 +191,14 @@ public class PlayMovieActivity extends Activity implements OnItemSelectedListene
                 surface.release();
                 return;
             }
-            adjustAspectRatio(player.getVideoWidth(), player.getVideoHeight());
+
+            AspectFrameLayout layout = (AspectFrameLayout) findViewById(R.id.playMovie_afl);
+            int width = player.getVideoWidth();
+            int height = player.getVideoHeight();
+            layout.setAspectRatio((double) width / height);
+            holder.setFixedSize(width, height);
+
             mPlayTask = new PlayMovieTask(player, surface, callback);
-            if (((CheckBox) findViewById(R.id.loopPlayback_checkbox)).isChecked()) {
-                mPlayTask.setLoopMode(true);
-            }
 
             mShowStopLabel = true;
             updateControls();
@@ -193,39 +217,6 @@ public class PlayMovieActivity extends Activity implements OnItemSelectedListene
     }
 
     /**
-     * Sets the TextureView transform to preserve the aspect ratio of the video.
-     */
-    private void adjustAspectRatio(int videoWidth, int videoHeight) {
-        int viewWidth = mTextureView.getWidth();
-        int viewHeight = mTextureView.getHeight();
-        double aspectRatio = (double) videoHeight / videoWidth;
-
-        int newWidth, newHeight;
-        if (viewHeight > (int) (viewWidth * aspectRatio)) {
-            // limited by narrow width; restrict height
-            newWidth = viewWidth;
-            newHeight = (int) (viewWidth * aspectRatio);
-        } else {
-            // limited by short height; restrict width
-            newWidth = (int) (viewHeight / aspectRatio);
-            newHeight = viewHeight;
-        }
-        int xoff = (viewWidth - newWidth) / 2;
-        int yoff = (viewHeight - newHeight) / 2;
-        Log.v(TAG, "video=" + videoWidth + "x" + videoHeight +
-                " view=" + viewWidth + "x" + viewHeight +
-                " newView=" + newWidth + "x" + newHeight +
-                " off=" + xoff + "," + yoff);
-
-        Matrix txform = new Matrix();
-        mTextureView.getTransform(txform);
-        txform.setScale((float) newWidth / viewWidth, (float) newHeight / viewHeight);
-        //txform.postRotate(10);          // just for fun
-        txform.postTranslate(xoff, yoff);
-        mTextureView.setTransform(txform);
-    }
-
-    /**
      * Updates the on-screen controls to reflect the current state of the app.
      */
     private void updateControls() {
@@ -235,13 +226,28 @@ public class PlayMovieActivity extends Activity implements OnItemSelectedListene
         } else {
             play.setText(R.string.play_button_text);
         }
-        play.setEnabled(mSurfaceTextureReady);
+        play.setEnabled(mSurfaceHolderReady);
+    }
 
-        // We don't support changes mid-play, so dim these.
-        CheckBox check = (CheckBox) findViewById(R.id.locked60fps_checkbox);
-        check.setEnabled(!mShowStopLabel);
-        check = (CheckBox) findViewById(R.id.loopPlayback_checkbox);
-        check.setEnabled(!mShowStopLabel);
+    /**
+     * Clears the playback surface to black.
+     */
+    private void clearSurface(Surface surface) {
+        // We need to do this with OpenGL ES (*not* Canvas -- the "software render" bits
+        // are sticky).  We can't stay connected to the Surface after we're done because
+        // that'd prevent the video encoder from attaching.
+        //
+        // If the Surface is resized to be larger, the new portions will be black, so
+        // clearing to something other than black may look weird unless we do the clear
+        // post-resize.
+        EglCore eglCore = new EglCore();
+        WindowSurface win = new WindowSurface(eglCore, surface, false);
+        win.makeCurrent();
+        GLES20.glClearColor(0, 0, 0, 0);
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+        win.swapBuffers();
+        win.release();
+        eglCore.release();
     }
 
     /**
@@ -263,13 +269,6 @@ public class PlayMovieActivity extends Activity implements OnItemSelectedListene
         }
 
         /**
-         * Sets the loop mode.  If true, playback will loop forever.
-         */
-        public void setLoopMode(boolean loopMode) {
-            mLoop = loopMode;
-        }
-
-        /**
          * Requests that playback stop.
          */
         public void requestStop() {
@@ -283,8 +282,6 @@ public class PlayMovieActivity extends Activity implements OnItemSelectedListene
                 mPlayer.play(mCallback);
             } catch (IOException ioe) {
                 Log.e(TAG, "movie playback failed", ioe);
-            } finally {
-                mSurface.release();
             }
             return null;
         }

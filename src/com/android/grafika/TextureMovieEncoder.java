@@ -30,6 +30,7 @@ import com.android.grafika.gles.Texture2dProgram;
 import com.android.grafika.gles.WindowSurface;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 
 /**
@@ -376,7 +377,11 @@ public class TextureMovieEncoder implements Runnable {
 
     private void prepareEncoder(EGLContext sharedContext, int width, int height, int bitRate,
             File outputFile) {
-        mVideoEncoder = new VideoEncoderCore(width, height, bitRate, outputFile);
+        try {
+            mVideoEncoder = new VideoEncoderCore(width, height, bitRate, outputFile);
+        } catch (IOException ioe) {
+            throw new RuntimeException(ioe);
+        }
         mEglCore = new EglCore(sharedContext, EglCore.FLAG_RECORDABLE);
         mInputWindowSurface = new WindowSurface(mEglCore, mVideoEncoder.getInputSurface(), true);
         mInputWindowSurface.makeCurrent();

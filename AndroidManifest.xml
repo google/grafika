@@ -17,7 +17,7 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.grafika"
-    android:versionCode="17"
+    android:versionCode="18"
     android:versionName="1.0" >
 
     <uses-sdk
@@ -97,6 +97,10 @@
         <activity
             android:name="com.android.grafika.GlesInfoActivity"
             android:label="@string/title_activity_gles_info" >
+        </activity>
+        <activity
+            android:name="com.android.grafika.PlayMovieSurfaceActivity"
+            android:label="@string/title_activity_play_movie_surface" >
         </activity>
     </application>
 

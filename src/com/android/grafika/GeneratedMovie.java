@@ -60,7 +60,7 @@ public abstract class GeneratedMovie implements Content {
      * Prepares the video encoder, muxer, and an EGL input surface.
      */
     protected void prepareEncoder(String mimeType, int width, int height, int bitRate,
-            int framesPerSecond, File outputFile) {
+            int framesPerSecond, File outputFile) throws IOException {
         mBufferInfo = new MediaCodec.BufferInfo();
 
         MediaFormat format = MediaFormat.createVideoFormat(mimeType, width, height);
@@ -89,13 +89,9 @@ public abstract class GeneratedMovie implements Content {
         //
         // We're not actually interested in multiplexing audio.  We just want to convert
         // the raw H.264 elementary stream we get from MediaCodec into a .mp4 file.
-        try {
-            if (VERBOSE) Log.d(TAG, "output will go to " + outputFile);
-            mMuxer = new MediaMuxer(outputFile.toString(),
-                    MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
-        } catch (IOException ioe) {
-            throw new RuntimeException("MediaMuxer creation failed", ioe);
-        }
+        if (VERBOSE) Log.d(TAG, "output will go to " + outputFile);
+        mMuxer = new MediaMuxer(outputFile.toString(),
+                MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
 
         mTrackIndex = -1;
         mMuxerStarted = false;

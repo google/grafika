@@ -16,7 +16,8 @@ However:
 - It's not stable.
 - It's not polished or well tested.  Expect the UI to be ugly and awkward.
 - It's not intended as a demonstration of the proper way to do things.
-  The code may handle edge cases poorly or not at all.
+  The code may handle edge cases poorly or not at all.  Logging is often
+  left enabled at a moderately verbose level.
 - It's not documented.
 - It's not part of the Android Open Source Project.  We cannot accept
   contributions to Grafika, even if you have an AOSP CLA on file.
@@ -24,7 +25,7 @@ However:
   got thrown together on company time and equipment.
 - It's generally just not supported.
 
-There is some overlap with the code on http://www.bigflake.com/mediacodec/.  The code there largely consists of "headless" CTS tests, which are designed to be robust, self-contained, and largely independent of the usual app lifecycle issues.  Grafika is a traditional app, and makes an effort to handle app issues correctly (like not doing lots of work on the UI thread).
+There is some overlap with the code on http://www.bigflake.com/mediacodec/.  The code there largely consists of "headless" CTS tests, which are designed to be robust, self-contained, and largely independent of the usual app lifecycle issues.  Grafika is a conventional app, and makes an effort to handle app issues correctly (like not doing lots of work on the UI thread).
 
 Features are added to Grafika as the need arises, often in response to developer complaints about correctness or performance problems in the platform (either to confirm that the problems exist, or demonstrate an approach that works).
 
@@ -33,10 +34,10 @@ There are two areas where some amount of care is taken:
   working with the media classes.  (Read the
   [Android SMP Primer](http://developer.android.com/training/articles/smp.html)
   for a detailed introduction to the problem.)  GL/EGL's reliance on thread-local storage
-  doesn't help.  Threading issues are called out in comments in the source code.
-- Garbage collection.  Ideally, none of the activities will do any allocations while
-  in a "steady state".  Allocations may occur while changing modes, e.g. starting or
-  stopping recording.
+  doesn't help.  Threading issues are frequently called out in comments in the source code.
+- Garbage collection.  GC pauses cause jank.  Ideally, none of the activities will do any
+  allocations while in a "steady state".  Allocations may occur while changing modes,
+  e.g. starting or stopping recording.
 
 All code is written in the Java programming language -- the NDK is not used.
 
@@ -85,11 +86,17 @@ Current features
 - Uses the default (rear-facing) camera.  If the device has no default camera (e.g.
   Nexus 7 (2012)), the Activity will crash.
 
+[Play video (SurfaceView)](src/com/android/grafika/PlayMovieSurfaceActivity.java).  Plays the video track from an MP4 file.
+- Works very much like "Play video (TextureView)", though not all features are present.
+  See the class comment for a list of advantages to using SurfaceView.
+
 [Record GL app](src/com/android/grafika/RecordFBOActivity.java).  Simultaneously draws to the display and to a video encoder with OpenGL ES, using framebuffer objects to avoid re-rendering.
 - It can write to the video encoder three different ways: (1) draw twice; (2) draw offscreen and
   blit twice; (3) draw onscreen and blit framebuffer.  #3 doesn't work yet.
 - The renderer is trigged by Choreographer to update every vsync.  If we get too far behind,
-  it will drop frames.
+  we will skip frames.  This is noted by an on-screen drop counter and a border flash.  You
+  generally won't see any stutter in the animation, because we don't skip the object
+  movement, just the render.
 - The encoder is fed every-other frame, so the recorded output will be ~30fps rather than ~60fps
   on a typical device.
 - The recording is letter- or pillar-boxed to maintain an aspect ratio that matches the
@@ -125,10 +132,6 @@ Feature & fix ideas
 
 In no particular order.
 
-- Add "Play video (SurfaceView)" to illustrate usage / differences vs. TextureView.  Render
-  directly from MediaCodec#releaseBuffer() rather than routing through GL.  Show a blank
-  screen before the video starts playing (http://stackoverflow.com/questions/21526989/).
-  Use setFixedSize() and adjust the View size to maintain the aspect ratio.
 - Add features to the video player, like a slider for random access, and buttons for
   single-frame advance / rewind (requires seeking to nearest sync frame and decoding frames
   until target is reached).

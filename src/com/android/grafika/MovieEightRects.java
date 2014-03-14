@@ -20,6 +20,7 @@ import android.opengl.GLES20;
 import android.util.Log;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Generates a very simple movie.  The screen is divided into eight rectangles, and one
@@ -67,6 +68,8 @@ public class MovieEightRects extends GeneratedMovie {
 
             // Send end-of-stream and drain remaining output.
             drainEncoder(true);
+        } catch (IOException ioe) {
+            throw new RuntimeException(ioe);
         } finally {
             releaseEncoder();
         }

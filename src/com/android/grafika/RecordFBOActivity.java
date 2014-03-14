@@ -45,6 +45,7 @@ import com.android.grafika.gles.Texture2dProgram;
 import com.android.grafika.gles.WindowSurface;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 
 /**
@@ -792,8 +793,13 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
                     " to +" + offX + ",+" + offY + " " +
                     mVideoRect.width() + "x" + mVideoRect.height());
 
-            VideoEncoderCore encoderCore = new VideoEncoderCore(VIDEO_WIDTH, VIDEO_HEIGHT,
-                    BIT_RATE, mOutputFile);
+            VideoEncoderCore encoderCore;
+            try {
+                encoderCore = new VideoEncoderCore(VIDEO_WIDTH, VIDEO_HEIGHT,
+                        BIT_RATE, mOutputFile);
+            } catch (IOException ioe) {
+                throw new RuntimeException(ioe);
+            }
             mInputWindowSurface = new WindowSurface(mEglCore, encoderCore.getInputSurface(), true);
             mVideoEncoder = new TextureMovieEncoder2(encoderCore);
         }
