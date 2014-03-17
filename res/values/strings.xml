@@ -75,6 +75,7 @@
     <string name="surfaceSizeSmall">[small]</string>
     <string name="surfaceSizeMedium">[medium]</string>
     <string name="surfaceSizeFull">[full]</string>
+    <string name="flatShaded">flat shaded</string>
 
     <!-- for cameraFilter_spinner; match with CameraCaptureActivity constants -->
     <string-array name="camera_filter_names">

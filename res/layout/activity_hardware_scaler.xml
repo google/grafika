@@ -47,10 +47,11 @@
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <RadioGroup
+        android:id="@+id/surfaceSize_radiogroup"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_below="@+id/viewSizeLabel_text">
+        android:layout_below="@+id/viewSizeLabel_text"
+        android:orientation="vertical" >
 
         <RadioButton
             android:id="@+id/surfaceSizeTiny_radio"
@@ -80,5 +81,14 @@
             android:onClick="onRadioButtonClicked"
             android:text="@string/surfaceSizeFull" />
     </RadioGroup>
+
+    <CheckBox
+        android:id="@+id/flatShading_checkbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/surfaceSize_radiogroup"
+        android:onClick="onFlatShadingClicked"
+        android:text="@string/flatShaded" />
 
 </RelativeLayout>

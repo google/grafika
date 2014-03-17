@@ -28,6 +28,7 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.RadioButton;
 import android.widget.TextView;
 import android.app.Activity;
@@ -139,6 +140,7 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
     private int mFullViewWidth;
     private int mFullViewHeight;
     private int[][] mWindowWidthHeight;
+    private boolean mFlatShadingChecked;
 
     private RenderThread mRenderThread;
 
@@ -220,6 +222,7 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
 
         RenderHandler rh = mRenderThread.getHandler();
         if (rh != null) {
+            rh.sendSetFlatShading(mFlatShadingChecked);
             rh.sendSurfaceCreated();
         }
 
@@ -316,6 +319,17 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
         sh.setFixedSize(wh[0], wh[1]);
     }
 
+    public void onFlatShadingClicked(@SuppressWarnings("unused") View unused) {
+        CheckBox cb = (CheckBox) findViewById(R.id.flatShading_checkbox);
+        mFlatShadingChecked = cb.isChecked();
+
+        RenderHandler rh = mRenderThread.getHandler();
+        if (rh != null) {
+            rh.sendSetFlatShading(mFlatShadingChecked);
+        }
+
+    }
+
     /**
      * Updates the on-screen controls to reflect the current state of the app.
      */
@@ -327,6 +341,9 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
 
         TextView tv = (TextView) findViewById(R.id.viewSizeValue_text);
         tv.setText(mFullViewWidth + "x" + mFullViewHeight);
+
+        CheckBox cb = (CheckBox) findViewById(R.id.flatShading_checkbox);
+        cb.setChecked(mFlatShadingChecked);
     }
 
     /**
@@ -366,6 +383,7 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
         private Texture2dProgram mTexProgram;
         private int mCoarseTexture;
         private int mFineTexture;
+        private boolean mUseFlatShading;
 
         // Orthographic projection matrix.
         private float[] mDisplayProjectionMatrix = new float[16];
@@ -579,6 +597,16 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
             mEglCore.makeNothingCurrent();
         }
 
+        /**
+         * Sets whether we use textures or flat shading.
+         */
+        private void setFlatShading(boolean useFlatShading) {
+            mUseFlatShading = useFlatShading;
+        }
+
+        /**
+         * Handles the frame update.  Runs when Choreographer signals.
+         */
         private void doFrame(long timeStampNanos) {
             //Log.d(TAG, "doFrame " + timeStampNanos);
 
@@ -610,6 +638,8 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
         }
 
         /**
+         * Advances animation state.
+         *
          * We use the time delta from the previous event to determine how far everything
          * moves.  Ideally this will yield identical animation sequences regardless of
          * the device's actual refresh rate.
@@ -677,8 +707,13 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
             // Textures may include alpha, so turn blending on.
             GLES20.glEnable(GLES20.GL_BLEND);
             GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA);
-            mTri.draw(mTexProgram, mDisplayProjectionMatrix);
-            mRect.draw(mTexProgram, mDisplayProjectionMatrix);
+            if (mUseFlatShading) {
+                mTri.draw(mFlatProgram, mDisplayProjectionMatrix);
+                mRect.draw(mFlatProgram, mDisplayProjectionMatrix);
+            } else {
+                mTri.draw(mTexProgram, mDisplayProjectionMatrix);
+                mRect.draw(mTexProgram, mDisplayProjectionMatrix);
+            }
             GLES20.glDisable(GLES20.GL_BLEND);
 
             for (int i = 0; i < 4; i++) {
@@ -708,6 +743,7 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
         private static final int MSG_SURFACE_CREATED = 0;
         private static final int MSG_SURFACE_CHANGED = 1;
         private static final int MSG_DO_FRAME = 2;
+        private static final int MSG_FLAT_SHADING = 3;
         private static final int MSG_SHUTDOWN = 5;
 
         // This shouldn't need to be a weak ref, since we'll go away when the Looper quits,
@@ -735,7 +771,8 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
          * <p>
          * Call from UI thread.
          */
-        public void sendSurfaceChanged(int format, int width, int height) {
+        public void sendSurfaceChanged(@SuppressWarnings("unused") int format, int width,
+                int height) {
             // ignore format
             sendMessage(obtainMessage(RenderHandler.MSG_SURFACE_CHANGED, width, height));
         }
@@ -748,6 +785,14 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
         public void sendDoFrame(long frameTimeNanos) {
             sendMessage(obtainMessage(RenderHandler.MSG_DO_FRAME,
                     (int) (frameTimeNanos >> 32), (int) frameTimeNanos));
+        }
+
+        /**
+         * Sends a new value for the "flat shaded" boolean.
+         */
+        public void sendSetFlatShading(boolean useFlatShading) {
+            // ignore format
+            sendMessage(obtainMessage(RenderHandler.MSG_FLAT_SHADING, useFlatShading ? 1:0, 0));
         }
 
         /**
@@ -781,6 +826,9 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
                     long timestamp = (((long) msg.arg1) << 32) |
                                      (((long) msg.arg2) & 0xffffffffL);
                     renderThread.doFrame(timestamp);
+                    break;
+                case MSG_FLAT_SHADING:
+                    renderThread.setFlatShading(msg.arg1 != 0);
                     break;
                 case MSG_SHUTDOWN:
                     renderThread.shutdown();
