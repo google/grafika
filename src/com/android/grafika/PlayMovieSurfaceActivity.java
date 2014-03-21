@@ -59,13 +59,12 @@ import java.io.IOException;
  *        SurfaceView.
  * </ul>
  * <p>
- * The output from the MediaCodec decoder won't be scaled.  If we create a SurfaceView whose
- * Surface dimensions match the View dimensions, rather than the video dimensions, we're likely
- * to see a shrunk-down video or one corner of a blown-up video.  What we need to do is set
- * the Surface dimensions to match the video size (using SurfaceHolder#setFixedSize()), and
- * let the hardware scaler do any required scaling to match the View size.  To preserve the
- * original aspect ratio, we need to adjust the size of the View, which we can do with a
- * custom layout.
+ * The MediaCodec decoder requests buffers from the Surface, passing the video dimensions
+ * in as arguments.  The Surface provides buffers with a matching size, which means
+ * the video data will completely cover the Surface.  As a result, there's no need to
+ * use SurfaceHolder#setFixedSize() to set the dimensions.  The hardware scaler will scale
+ * the video to match the view size, so if we want to preserve the correct aspect ratio
+ * we need to adjust the View layout.  We can use our custom AspectFrameLayout for this.
  * <p>
  * The actual playback of the video -- sending frames to a Surface -- is the same for
  * TextureView and SurfaceView.
@@ -196,7 +195,7 @@ public class PlayMovieSurfaceActivity extends Activity implements OnItemSelected
             int width = player.getVideoWidth();
             int height = player.getVideoHeight();
             layout.setAspectRatio((double) width / height);
-            holder.setFixedSize(width, height);
+            //holder.setFixedSize(width, height);
 
             mPlayTask = new PlayMovieTask(player, surface, callback);
 

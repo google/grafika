@@ -132,12 +132,17 @@ Feature & fix ideas
 
 In no particular order.
 
+- Add a trivial glTexImage2D texture upload speed benchmark (maybe 512x512 RGBA).
+- Update MoviePlayer#doExtract() to improve startup latency
+  (http://stackoverflow.com/questions/21440820/).
+- Add camera demo that sends preview to ST and then renders it in a small window that
+  can be flung around / scaled / rotated by touch.
+- Add a "fat bits" viewer for camera (single SurfaceView; left half has live camera feed
+  and a pan rect, right half has 8x pixels)
+- Cross-fade from one video to another, recording the result.
 - Add features to the video player, like a slider for random access, and buttons for
   single-frame advance / rewind (requires seeking to nearest sync frame and decoding frames
   until target is reached).
-- Capture audio from microphone, record + mux it.
-- Enable preview on front/back cameras simultaneously, display them side-by-side.  (Is
-  this even possible?)
 - Convert a series of PNG images to video.
 - Use virtual displays to record app activity.
 - Play continuous video from a series of MP4 files with different characteristics.  Will
@@ -145,14 +150,9 @@ In no particular order.
 - Experiment with alternatives to glReadPixels().  Add a PBO speed test.  (Doesn't seem
   to be a way to play with eglCreateImageKHR from Java.)
 - Do something with ImageReader class (req API 19).
-- Update MoviePlayer#doExtract() to improve startup latency
-  (http://stackoverflow.com/questions/21440820/).
-- Cross-fade from one video to another, recording the result.
 - Figure out why "double decode" playback is janky.
-- Add a trivial glTexImage2D texture upload speed benchmark (maybe 512x512 RGBA).
 - Add fps indicator to "Simple GL in TextureView".
-- Add camera demo that sends preview to ST and then renders it in a small window that
-  can be flung around / scaled / rotated by touch.
-- Add a "fat bits" viewer for camera (single SurfaceView; left half has live camera feed
-  and a pan rect, right half has 8x pixels)
+- Capture audio from microphone, record + mux it.
+- Enable preview on front/back cameras simultaneously, display them side-by-side.  (This
+  appears to be impossible except on specific devices.)
 

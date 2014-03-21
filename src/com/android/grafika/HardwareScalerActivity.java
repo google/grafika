@@ -54,8 +54,8 @@ import java.lang.ref.WeakReference;
  * The purpose of the feature is to allow games to render at 720p or 1080p to get good
  * performance on displays with a large number of pixels.  It's easier (and more fun) to
  * see the effects when we crank the resolution way down.  Normally the resolution would
- * be fixed, perhaps with minor tweaks (e.g. letterboxing) to match the device aspect
- * ratio, but here we make it variable.
+ * be fixed, perhaps with minor tweaks (e.g. letterboxing via AspectFrameLayout) to match
+ * the device aspect ratio, but here we make it variable to match the display window.
  * <p>
  * TODO: examine effects on touch input
  */
