@@ -164,6 +164,7 @@ public class DoubleDecodeActivity extends Activity {
             } else {
                 // Can't do it here in Android <= 4.4.  The TextureView doesn't add a
                 // listener on the new SurfaceTexture, so it never sees any updates.
+                // Needs to happen from activity onCreate() -- see recreateView().
                 //Log.d(LTAG, "using saved st=" + mSavedSurfaceTexture);
                 //mTextureView.setSurfaceTexture(mSavedSurfaceTexture);
             }

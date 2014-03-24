@@ -17,7 +17,7 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.grafika"
-    android:versionCode="19"
+    android:versionCode="20"
     android:versionName="1.0" >
 
     <uses-sdk
@@ -82,8 +82,8 @@
             android:label="@string/title_activity_double_decode" >
         </activity>
         <activity
-            android:name="com.android.grafika.ConstantCaptureActivity"
-            android:label="@string/title_activity_constant_capture" >
+            android:name="com.android.grafika.ContinuousCaptureActivity"
+            android:label="@string/title_activity_continuous_capture" >
         </activity>
         <activity
             android:name="com.android.grafika.SoftInputSurfaceActivity"

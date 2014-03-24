@@ -23,6 +23,10 @@ import android.util.Log;
  * <p>
  * The goal here is to play back frames at the original rate.  This is done by introducing
  * a pause before the frame is submitted to the renderer.
+ * <p>
+ * This is not coordinated with VSYNC.  Since we can't control the display's refresh rate, and
+ * the source material has time stamps that specify when each frame should be presented,
+ * we will have to drop or repeat frames occasionally.
  */
 public class SpeedControlCallback implements MoviePlayer.FrameCallback {
     private static final String TAG = MainActivity.TAG;

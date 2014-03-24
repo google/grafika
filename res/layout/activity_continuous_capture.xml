@@ -6,7 +6,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context=".ConstantCaptureActivity" >
+    tools:context=".ContinuousCaptureActivity" >
 
     <Button
         android:id="@+id/capture_button"
@@ -27,7 +27,7 @@
         android:text="@string/secondsOfVideo" />
 
     <SurfaceView
-        android:id="@+id/constantCapture_surfaceView"
+        android:id="@+id/continuousCapture_surfaceView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
@@ -39,8 +39,8 @@
         android:id="@+id/recording_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/constantCapture_surfaceView"
-        android:layout_alignTop="@+id/constantCapture_surfaceView"
+        android:layout_alignLeft="@+id/continuousCapture_surfaceView"
+        android:layout_alignTop="@+id/continuousCapture_surfaceView"
         android:text="@string/nowRecording"
         android:textColor="#f00"
         android:textAppearance="?android:attr/textAppearanceLarge" />

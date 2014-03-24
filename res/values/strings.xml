@@ -96,10 +96,10 @@
     <string name="action_settings">Settings</string>
     <string name="title_activity_chor_test">ChorTestActivity</string>
     <string name="title_activity_double_decode">Double decode</string>
-    <string name="title_activity_constant_capture">Constant capture</string>
+    <string name="title_activity_continuous_capture">Continuous capture</string>
     <string name="title_activity_soft_input_surface">Software Input Surface</string>
     <string name="title_activity_hardware_scaler">Hardware Scaler Activity</string>
     <string name="title_activity_gles_info">OpenGL ES Info</string>
-    <string name="title_activity_play_movie_surface">Play Movie (SurfaceView)</string>
+    <string name="title_activity_play_movie_surface">Play video (SurfaceView)</string>
 
 </resources>

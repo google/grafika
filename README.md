@@ -54,7 +54,9 @@ Current features
 - Uses a `TextureView` for output.
 - Name starts with an asterisk so it's at the top of the list of activities.
 
-[Constant capture](src/com/android/grafika/ConstantCaptureActivity.java).  Stores video in a circular buffer, saving it when you hit the "capture" button.
+[Continuous capture](src/com/android/grafika/ContinuousCaptureActivity.java).  Stores video in a circular buffer, saving it when you hit the "capture" button.  (Formerly "Constant capture".)
+- The aspect ratio of the display window does not match the incoming frames, so the
+  images will appear stretched on screen.
 - Currently hard-wired to try to capture 7 seconds of video from the camera at 6MB/sec,
   preferrably 15fps 720p.  That requires a buffer size of about 5MB.
 - The time span of frames currently held in the buffer is displayed.  The actual

@@ -51,8 +51,10 @@ import java.lang.ref.WeakReference;
  * notified.  That can happen on an arbitrary thread, so we use it to send a message
  * through our Handler.  That causes us to render the new frame to the display and to
  * our video encoder.
+ * <p>
+ * TODO: adjust the view aspect ratio to match the incoming frames.
  */
-public class ConstantCaptureActivity extends Activity implements SurfaceHolder.Callback,
+public class ContinuousCaptureActivity extends Activity implements SurfaceHolder.Callback,
         SurfaceTexture.OnFrameAvailableListener {
     private static final String TAG = MainActivity.TAG;
 
@@ -91,10 +93,10 @@ public class ConstantCaptureActivity extends Activity implements SurfaceHolder.C
         public static final int MSG_FILE_SAVE_COMPLETE = 2;
         public static final int MSG_BUFFER_STATUS = 3;
 
-        private WeakReference<ConstantCaptureActivity> mWeakActivity;
+        private WeakReference<ContinuousCaptureActivity> mWeakActivity;
 
-        public MainHandler(ConstantCaptureActivity activity) {
-            mWeakActivity = new WeakReference<ConstantCaptureActivity>(activity);
+        public MainHandler(ContinuousCaptureActivity activity) {
+            mWeakActivity = new WeakReference<ContinuousCaptureActivity>(activity);
         }
 
         // CircularEncoder.Callback, called on encoder thread
@@ -113,7 +115,7 @@ public class ConstantCaptureActivity extends Activity implements SurfaceHolder.C
 
         @Override
         public void handleMessage(Message msg) {
-            ConstantCaptureActivity activity = mWeakActivity.get();
+            ContinuousCaptureActivity activity = mWeakActivity.get();
             if (activity == null) {
                 Log.d(TAG, "Got message for dead activity");
                 return;
@@ -160,16 +162,16 @@ public class ConstantCaptureActivity extends Activity implements SurfaceHolder.C
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_constant_capture);
+        setContentView(R.layout.activity_continuous_capture);
 
-        SurfaceView sv = (SurfaceView) findViewById(R.id.constantCapture_surfaceView);
+        SurfaceView sv = (SurfaceView) findViewById(R.id.continuousCapture_surfaceView);
         SurfaceHolder sh = sv.getHolder();
         sh.addCallback(this);
 
         mHandler = new MainHandler(this);
         mHandler.sendEmptyMessageDelayed(MainHandler.MSG_BLINK_TEXT, 1500);
 
-        mOutputFile = new File(getFilesDir(), "constant-capture.mp4");
+        mOutputFile = new File(getFilesDir(), "continuous-capture.mp4");
         mSecondsOfVideo = 0.0f;
         updateControls();
     }
@@ -347,8 +349,8 @@ public class ConstantCaptureActivity extends Activity implements SurfaceHolder.C
         // We had to wait until we had a surface because you can't make an EGL context current
         // without one, and creating a temporary 1x1 pbuffer is a waste of time.
         //
-        // The display surface that we use for the SurfaceView and the encoder surface we
-        // use for video use the same EGL context.
+        // The display surface that we use for the SurfaceView, and the encoder surface we
+        // use for video, use the same EGL context.
         mEglCore = new EglCore(null, EglCore.FLAG_RECORDABLE);
         mDisplaySurface = new WindowSurface(mEglCore, holder.getSurface(), false);
         mDisplaySurface.makeCurrent();
@@ -422,7 +424,7 @@ public class ConstantCaptureActivity extends Activity implements SurfaceHolder.C
         mCameraTexture.getTransformMatrix(mTmpMatrix);
 
         // Fill the SurfaceView with it.
-        SurfaceView sv = (SurfaceView) findViewById(R.id.constantCapture_surfaceView);
+        SurfaceView sv = (SurfaceView) findViewById(R.id.continuousCapture_surfaceView);
         int viewWidth = sv.getWidth();
         int viewHeight = sv.getHeight();
         GLES20.glViewport(0, 0, viewWidth, viewHeight);
@@ -437,6 +439,7 @@ public class ConstantCaptureActivity extends Activity implements SurfaceHolder.C
             mFullFrameBlit.drawFrame(mTextureId, mTmpMatrix);
             drawExtra(mFrameNum, VIDEO_WIDTH, VIDEO_HEIGHT);
             mCircEncoder.frameAvailableSoon();
+            mEncoderSurface.setPresentationTime(mCameraTexture.getTimestamp());
             mEncoderSurface.swapBuffers();
         }
 
