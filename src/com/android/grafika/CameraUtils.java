@@ -73,6 +73,7 @@ public class CameraUtils {
         List<int[]> supported = parms.getSupportedPreviewFpsRange();
 
         for (int[] entry : supported) {
+            //Log.d(TAG, "entry: " + entry[0] + " - " + entry[1]);
             if ((entry[0] == entry[1]) && (entry[0] == desiredThousandFps)) {
                 parms.setPreviewFpsRange(entry[0], entry[1]);
                 return entry[0];

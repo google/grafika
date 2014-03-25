@@ -250,6 +250,10 @@ public class ContinuousCaptureActivity extends Activity implements SurfaceHolder
         // Try to set the frame rate to a constant value.
         mCameraPreviewThousandFps = CameraUtils.chooseFixedPreviewFps(parms, desiredFps * 1000);
 
+        // Give the camera a hint that we're recording video.  This can have a big
+        // impact on frame rate.
+        parms.setRecordingHint(true);
+
         mCamera.setParameters(parms);
 
         Camera.Size mCameraPreviewSize = parms.getPreviewSize();

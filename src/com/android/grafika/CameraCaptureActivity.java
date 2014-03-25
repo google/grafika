@@ -264,6 +264,11 @@ public class CameraCaptureActivity extends Activity
         Camera.Parameters parms = mCamera.getParameters();
 
         CameraUtils.choosePreviewSize(parms, desiredWidth, desiredHeight);
+
+        // Give the camera a hint that we're recording video.  This can have a big
+        // impact on frame rate.
+        parms.setRecordingHint(true);
+
         // leave the frame rate set to default
         mCamera.setParameters(parms);
 
