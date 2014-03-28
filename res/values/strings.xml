@@ -76,6 +76,7 @@
     <string name="surfaceSizeMedium">[medium]</string>
     <string name="surfaceSizeFull">[full]</string>
     <string name="flatShaded">flat shaded</string>
+    <string name="multiSurfaceMessage">This is a test!</string>
 
     <!-- for cameraFilter_spinner; match with CameraCaptureActivity constants -->
     <string-array name="camera_filter_names">
@@ -101,5 +102,6 @@
     <string name="title_activity_hardware_scaler">Hardware Scaler Activity</string>
     <string name="title_activity_gles_info">OpenGL ES Info</string>
     <string name="title_activity_play_movie_surface">Play video (SurfaceView)</string>
+    <string name="title_activity_multi_surface_test">Multi-Surface Test</string>
 
 </resources>

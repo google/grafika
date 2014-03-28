@@ -50,7 +50,7 @@ Current features
   create video leave their files there.  You'll also find two automatically-generated videos
   (gen-eight-rects.mp4 and gen-slides.mp4).
 - By default the video is played once, at the same rate it was recorded.  You can use the
-  checkboxes to loop playback and/or play the frames as quickly as possible.
+  checkboxes to loop playback and/or play the frames at a fixed rate of 60 FPS.
 - Uses a `TextureView` for output.
 - Name starts with an asterisk so it's at the top of the list of activities.
 
@@ -87,6 +87,11 @@ Current features
 - This comes more or less verbatim from the [TextureView](http://developer.android.com/reference/android/view/TextureView.html) documentation.
 - Uses the default (rear-facing) camera.  If the device has no default camera (e.g.
   Nexus 7 (2012)), the Activity will crash.
+
+[Multi-surface test](src/com/android/grafika/MultiSurfaceTest.java).  Simple activity with three overlapping SurfaceViews, one marked secure.
+- Useful for examining HWC behavior with multiple static layers, and
+  screencap / screenrecord behavior with a secure surface.  (If you record or capture the
+  screen, one of the circles should be missing.)
 
 [Play video (SurfaceView)](src/com/android/grafika/PlayMovieSurfaceActivity.java).  Plays the video track from an MP4 file.
 - Works very much like "Play video (TextureView)", though not all features are present.
@@ -134,6 +139,10 @@ Feature & fix ideas
 
 In no particular order.
 
+- Try to detect when the codec selects a software AVC codec, as the current SoftAVC
+  codec does not work with input surfaces.
+- If initial movie generation fails, handle it better (currently crashes -- should
+  show a dialog explaining what happened).
 - Add a trivial glTexImage2D texture upload speed benchmark (maybe 512x512 RGBA).
 - Update MoviePlayer#doExtract() to improve startup latency
   (http://stackoverflow.com/questions/21440820/).
@@ -141,7 +150,9 @@ In no particular order.
   can be flung around / scaled / rotated by touch.
 - Add a "fat bits" viewer for camera (single SurfaceView; left half has live camera feed
   and a pan rect, right half has 8x pixels)
-- Cross-fade from one video to another, recording the result.
+- Change the "Simple GL in TextureView" animation.  Or add an epilepsy warning.
+- Cross-fade from one video to another, recording the result.  Allow specification of
+  the resolution (maybe QVGA, 720p, 1080p) and generate appropriately.
 - Add features to the video player, like a slider for random access, and buttons for
   single-frame advance / rewind (requires seeking to nearest sync frame and decoding frames
   until target is reached).

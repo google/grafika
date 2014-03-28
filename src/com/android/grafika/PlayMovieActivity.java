@@ -157,6 +157,7 @@ public class PlayMovieActivity extends Activity implements OnItemSelectedListene
             Log.d(TAG, "starting movie");
             SpeedControlCallback callback = new SpeedControlCallback();
             if (((CheckBox) findViewById(R.id.locked60fps_checkbox)).isChecked()) {
+                // TODO: consider changing this to be "free running" mode
                 callback.setFixedPlaybackRate(60);
             }
             SurfaceTexture st = mTextureView.getSurfaceTexture();
