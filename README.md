@@ -90,8 +90,8 @@ Current features
 
 [Multi-surface test](src/com/android/grafika/MultiSurfaceTest.java).  Simple activity with three overlapping SurfaceViews, one marked secure.
 - Useful for examining HWC behavior with multiple static layers, and
-  screencap / screenrecord behavior with a secure surface.  (If you record or capture the
-  screen, one of the circles should be missing.)
+  screencap / screenrecord behavior with a secure surface.  (If you record the screen one
+  of the circles should be missing, and capturing the screen should just show black.)
 
 [Play video (SurfaceView)](src/com/android/grafika/PlayMovieSurfaceActivity.java).  Plays the video track from an MP4 file.
 - Works very much like "Play video (TextureView)", though not all features are present.
