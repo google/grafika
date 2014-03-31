@@ -21,6 +21,7 @@ import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
 import android.util.Log;
+import android.view.Surface;
 
 import com.android.grafika.gles.EglCore;
 import com.android.grafika.gles.WindowSurface;
@@ -57,6 +58,15 @@ public abstract class GeneratedMovie implements Content {
     public abstract void create(File outputFile, ContentManager.ProgressUpdater prog);
 
     /**
+     * Returns true if the codec has a software implementation.
+     */
+    private static boolean isSoftwareCodec(MediaCodec codec) {
+        String codecName = codec.getCodecInfo().getName();
+
+        return ("OMX.google.h264.encoder".equals(codecName));
+    }
+
+    /**
      * Prepares the video encoder, muxer, and an EGL input surface.
      */
     protected void prepareEncoder(String mimeType, int width, int height, int bitRate,
@@ -78,8 +88,24 @@ public abstract class GeneratedMovie implements Content {
         // we can use for input and wrap it with a class that handles the EGL work.
         mEncoder = MediaCodec.createEncoderByType(mimeType);
         mEncoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
+        Log.v(TAG, "encoder is " + mEncoder.getCodecInfo().getName());
+        Surface surface;
+        try {
+            surface = mEncoder.createInputSurface();
+        } catch (IllegalStateException ise) {
+            // This is generally the first time we ever try to encode something through a
+            // Surface, so specialize the message a bit if we can guess at why it's failing.
+            // TODO: failure message should come out of strings.xml for i18n
+            if (isSoftwareCodec(mEncoder)) {
+                throw new RuntimeException("Can't use input surface with software codec: " +
+                        mEncoder.getCodecInfo().getName(),
+                        ise);
+            } else {
+                throw new RuntimeException("Failed to create input surface", ise);
+            }
+        }
         mEglCore = new EglCore(null, EglCore.FLAG_RECORDABLE);
-        mInputSurface = new WindowSurface(mEglCore, mEncoder.createInputSurface(), true);
+        mInputSurface = new WindowSurface(mEglCore, surface, true);
         mInputSurface.makeCurrent();
         mEncoder.start();
 

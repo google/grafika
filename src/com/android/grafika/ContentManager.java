@@ -19,6 +19,7 @@ package com.android.grafika;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.ProgressBar;
@@ -88,7 +89,7 @@ public class ContentManager {
      * <p>
      * If this returns false, call createAll.
      */
-    public boolean isContentCreated(Context unused) {
+    public boolean isContentCreated(@SuppressWarnings("unused") Context unused) {
         // Ideally this would probe each individual item to see if anything needs to be done,
         // and a subsequent "prepare" call would generate only the necessary items.  This
         // takes a much simpler approach and just checks to see if the files exist.  If the
@@ -117,7 +118,8 @@ public class ContentManager {
      * Prepares the specified content.  For example, if the caller requires a movie that doesn't
      * exist, this will post a progress dialog and generate the movie.
      * <p>
-     * Call from main UI thread.
+     * Call from main UI thread.  This returns immediately.  Content generation continues
+     * on a background thread.
      */
     public void prepareContent(Activity caller, int[] tags) {
         // Put up the progress dialog.
@@ -126,7 +128,7 @@ public class ContentManager {
         AlertDialog dialog = builder.show();
 
         // Generate content in async task.
-        GenerateTask genTask = new GenerateTask(dialog, tags);
+        GenerateTask genTask = new GenerateTask(caller, dialog, tags);
         genTask.execute();
     }
 
@@ -201,6 +203,7 @@ public class ContentManager {
     private static class GenerateTask extends AsyncTask<Void, Integer, Integer>
             implements ProgressUpdater {
         // ----- accessed from UI thread -----
+        private final Context mContext;
         private final AlertDialog mPrepDialog;
         private final ProgressBar mProgressBar;
 
@@ -209,9 +212,11 @@ public class ContentManager {
 
         // ----- accessed from both -----
         private final int[] mTags;
+        private volatile RuntimeException mFailure;
 
 
-        public GenerateTask(AlertDialog dialog, int[] tags) {
+        public GenerateTask(Context context, AlertDialog dialog, int[] tags) {
+            mContext = context;
             mPrepDialog = dialog;
             mTags = tags;
             mProgressBar = (ProgressBar) mPrepDialog.findViewById(R.id.work_progress);
@@ -226,10 +231,20 @@ public class ContentManager {
             for (int i = 0; i < mTags.length; i++) {
                 mCurrentIndex = i;
                 updateProgress(0);
-                contentManager.prepare(this, mTags[i]);
+                try {
+                    contentManager.prepare(this, mTags[i]);
+                } catch (RuntimeException re) {
+                    mFailure = re;
+                    break;
+                }
                 updateProgress(100);
             }
-            Log.d(TAG, "done");
+
+            if (mFailure != null) {
+                Log.w(TAG, "Failed while generating content", mFailure);
+            } else {
+                Log.d(TAG, "generation complete");
+            }
             return 0;
         }
 
@@ -254,6 +269,30 @@ public class ContentManager {
         protected void onPostExecute(Integer result) {
             Log.d(TAG, "onPostExecute -- dismss");
             mPrepDialog.dismiss();
+
+            if (mFailure != null) {
+                showFailureDialog(mContext, mFailure);
+            }
+        }
+
+        /**
+         * Posts an error dialog, including the message from the failure exception.
+         */
+        private void showFailureDialog(Context context, RuntimeException failure) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setTitle(R.string.content_generation_failed_title);
+            String msg = context.getString(R.string.content_generation_failed_msg,
+                    failure.getMessage());
+            builder.setMessage(msg);
+            builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int id) {
+                    dialog.dismiss();
+                }
+            });
+            builder.setCancelable(false);
+            AlertDialog dialog = builder.create();
+            dialog.show();
         }
     }
 }

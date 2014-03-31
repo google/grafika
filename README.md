@@ -41,11 +41,14 @@ There are two areas where some amount of care is taken:
 
 All code is written in the Java programming language -- the NDK is not used.
 
+The first time Grafika starts, two videos are generated (gen-eight-rects, gen-sliders).
+If you want to experiment with the generation code, you can cause them to be re-generated
+from the main activity menu ("Regenerate content").
+
 Some features of Grafika may not work on an emulator, notably anything that involves
 encoding video.  The problem is that the software AVC encoder doesn't support
 `createInputSurface()`, and all of Grafika's video encoding features currently make
-use of that.  \[Grafika currently crashes on startup when it tries to generate a
-couple of videos; this will be fixed.]
+use of that.  Very little works in the AOSP emulator, even with `-gpu on`.
 
 
 Current features
@@ -72,6 +75,7 @@ Current features
   usually matches what the camera provides.
 
 [Double decode](src/com/android/grafika/DoubleDecodeActivity.java).  Decodes two video streams side-by-side to a pair of `TextureViews`.
+- Plays the two auto-generated videos.  Note they play at different rates.
 - The video decoders don't stop when the screen is rotated.  We retain the `SurfaceTexture`
   and just attach it to the new `TextureView`.  Useful for avoiding expensive codec reconfigures.
   The decoders *do* stop if you leave the activity, so we don't tie up hardware codec
@@ -145,11 +149,6 @@ Feature & fix ideas
 
 In no particular order.
 
-- Try to detect when the codec selects a software AVC codec, as the current SoftAVC
-  codec does not work with input surfaces.
-- If initial movie generation fails, handle it better (currently crashes -- should
-  show a dialog explaining what happened).  This currently prevents Grafika from
-  working at all on emulators.
 - Add a trivial glTexImage2D texture upload speed benchmark (maybe 512x512 RGBA).
 - Update MoviePlayer#doExtract() to improve startup latency
   (http://stackoverflow.com/questions/21440820/).
