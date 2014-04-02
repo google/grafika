@@ -40,6 +40,15 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent" />
 
+    <Button
+        android:id="@+id/multiSurfaceBounce_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@id/multiSurfaceView1"
+        android:layout_alignTop="@id/multiSurfaceView1"
+        android:onClick="clickBounce"
+        android:text="@string/bounce" />
+
     <TextView
         android:id="@+id/multiSurfaceMessage_text"
         android:layout_width="wrap_content"

@@ -22,11 +22,14 @@ import android.util.Log;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 import android.app.Activity;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
+import android.graphics.PorterDuff;
+import android.os.Trace;
 
 import com.android.grafika.gles.EglCore;
 import com.android.grafika.gles.WindowSurface;
@@ -38,13 +41,23 @@ import com.android.grafika.gles.WindowSurface;
  * <li> One is at the default depth, one is at "media overlay" depth, and one is on top of the UI.
  * <li> One is marked "secure".
  * </ul>
+ * <p>
+ * To watch this in systrace, use
+ * <code>systrace.py --app=com.android.grafika gfx view sched dalvik</code>
+ * (most interesting while bouncing).
  */
 public class MultiSurfaceTest extends Activity implements SurfaceHolder.Callback {
     private static final String TAG = MainActivity.TAG;
 
+    // Number of steps in each direction.  There's actually N+1 positions because we
+    // don't re-draw the same position after a rebound.
+    private static final int BOUNCE_STEPS = 30;
+
     private SurfaceView mSurfaceView1;
     private SurfaceView mSurfaceView2;
     private SurfaceView mSurfaceView3;
+    private volatile boolean mBouncing;
+    private Thread mBounceThread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +81,67 @@ public class MultiSurfaceTest extends Activity implements SurfaceHolder.Callback
         mSurfaceView3.getHolder().addCallback(this);
         mSurfaceView3.getHolder().setFormat(PixelFormat.TRANSLUCENT);
         mSurfaceView3.setZOrderOnTop(true);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mBounceThread != null) {
+            stopBouncing();
+        }
+    }
+
+    /**
+     * onClick handler for "bounce" button.
+     */
+    public void clickBounce(@SuppressWarnings("unused") View unused) {
+        Log.d(TAG, "clickBounce bouncing=" + mBouncing);
+        if (mBounceThread != null) {
+            stopBouncing();
+        } else {
+            startBouncing();
+        }
+    }
+
+    private void startBouncing() {
+        final Surface surface = mSurfaceView2.getHolder().getSurface();
+        if (surface == null || !surface.isValid()) {
+            Log.w(TAG, "mSurfaceView2 is not ready");
+            return;
+        }
+        mBounceThread = new Thread() {
+            @Override
+            public void run() {
+                while (true) {
+                    long startWhen = System.nanoTime();
+                    for (int i = 0; i < BOUNCE_STEPS; i++) {
+                        if (!mBouncing) return;
+                        drawBouncingCircle(surface, i);
+                    }
+                    for (int i = BOUNCE_STEPS; i > 0; i--) {
+                        if (!mBouncing) return;
+                        drawBouncingCircle(surface, i);
+                    }
+                    long duration = System.nanoTime() - startWhen;
+                    double framesPerSec = 1000000000.0 / (duration / (BOUNCE_STEPS * 2.0));
+                    Log.d(TAG, "Bouncing at " + framesPerSec + " fps");
+                }
+            }
+        };
+        mBouncing = true;
+        mBounceThread.start();
+    }
+
+    /**
+     * Signals the bounce-thread to stop, and waits for it to do so.
+     */
+    private void stopBouncing() {
+        Log.d(TAG, "Stopping bounce thread");
+        mBouncing = false;      // tell thread to stop
+        try {
+            mBounceThread.join();
+        } catch (InterruptedException ignored) {}
+        mBounceThread = null;
     }
 
     /**
@@ -186,9 +260,48 @@ public class MultiSurfaceTest extends Activity implements SurfaceHolder.Callback
         paint.setShadowLayer(radius / 4 + 1, 0, 0, Color.RED);
 
         Canvas canvas = surface.lockCanvas(null);
-        Log.d(TAG, "drawCircleSurface: isHwAcc=" + canvas.isHardwareAccelerated());
-        canvas.drawARGB(0, 0, 0, 0);
+        Log.v(TAG, "drawCircleSurface: isHwAcc=" + canvas.isHardwareAccelerated());
+        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
         canvas.drawCircle(x, y, radius, paint);
         surface.unlockCanvasAndPost(canvas);
     }
+
+    /**
+     * Clears the surface, then draws a filled circle with a shadow.
+     * <p>
+     * Similar to drawCircleSurface(), but the position changes based on the value of "i".
+     */
+    private void drawBouncingCircle(Surface surface, int i) {
+        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setColor(Color.WHITE);
+        paint.setStyle(Paint.Style.FILL);
+
+        Canvas canvas = surface.lockCanvas(null);
+        Trace.beginSection("drawBouncingCircle");
+        Trace.beginSection("drawColor");
+        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+        Trace.endSection(); // drawColor
+
+        int width = canvas.getWidth();
+        int height = canvas.getHeight();
+        int radius, x, y;
+        if (width < height) {
+            // portrait
+            radius = width / 4;
+            x = width / 4 + ((width / 2 * i) / BOUNCE_STEPS);
+            y = height * 3 / 4;
+        } else {
+            // landscape
+            radius = height / 4;
+            x = width * 3 / 4;
+            y = height / 4 + ((height / 2 * i) / BOUNCE_STEPS);
+        }
+
+        paint.setShadowLayer(radius / 4 + 1, 0, 0, Color.RED);
+
+        canvas.drawCircle(x, y, radius, paint);
+        Trace.endSection(); // drawBouncingCircle
+        surface.unlockCanvasAndPost(canvas);
+    }
+
 }

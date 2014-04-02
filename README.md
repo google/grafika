@@ -102,6 +102,9 @@ Current features
 - Useful for examining HWC behavior with multiple static layers, and
   screencap / screenrecord behavior with a secure surface.  (If you record the screen one
   of the circles should be missing, and capturing the screen should just show black.)
+- If you tap the "bounce" button, the circle on the non-secure layer will animate.  It will
+  update as quickly as possible, which may be slower than the display refresh rate because
+  the circle is rendered in software.  The frame rate will be reported in logcat.
 
 [Play video (SurfaceView)](src/com/android/grafika/PlayMovieSurfaceActivity.java).  Plays the video track from an MP4 file.
 - Works very much like "Play video (TextureView)", though not all features are present.

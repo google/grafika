@@ -34,6 +34,7 @@
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>
+    <string name="bounce">Bounce</string>
     <string name="state_ready">[ready]</string>
     <string name="state_running">[running]</string>
     <string name="succeeded">SUCCEEDED</string>

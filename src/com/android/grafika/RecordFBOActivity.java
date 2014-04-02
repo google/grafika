@@ -261,7 +261,7 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
      * MediaMuxer finishes creating the file, and in the (very brief) period before the
      * SurfaceView's surface is created.
      */
-    public void clickToggleRecording(View unused) {
+    public void clickToggleRecording(@SuppressWarnings("unused") View unused) {
         Log.d(TAG, "clickToggleRecording");
         RenderHandler rh = mRenderThread.getHandler();
         if (rh != null) {
@@ -1143,7 +1143,8 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
          * <p>
          * Call from UI thread.
          */
-        public void sendSurfaceChanged(int format, int width, int height) {
+        public void sendSurfaceChanged(@SuppressWarnings("unused") int format,
+                int width, int height) {
             // ignore format
             sendMessage(obtainMessage(RenderHandler.MSG_SURFACE_CHANGED, width, height));
         }
