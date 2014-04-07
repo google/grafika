@@ -173,9 +173,11 @@ public class EglSurfaceBase {
 
         String filename = file.toString();
 
-        ByteBuffer buf = ByteBuffer.allocateDirect(mWidth * mHeight * 4);
+        int width = getWidth();
+        int height = getHeight();
+        ByteBuffer buf = ByteBuffer.allocateDirect(width * height * 4);
         buf.order(ByteOrder.LITTLE_ENDIAN);
-        GLES20.glReadPixels(0, 0, mWidth, mHeight,
+        GLES20.glReadPixels(0, 0, width, height,
                 GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, buf);
         GlUtil.checkGlError("glReadPixels");
         buf.rewind();
@@ -183,13 +185,13 @@ public class EglSurfaceBase {
         BufferedOutputStream bos = null;
         try {
             bos = new BufferedOutputStream(new FileOutputStream(filename));
-            Bitmap bmp = Bitmap.createBitmap(mWidth, mHeight, Bitmap.Config.ARGB_8888);
+            Bitmap bmp = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
             bmp.copyPixelsFromBuffer(buf);
             bmp.compress(Bitmap.CompressFormat.PNG, 90, bos);
             bmp.recycle();
         } finally {
             if (bos != null) bos.close();
         }
-        Log.d(TAG, "Saved " + mWidth + "x" + mHeight + " frame as '" + filename + "'");
+        Log.d(TAG, "Saved " + width + "x" + height + " frame as '" + filename + "'");
     }
 }
