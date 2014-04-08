@@ -64,19 +64,21 @@ public class MultiSurfaceTest extends Activity implements SurfaceHolder.Callback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_multi_surface_test);
 
-        // #1 is at the bottom; mark it as secure just for fun
+        // #1 is at the bottom; mark it as secure just for fun.  By default, this will use
+        // the RGB565 color format.
         mSurfaceView1 = (SurfaceView) findViewById(R.id.multiSurfaceView1);
         mSurfaceView1.getHolder().addCallback(this);
         mSurfaceView1.setSecure(true);
 
-        // #2 is above it, in the "media overlay"; must be translucent or we will
-        // totally obscure #1 and it will be ignored by the compositor
+        // #2 is above it, in the "media overlay"; must be translucent or we will totally
+        // obscure #1 and it will be ignored by the compositor.  The addition of the alpha
+        // plane should switch us to RGBA8888.
         mSurfaceView2 = (SurfaceView) findViewById(R.id.multiSurfaceView2);
         mSurfaceView2.getHolder().addCallback(this);
         mSurfaceView2.getHolder().setFormat(PixelFormat.TRANSLUCENT);
         mSurfaceView2.setZOrderMediaOverlay(true);
 
-        // #3 is above everything, including the UI
+        // #3 is above everything, including the UI.  Also translucent.
         mSurfaceView3 = (SurfaceView) findViewById(R.id.multiSurfaceView3);
         mSurfaceView3.getHolder().addCallback(this);
         mSurfaceView3.getHolder().setFormat(PixelFormat.TRANSLUCENT);
@@ -203,13 +205,13 @@ public class MultiSurfaceTest extends Activity implements SurfaceHolder.Callback
                 }
                 break;
             case 3:
-                // top layer: faint blue line
+                // top layer: alpha stripes
                 if (portrait) {
                     int halfLine = width / 16 + 1;
-                    drawRectSurface(surface, width/2 - halfLine, 0, width/2 + halfLine, height);
+                    drawRectSurface(surface, width/2 - halfLine, 0, halfLine*2, height);
                 } else {
                     int halfLine = height / 16 + 1;
-                    drawRectSurface(surface, 0, height/2 - halfLine, width, height/2 + halfLine);
+                    drawRectSurface(surface, 0, height/2 - halfLine, width, halfLine*2);
                 }
                 break;
             default:
@@ -224,11 +226,11 @@ public class MultiSurfaceTest extends Activity implements SurfaceHolder.Callback
     }
 
     /**
-     * Clears the surface, then draws a blue alpha-blended rectangle with GL.
+     * Clears the surface, then draws some alpha-blended rectangles with GL.
      * <p>
      * Creates a temporary EGL context just for the duration of the call.
      */
-    private void drawRectSurface(Surface surface, int left, int top, int right, int bottom) {
+    private void drawRectSurface(Surface surface, int left, int top, int width, int height) {
         EglCore eglCore = new EglCore();
         WindowSurface win = new WindowSurface(eglCore, surface, false);
         win.makeCurrent();
@@ -236,9 +238,38 @@ public class MultiSurfaceTest extends Activity implements SurfaceHolder.Callback
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
 
         GLES20.glEnable(GLES20.GL_SCISSOR_TEST);
-        GLES20.glScissor(left, top, right - left, bottom - top);
-        GLES20.glClearColor(0.0f, 0.0f, 0.5f, 0.25f);
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+        for (int i = 0; i < 4; i++) {
+            int x, y, w, h;
+            if (width < height) {
+                // vertical
+                w = width / 4;
+                h = height;
+                x = left + w * i;
+                y = top;
+            } else {
+                // horizontal
+                w = width;
+                h = height / 4;
+                x = left;
+                y = top + h * i;
+            }
+            GLES20.glScissor(x, y, w, h);
+            switch (i) {
+                case 0:     // 50% blue at 25% alpha, pre-multiplied
+                    GLES20.glClearColor(0.0f, 0.0f, 0.125f, 0.25f);
+                    break;
+                case 1:     // 100% blue at 25% alpha, pre-multiplied
+                    GLES20.glClearColor(0.0f, 0.0f, 0.25f, 0.25f);
+                    break;
+                case 2:     // 200% blue at 25% alpha, pre-multiplied (should get clipped)
+                    GLES20.glClearColor(0.0f, 0.0f, 0.5f, 0.25f);
+                    break;
+                case 3:     // 100% white at 25% alpha, pre-multiplied
+                    GLES20.glClearColor(0.25f, 0.25f, 0.25f, 0.25f);
+                    break;
+            }
+            GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+        }
         GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
 
         win.swapBuffers();
