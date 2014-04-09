@@ -17,7 +17,7 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.grafika"
-    android:versionCode="24"
+    android:versionCode="25"
     android:versionName="1.0" >
 
     <uses-sdk
@@ -105,6 +105,10 @@
         <activity
             android:name="com.android.grafika.MultiSurfaceTest"
             android:label="@string/title_activity_multi_surface_test" >
+        </activity>
+        <activity
+            android:name="com.android.grafika.CodecOpenActivity"
+            android:label="@string/title_activity_codec_open" >
         </activity>
     </application>
 

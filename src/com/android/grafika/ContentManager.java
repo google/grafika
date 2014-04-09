@@ -280,8 +280,8 @@ public class ContentManager {
          */
         private void showFailureDialog(Context context, RuntimeException failure) {
             AlertDialog.Builder builder = new AlertDialog.Builder(context);
-            builder.setTitle(R.string.content_generation_failed_title);
-            String msg = context.getString(R.string.content_generation_failed_msg,
+            builder.setTitle(R.string.contentGenerationFailedTitle);
+            String msg = context.getString(R.string.contentGenerationFailedMsg,
                     failure.getMessage());
             builder.setMessage(msg);
             builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
