@@ -26,10 +26,17 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 
+/**
+ * Opens a large number of MediaCodec encoders, just to see what happens.
+ * <p>
+ * We never explicitly release the instances, though they will get garbage collected
+ * eventually.  The activity provides a "GC" button (so you can force the GC to happen)
+ * and a "Halt" button (which kills the app so you can see if mediaserver is cleaning up).
+ */
 public class CodecOpenActivity extends Activity {
     private static final String TAG = MainActivity.TAG;
 
-    private static final int MAX_OPEN = 128;
+    private static final int MAX_OPEN = 256;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,6 +87,9 @@ public class CodecOpenActivity extends Activity {
         showCountDialog(i);
     }
 
+    /**
+     * Puts up a dialog showing how many codecs we created.
+     */
     private void showCountDialog(int count) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.codecOpenCountTitle);
@@ -96,8 +106,21 @@ public class CodecOpenActivity extends Activity {
     }
 
     /**
+     * onClick handler for "GC" button.
+     * <p>
+     * Initiates manual garbage collection.  Some of the native stuff might not get cleaned up
+     * until finalizers run, so we request those too.
+     */
+    public void clickGc(@SuppressWarnings("unused") View unused) {
+        Log.i(TAG, "Collecting garbage");
+        System.gc();
+        System.runFinalization();
+        System.gc();
+    }
+
+    /**
      * onClick handler for "halt" button.
-     *
+     * <p>
      * This kills the process, which will be immediately restarted.
      */
     public void clickHalt(@SuppressWarnings("unused") View unused) {

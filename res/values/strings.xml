@@ -37,6 +37,7 @@
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>
     <string name="halt">Halt</string>
+    <string name="GC">GC</string>
     <string name="bounce">Bounce</string>
     <string name="state_ready">[ready]</string>
     <string name="state_running">[running]</string>

@@ -24,11 +24,20 @@
         android:text="@string/start_button" />
 
     <Button
+        android:id="@+id/codeOpenGc_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/codecOpenStart_button"
+        android:layout_below="@+id/codecOpenStart_button"
+        android:onClick="clickGc"
+        android:text="@string/GC" />
+
+    <Button
         android:id="@+id/codeOpenHalt_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignRight="@+id/codecOpenStart_button"
-        android:layout_below="@+id/codecOpenStart_button"
+        android:layout_alignRight="@+id/codeOpenGc_button"
+        android:layout_below="@+id/codeOpenGc_button"
         android:onClick="clickHalt"
         android:text="@string/halt" />
 

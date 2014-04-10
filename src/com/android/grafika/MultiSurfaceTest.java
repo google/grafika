@@ -131,6 +131,7 @@ public class MultiSurfaceTest extends Activity implements SurfaceHolder.Callback
             }
         };
         mBouncing = true;
+        mBounceThread.setName("Bouncer");
         mBounceThread.start();
     }
 
