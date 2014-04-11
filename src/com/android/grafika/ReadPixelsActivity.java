@@ -70,7 +70,7 @@ public class ReadPixelsActivity extends Activity {
      *
      * @return the dialog
      */
-    AlertDialog showProgressDialog() {
+    private AlertDialog showProgressDialog() {
         // Put up the progress dialog.
         AlertDialog.Builder builder = WorkDialog.create(this, R.string.running_test);
         builder.setCancelable(false);   // only by button
@@ -79,6 +79,7 @@ public class ReadPixelsActivity extends Activity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 mIsCanceled = true;
+                // let the async task handle dismiss the dialog
             }
         });
         return builder.show();
@@ -88,7 +89,7 @@ public class ReadPixelsActivity extends Activity {
     /**
      * onClick handler for gfx test button.
      */
-    public void clickRunGfxTest(View unused) {
+    public void clickRunGfxTest(@SuppressWarnings("unused") View unused) {
         Resources res = getResources();
         String running = res.getString(R.string.state_running);
         setMessage(R.id.gfxResult_text, running);
@@ -113,7 +114,7 @@ public class ReadPixelsActivity extends Activity {
         private ProgressBar mProgressBar;
 
         /**
-         * Prepares for either a gfx test or a video test.
+         * Prepare for the glReadPixels test.
          */
         public ReadPixelsTask(AlertDialog dialog, int resultTextId,
                 int width, int height, int iterations) {

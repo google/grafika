@@ -18,6 +18,7 @@ package com.android.grafika;
 
 import android.opengl.EGL14;
 import android.opengl.GLES20;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -104,6 +105,19 @@ public class GlesInfoActivity extends Activity {
 
         surface.release();
         eglCore.release();
+
+        sb.append("\n===== System Information =====");
+        sb.append("\nmfgr      : ");
+        sb.append(Build.MANUFACTURER);
+        sb.append("\nbrand     : ");
+        sb.append(Build.BRAND);
+        sb.append("\nmodel     : ");
+        sb.append(Build.MODEL);
+        sb.append("\nrelease   : ");
+        sb.append(Build.VERSION.RELEASE);
+        sb.append("\nbuild     : ");
+        sb.append(Build.DISPLAY);
+        sb.append("\n");
 
         return sb.toString();
     }

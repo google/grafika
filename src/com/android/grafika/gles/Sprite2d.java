@@ -25,12 +25,6 @@ import android.util.Log;
 public class Sprite2d {
     private static final String TAG = GlUtil.TAG;
 
-    private static final float[] IDENTITY_MATRIX;
-    static {
-        IDENTITY_MATRIX = new float[16];
-        Matrix.setIdentityM(IDENTITY_MATRIX, 0);
-    }
-
     private Drawable2d mDrawable;
     private float mColor[];
     private int mTextureId;
@@ -195,7 +189,7 @@ public class Sprite2d {
 
         program.draw(mScratchMatrix, mDrawable.getVertexArray(), 0,
                 mDrawable.getVertexCount(), mDrawable.getCoordsPerVertex(),
-                mDrawable.getVertexStride(), IDENTITY_MATRIX, mDrawable.getTexCoordArray(),
+                mDrawable.getVertexStride(), GlUtil.IDENTITY_MATRIX, mDrawable.getTexCoordArray(),
                 mTextureId, mDrawable.getTexCoordStride());
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Google Inc. All rights reserved.
+ * Copyright 2014 Google Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,35 +16,19 @@
 
 package com.android.grafika;
 
-import android.opengl.GLES20;
-import android.opengl.GLES30;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Surface;
 import android.view.TextureView;
-import android.view.View;
-import android.widget.Button;
 import android.app.Activity;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.SurfaceTexture;
 
-import com.android.grafika.gles.EglCore;
-import com.android.grafika.gles.WindowSurface;
-
 /**
- * Simple demonstration of using GLES to draw on a TextureView.
- * <p>
- * Note that rendering is a multi-stage process:
- * <ol>
- * <li>Render thread draws with GL on its local EGLSurface, a window surface it created.  The
- *     window surface is backed by the SurfaceTexture from TextureVIew.
- * <li>The SurfaceTexture takes what is rendered onto it and makes it available as a GL texture.
- * <li>TextureView takes the GL texture and renders it onto its EGLSurface.  That EGLSurface
- *     is a window surface visible to the compositor.
- * </ol>
- * It's important to bear in mind that Surface and EGLSurface are related but very
- * different things.
- * <p>
- * Unlike GLSurfaceView, TextureView doesn't manage the EGL config or renderer thread, so we
- * take care of that ourselves.
+ * A demonstration of using Canvas to draw on a TextureView.  Based on TextureViewGLActivity.
  * <p>
  * Currently renders frames as fast as possible, without waiting for the consumer.
  * <p>
@@ -52,16 +36,8 @@ import com.android.grafika.gles.WindowSurface;
  * to run as the TextureView is being destroyed.  Normally the renderer would be stopped
  * when the application pauses.
  */
-public class TextureViewGLActivity extends Activity {
+public class TextureViewCanvasActivity extends Activity {
     private static final String TAG = MainActivity.TAG;
-
-    // Experiment with allowing TextureView to release the SurfaceTexture from the callback vs.
-    // releasing it explicitly ourselves from the draw loop.  The latter seems to be problematic
-    // in 4.4 (KK) -- set the flag to "false", rotate the screen a few times, then check the
-    // output of "adb shell ps -t | grep `pid grafika`".
-    //
-    // Must be static or it'll get reset on every Activity pause/resume.
-    private static volatile boolean sReleaseInCallback = true;
 
     private TextureView mTextureView;
     private Renderer mRenderer;
@@ -75,8 +51,8 @@ public class TextureViewGLActivity extends Activity {
         mRenderer = new Renderer();
         mRenderer.start();
 
-        setContentView(R.layout.activity_texture_view_gl);
-        mTextureView = (TextureView) findViewById(R.id.glTextureView);
+        setContentView(R.layout.activity_texture_view_canvas);
+        mTextureView = (TextureView) findViewById(R.id.canvasTextureView);
         mTextureView.setSurfaceTextureListener(mRenderer);
     }
 
@@ -97,22 +73,10 @@ public class TextureViewGLActivity extends Activity {
      * Updates the UI elements to match current state.
      */
     private void updateControls() {
-        Button toggleRelease = (Button) findViewById(R.id.toggleRelease_button);
-        int id = sReleaseInCallback ?
-                R.string.toggleReleaseCallbackOff : R.string.toggleReleaseCallbackOn;
-        toggleRelease.setText(id);
     }
 
     /**
-     * onClick handler for toggleRelease_button.
-     */
-    public void clickToggleRelease(View unused) {
-        sReleaseInCallback = !sReleaseInCallback;
-        updateControls();
-    }
-
-    /**
-     * Handles GL rendering and SurfaceTexture callbacks.
+     * Handles Canvas rendering and SurfaceTexture callbacks.
      * <p>
      * We don't create a Looper, so the SurfaceTexture-by-way-of-TextureView callbacks
      * happen on the UI thread.
@@ -120,11 +84,13 @@ public class TextureViewGLActivity extends Activity {
     private static class Renderer extends Thread implements TextureView.SurfaceTextureListener {
         private Object mLock = new Object();        // guards mSurfaceTexture, mDone
         private SurfaceTexture mSurfaceTexture;
-        private EglCore mEglCore;
         private boolean mDone;
 
+        private int mWidth;     // from SurfaceTexture
+        private int mHeight;
+
         public Renderer() {
-            super("TextureViewGL Renderer");
+            super("TextureViewCanvas Renderer");
         }
 
         @Override
@@ -148,24 +114,8 @@ public class TextureViewGLActivity extends Activity {
                 }
                 Log.d(TAG, "Got surfaceTexture=" + surfaceTexture);
 
-                // Create an EGL surface for our new SurfaceTexture.  We're not on the same
-                // thread as the SurfaceTexture, which is a concern for the *consumer*, which
-                // wants to call updateTexImage().  Because we're the *producer*, i.e. the
-                // one generating the frames, we don't need to worry about being on the same
-                // thread.
-                mEglCore = new EglCore(null, EglCore.FLAG_TRY_GLES3);
-                WindowSurface windowSurface = new WindowSurface(mEglCore, mSurfaceTexture);
-                windowSurface.makeCurrent();
-
                 // Render frames until we're told to stop or the SurfaceTexture is destroyed.
-                doAnimation(windowSurface);
-
-                windowSurface.release();
-                mEglCore.release();
-                if (!sReleaseInCallback) {
-                    Log.i(TAG, "Releasing SurfaceTexture in renderer thread");
-                    surfaceTexture.release();
-                }
+                doAnimation();
             }
 
             Log.d(TAG, "Renderer thread exiting");
@@ -180,52 +130,70 @@ public class TextureViewGLActivity extends Activity {
          * The correct thing to do here is use Choreographer to schedule frame updates off
          * of vsync, but that's not nearly as much fun.
          */
-        private void doAnimation(WindowSurface eglSurface) {
+        private void doAnimation() {
             final int BLOCK_WIDTH = 80;
             final int BLOCK_SPEED = 2;
-            float clearColor = 0.0f;
+            int clearColor = 0;
             int xpos = -BLOCK_WIDTH / 2;
             int xdir = BLOCK_SPEED;
-            int width = eglSurface.getWidth();
-            int height = eglSurface.getHeight();
 
-            Log.d(TAG, "Animating " + width + "x" + height + " EGL surface");
+            // Create a Surface for the SurfaceTexture.
+            Surface surface = null;
+            synchronized (mLock) {
+                SurfaceTexture surfaceTexture = mSurfaceTexture;
+                if (surfaceTexture == null) {
+                    Log.d(TAG, "ST null on entry");
+                    return;
+                }
+                surface = new Surface(surfaceTexture);
+            }
 
+            Paint paint = new Paint();
+            paint.setColor(Color.RED);
+            paint.setStyle(Paint.Style.FILL);
+
+            boolean partial = false;
             while (true) {
-                // Check to see if the TextureView's SurfaceTexture is still valid.
-                synchronized (mLock) {
-                    SurfaceTexture surfaceTexture = mSurfaceTexture;
-                    if (surfaceTexture == null) {
-                        Log.d(TAG, "doAnimation exiting");
-                        return;
-                    }
+                Rect dirty = null;
+                if (partial) {
+                    // Set a dirty rect to confirm that this is working.
+                    dirty = new Rect(0, mHeight * 3 / 8, mWidth, mHeight * 5 / 8);
+                }
+                Canvas canvas = surface.lockCanvas(dirty);
+                if (canvas == null) {
+                    Log.d(TAG, "lockCanvas() failed");
+                    break;
                 }
 
-                // Still alive, render a frame.
-                GLES20.glClearColor(clearColor, clearColor, clearColor, 1.0f);
-                GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+                // just curious
+                if (canvas.getWidth() != mWidth || canvas.getHeight() != mHeight) {
+                    Log.d(TAG, "WEIRD: width/height mismatch");
+                }
 
-                GLES20.glEnable(GLES20.GL_SCISSOR_TEST);
-                GLES20.glScissor(xpos, height / 4, BLOCK_WIDTH, height / 2);
-                GLES20.glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
-                GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
-                GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
+                canvas.drawRGB(clearColor, clearColor, clearColor);
+                canvas.drawRect(xpos, mHeight / 4, xpos + BLOCK_WIDTH, mHeight * 3 / 4, paint);
 
                 // Publish the frame.  If we overrun the consumer (which is likely), we will
                 // slow down due to back-pressure.  If the consumer stops acquiring buffers,
                 // which will happen if the TextureView is paused, we will get stuck here
                 // until the SurfaceTexture is released.
                 //
-                // TODO: investigate whether this behavior is different in 4.3 vs. 4.4
-                eglSurface.swapBuffers();
+                // If the SurfaceTexture has been destroyed, this will throw an exception.
+                try {
+                    surface.unlockCanvasAndPost(canvas);
+                } catch (IllegalArgumentException iae) {
+                    Log.d(TAG, "unlockCanvasAndPost failed: " + iae.getMessage());
+                    break;
+                }
 
                 // Advance state
-                clearColor += 0.015625f;
-                if (clearColor > 1.0f) {
-                    clearColor = 0.0f;
+                clearColor += 4;
+                if (clearColor > 255) {
+                    clearColor = 0;
+                    partial = !partial;
                 }
                 xpos += xdir;
-                if (xpos <= -BLOCK_WIDTH / 2 || xpos >= width - BLOCK_WIDTH / 2) {
+                if (xpos <= -BLOCK_WIDTH / 2 || xpos >= mWidth - BLOCK_WIDTH / 2) {
                     Log.d(TAG, "change direction");
                     xdir = -xdir;
                 }
@@ -245,6 +213,8 @@ public class TextureViewGLActivity extends Activity {
         @Override   // will be called on UI thread
         public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
             Log.d(TAG, "onSurfaceTextureAvailable(" + width + "x" + height + ")");
+            mWidth = width;
+            mHeight = height;
             synchronized (mLock) {
                 mSurfaceTexture = surface;
                 mLock.notify();
@@ -254,36 +224,18 @@ public class TextureViewGLActivity extends Activity {
         @Override   // will be called on UI thread
         public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
             Log.d(TAG, "onSurfaceTextureSizeChanged(" + width + "x" + height + ")");
-            // TODO: ?
+            mWidth = width;
+            mHeight = height;
         }
 
         @Override   // will be called on UI thread
         public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
             Log.d(TAG, "onSurfaceTextureDestroyed");
 
-            // We set the SurfaceTexture reference to null to tell the Renderer thread that
-            // it needs to stop.  The renderer might be in the middle of drawing, so we want
-            // to return false here so that the caller doesn't try to release the ST out
-            // from under us.
-            //
-            // In theory.
-            //
-            // In 4.4, the buffer queue was changed to be synchronous, which means we block
-            // in dequeueBuffer().  If the renderer has been running flat out and is currently
-            // sleeping in eglSwapBuffers(), it's going to be stuck there until somebody
-            // tears down the SurfaceTexture.  So we need to tear it down here to ensure
-            // that the renderer thread will break.  If we don't, the thread sticks there
-            // forever.
-            //
-            // The only down side to releasing it here is we'll get some complaints in logcat
-            // when eglSwapBuffers() fails.
             synchronized (mLock) {
                 mSurfaceTexture = null;
             }
-            if (sReleaseInCallback) {
-                Log.i(TAG, "Allowing TextureView to release SurfaceTexture");
-            }
-            return sReleaseInCallback;
+            return true;
         }
 
         @Override   // will be called on UI thread

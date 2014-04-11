@@ -44,8 +44,10 @@
     <string name="succeeded">SUCCEEDED</string>
     <string name="failed">FAILED</string>
     <string name="gfxRunTest_button">Run test</string>
-    <string name="videoRunTest_button">Run test (video)</string>
     <string name="gfxResultLabel_text">"Result: "</string>
+    <string name="textureRunTest_button">Run test</string>
+    <string name="textureResultLabel_text">"Result: "</string>
+    <string name="videoRunTest_button">Run test (video)</string>
     <string name="preparing_content">Preparing content&#8230;</string>
     <string name="workJobName_text">Working&#8230;</string>
     <string name="running_test">Running test&#8230;</string>
@@ -55,7 +57,8 @@
     <string name="stop_button_text">Stop</string>
     <string name="cameraOutputFileLabel_text">Output file:</string>
     <string name="cameraOutputFile_text">[filename]</string>
-    <string name="glTextureViewCaption_text">GLES rendered into a TextureView</string>
+    <string name="glTextureViewCaption">GLES rendered into a TextureView</string>
+    <string name="canvasTextureViewCaption">Canvas rendered into a TextureView</string>
     <string name="toggleReleaseCallbackOff">Toggle release (now: ST callback)</string>
     <string name="toggleReleaseCallbackOn">Toggle release (now: renderer)</string>
     <string name="toggleRecordingOn">Start recording</string>
@@ -101,6 +104,7 @@
     <string name="title_activity_play_movie">Play video (TextureView)</string>
     <string name="title_activity_read_pixels">glReadPixels speed test</string>
     <string name="title_activity_texture_view_gl">Basic GL in TextureView</string>
+    <string name="title_activity_texture_view_canvas">Basic Canvas in TextureView</string>
     <string name="title_activity_live_camera">Live camera (TextureView)</string>
     <string name="title_activity_record_fbo">Record GL app</string>
     <string name="action_settings">Settings</string>
@@ -113,5 +117,6 @@
     <string name="title_activity_play_movie_surface">Play video (SurfaceView)</string>
     <string name="title_activity_multi_surface_test">Multi-Surface Test</string>
     <string name="title_activity_codec_open">Codec Open Activity</string>
+    <string name="title_activity_texture_upload">Texture upload speed test</string>
 
 </resources>

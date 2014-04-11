@@ -144,6 +144,8 @@ Current features
 [OpenGL ES Info](src/com/android/grafika/GlesInfoActivity.java).  Dumps version info and extension lists.
 - The "Save" button writes a copy of the output to the app's file area.
 
+[glTexImage2d speed test](src/com/android/grafika/TextureUploadActivity.java).  Simple, unscientific measurement of the time required to upload a 512x512 RGBA texture with `glTexImage2d()`.
+
 [glReadPixels speed test](src/com/android/grafika/ReadPixelsActivity.java).  Simple, unscientific measurement of the time required for `glReadPixels()` to read a 720p frame.
 
 
@@ -177,4 +179,6 @@ In no particular order.
 - Capture audio from microphone, record + mux it.
 - Enable preview on front/back cameras simultaneously, display them side-by-side.  (This
   appears to be impossible except on specific devices.)
+- Fix the various aspect ratio problems (camera in/out in "Show + capture" and "Continuous
+  capture" activities).
 

@@ -22,29 +22,36 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context=".TextureViewGLActivity" >
-
-    <TextView
-        android:id="@+id/glTextureViewCaption_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/glTextureViewCaption" />
-
-    <TextureView
-        android:id="@+id/glTextureView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/glTextureViewCaption_text"
-        android:layout_below="@+id/toggleRelease_button" />
+    tools:context=".ReadPixelsActivity" >
 
     <Button
-        android:id="@+id/toggleRelease_button"
-        style="?android:attr/buttonStyleSmall"
+        android:id="@+id/textureRunTest_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/glTextureViewCaption_text"
-        android:layout_below="@+id/glTextureViewCaption_text"
-        android:text="@string/toggleReleaseCallbackOff"
-        android:onClick="clickToggleRelease" />
+        android:layout_alignLeft="@+id/textureResultLabel_text"
+        android:layout_alignParentTop="true"
+        android:text="@string/textureRunTest_button"
+        android:onClick="clickRunTest" />
+
+    <TextView
+        android:id="@+id/textureResultLabel_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/textureRunTest_button"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="12dp"
+        android:text="@string/textureResultLabel_text"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <TextView
+        android:id="@+id/textureResult_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/textureResultLabel_text"
+        android:layout_alignBottom="@+id/textureResultLabel_text"
+        android:layout_toRightOf="@+id/textureResultLabel_text"
+        android:text="@string/state_ready"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
 
 </RelativeLayout>
