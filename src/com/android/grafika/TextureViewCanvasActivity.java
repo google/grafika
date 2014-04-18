@@ -124,8 +124,9 @@ public class TextureViewCanvasActivity extends Activity {
         /**
          * Draws updates as fast as the system will allow.
          * <p>
-         * In 4.4, with the synchronous queue, the frame rate will be limited.  In previous
-         * releases, with the async queue, most of the frames we render will be dropped.
+         * In 4.4, with the synchronous buffer queue queue, the frame rate will be limited.
+         * In previous (and future) releases, with the async queue, many of the frames we
+         * render may be dropped.
          * <p>
          * The correct thing to do here is use Choreographer to schedule frame updates off
          * of vsync, but that's not nearly as much fun.
@@ -156,7 +157,9 @@ public class TextureViewCanvasActivity extends Activity {
             while (true) {
                 Rect dirty = null;
                 if (partial) {
-                    // Set a dirty rect to confirm that this is working.
+                    // Set a dirty rect to confirm that the feature is working.  It's
+                    // possible for lockCanvas() to expand the dirty rect if for some
+                    // reason the system doesn't have access to the previous buffer.
                     dirty = new Rect(0, mHeight * 3 / 8, mWidth, mHeight * 5 / 8);
                 }
                 Canvas canvas = surface.lockCanvas(dirty);
@@ -170,13 +173,16 @@ public class TextureViewCanvasActivity extends Activity {
                     Log.d(TAG, "WEIRD: width/height mismatch");
                 }
 
+                // Draw the entire window.  If the dirty rect is set we should actually
+                // just be drawing into the area covered by it -- the system lets us draw
+                // whatever we want, then overwrites the areas outside the dirty rect with
+                // the previous contents.  So we've got a lot of overdraw here.
                 canvas.drawRGB(clearColor, clearColor, clearColor);
                 canvas.drawRect(xpos, mHeight / 4, xpos + BLOCK_WIDTH, mHeight * 3 / 4, paint);
 
-                // Publish the frame.  If we overrun the consumer (which is likely), we will
-                // slow down due to back-pressure.  If the consumer stops acquiring buffers,
-                // which will happen if the TextureView is paused, we will get stuck here
-                // until the SurfaceTexture is released.
+                // Publish the frame.  If we overrun the consumer, frames will be dropped,
+                // so on a sufficiently fast device the animation will run at faster than
+                // the display refresh rate.
                 //
                 // If the SurfaceTexture has been destroyed, this will throw an exception.
                 try {

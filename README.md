@@ -137,6 +137,12 @@ Current features
   here: http://www.youtube.com/watch?v=kH9kCP2T5Gg
 - The output is a video-only MP4 file ("camera-test.mp4").
 
+[Simple Canvas in TextureView](src/com/android/grafika/TextureViewCanvasActivity.java).  Exercises software rendering to a `TextureView` with a `Canvas`.
+- Renders as quickly as possible.  Because it's using software rendering, this will likely
+  run more slowly than the "Simple GL in TextureView" activity.
+- Toggles the use of a dirty rect every 64 frames.  When enabled, the dirty rect extends
+  horizontally across the screen.
+
 [Simple GL in TextureView](src/com/android/grafika/TextureViewGLActivity.java).  Demonstates simple use of GLES in a `TextureView`, rather than a `GLSurfaceView`.
 - Renders as quickly as possible.  On most devices it will exceed 60fps and flicker wildly,
   but in 4.4 ("KitKat") a bug prevents the system from dropping frames.

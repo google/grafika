@@ -174,8 +174,9 @@ public class TextureViewGLActivity extends Activity {
         /**
          * Draws updates as fast as the system will allow.
          * <p>
-         * In 4.4, with the synchronous queue, the frame rate will be limited.  In previous
-         * releases, with the async queue, most of the frames we render will be dropped.
+         * In 4.4, with the synchronous buffer queue queue, the frame rate will be limited.
+         * In previous (and future) releases, with the async queue, many of the frames we
+         * render may be dropped.
          * <p>
          * The correct thing to do here is use Choreographer to schedule frame updates off
          * of vsync, but that's not nearly as much fun.
@@ -211,12 +212,11 @@ public class TextureViewGLActivity extends Activity {
                 GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
                 GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
 
-                // Publish the frame.  If we overrun the consumer (which is likely), we will
-                // slow down due to back-pressure.  If the consumer stops acquiring buffers,
-                // which will happen if the TextureView is paused, we will get stuck here
-                // until the SurfaceTexture is released.
+                // Publish the frame.  If we overrun the consumer, frames will be dropped,
+                // so on a sufficiently fast device the animation will run at faster than
+                // the display refresh rate.
                 //
-                // TODO: investigate whether this behavior is different in 4.3 vs. 4.4
+                // If the SurfaceTexture has been destroyed, this will throw an exception.
                 eglSurface.swapBuffers();
 
                 // Advance state
