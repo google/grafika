@@ -162,7 +162,6 @@ Feature & fix ideas
 
 In no particular order.
 
-- Add a trivial glTexImage2D texture upload speed benchmark (maybe 512x512 RGBA).
 - Update MoviePlayer#doExtract() to improve startup latency
   (http://stackoverflow.com/questions/21440820/).
 - Add camera demo that sends preview to ST and then renders it in a small window that
