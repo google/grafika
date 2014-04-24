@@ -147,6 +147,8 @@ Current features
 - Renders as quickly as possible.  On most devices it will exceed 60fps and flicker wildly,
   but in 4.4 ("KitKat") a bug prevents the system from dropping frames.
 
+[Color bars](src/com/android/grafika/ColorBarActivity.java).  Displays RGB color bars.
+
 [OpenGL ES Info](src/com/android/grafika/GlesInfoActivity.java).  Dumps version info and extension lists.
 - The "Save" button writes a copy of the output to the app's file area.
 

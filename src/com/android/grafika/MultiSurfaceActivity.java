@@ -46,7 +46,7 @@ import com.android.grafika.gles.WindowSurface;
  * <code>systrace.py --app=com.android.grafika gfx view sched dalvik</code>
  * (most interesting while bouncing).
  */
-public class MultiSurfaceTest extends Activity implements SurfaceHolder.Callback {
+public class MultiSurfaceActivity extends Activity implements SurfaceHolder.Callback {
     private static final String TAG = MainActivity.TAG;
 
     // Number of steps in each direction.  There's actually N+1 positions because we
@@ -292,10 +292,13 @@ public class MultiSurfaceTest extends Activity implements SurfaceHolder.Callback
         paint.setShadowLayer(radius / 4 + 1, 0, 0, Color.RED);
 
         Canvas canvas = surface.lockCanvas(null);
-        Log.v(TAG, "drawCircleSurface: isHwAcc=" + canvas.isHardwareAccelerated());
-        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
-        canvas.drawCircle(x, y, radius, paint);
-        surface.unlockCanvasAndPost(canvas);
+        try {
+            Log.v(TAG, "drawCircleSurface: isHwAcc=" + canvas.isHardwareAccelerated());
+            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+            canvas.drawCircle(x, y, radius, paint);
+        } finally {
+            surface.unlockCanvasAndPost(canvas);
+        }
     }
 
     /**
@@ -309,31 +312,34 @@ public class MultiSurfaceTest extends Activity implements SurfaceHolder.Callback
         paint.setStyle(Paint.Style.FILL);
 
         Canvas canvas = surface.lockCanvas(null);
-        Trace.beginSection("drawBouncingCircle");
-        Trace.beginSection("drawColor");
-        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
-        Trace.endSection(); // drawColor
+        try {
+            Trace.beginSection("drawBouncingCircle");
+            Trace.beginSection("drawColor");
+            canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
+            Trace.endSection(); // drawColor
 
-        int width = canvas.getWidth();
-        int height = canvas.getHeight();
-        int radius, x, y;
-        if (width < height) {
-            // portrait
-            radius = width / 4;
-            x = width / 4 + ((width / 2 * i) / BOUNCE_STEPS);
-            y = height * 3 / 4;
-        } else {
-            // landscape
-            radius = height / 4;
-            x = width * 3 / 4;
-            y = height / 4 + ((height / 2 * i) / BOUNCE_STEPS);
+            int width = canvas.getWidth();
+            int height = canvas.getHeight();
+            int radius, x, y;
+            if (width < height) {
+                // portrait
+                radius = width / 4;
+                x = width / 4 + ((width / 2 * i) / BOUNCE_STEPS);
+                y = height * 3 / 4;
+            } else {
+                // landscape
+                radius = height / 4;
+                x = width * 3 / 4;
+                y = height / 4 + ((height / 2 * i) / BOUNCE_STEPS);
+            }
+
+            paint.setShadowLayer(radius / 4 + 1, 0, 0, Color.RED);
+
+            canvas.drawCircle(x, y, radius, paint);
+            Trace.endSection(); // drawBouncingCircle
+        } finally {
+            surface.unlockCanvasAndPost(canvas);
         }
-
-        paint.setShadowLayer(radius / 4 + 1, 0, 0, Color.RED);
-
-        canvas.drawCircle(x, y, radius, paint);
-        Trace.endSection(); // drawBouncingCircle
-        surface.unlockCanvasAndPost(canvas);
     }
 
 }

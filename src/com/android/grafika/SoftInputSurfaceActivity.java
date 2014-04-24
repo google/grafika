@@ -257,32 +257,34 @@ public class SoftInputSurfaceActivity extends Activity {
      */
     private void generateFrame(int frameNum) {
         Canvas canvas = mInputSurface.lockCanvas(null);
-        int width = canvas.getWidth();
-        int height = canvas.getHeight();
+        try {
+            int width = canvas.getWidth();
+            int height = canvas.getHeight();
 
-        Paint paint = new Paint();
-        for (int i = 0; i < 8; i++) {
-            int color = 0xff000000;
-            if ((i & 0x01) != 0) {
-                color |= 0x00ff0000;
-            }
-            if ((i & 0x02) != 0) {
-                color |= 0x0000ff00;
-            }
-            if ((i & 0x04) != 0) {
-                color |= 0x000000ff;
-            }
-            paint.setColor(color);
+            Paint paint = new Paint();
+            for (int i = 0; i < 8; i++) {
+                int color = 0xff000000;
+                if ((i & 0x01) != 0) {
+                    color |= 0x00ff0000;
+                }
+                if ((i & 0x02) != 0) {
+                    color |= 0x0000ff00;
+                }
+                if ((i & 0x04) != 0) {
+                    color |= 0x000000ff;
+                }
+                paint.setColor(color);
 
-            float sliceWidth = width / 8;
-            canvas.drawRect(sliceWidth * i, 0, sliceWidth * (i+1), height, paint);
+                float sliceWidth = width / 8;
+                canvas.drawRect(sliceWidth * i, 0, sliceWidth * (i+1), height, paint);
+            }
+
+            paint.setColor(0x80808080);
+            float sliceHeight = height / 8;
+            int frameMod = frameNum % 8;
+            canvas.drawRect(0, sliceHeight * frameMod, width, sliceHeight * (frameMod+1), paint);
+        } finally {
+            mInputSurface.unlockCanvasAndPost(canvas);
         }
-
-        paint.setColor(0x80808080);
-        float sliceHeight = height / 8;
-        int frameMod = frameNum % 8;
-        canvas.drawRect(0, sliceHeight * frameMod, width, sliceHeight * (frameMod+1), paint);
-
-        mInputSurface.unlockCanvasAndPost(canvas);
     }
 }

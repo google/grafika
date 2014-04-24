@@ -118,5 +118,6 @@
     <string name="title_activity_multi_surface_test">Multi-Surface Test</string>
     <string name="title_activity_codec_open">Codec Open Activity</string>
     <string name="title_activity_texture_upload">Texture upload speed test</string>
+    <string name="title_color_bar">RGB color bars</string>
 
 </resources>
