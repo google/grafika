@@ -92,7 +92,7 @@ public class PlayMovieSurfaceActivity extends Activity implements OnItemSelected
         Spinner spinner = (Spinner) findViewById(R.id.playMovieFile_spinner);
         // Need to create one of these fancy ArrayAdapter thingies, and specify the generic layout
         // for the widget itself.
-        mMovieFiles = FileUtils.getFiles(getFilesDir(), "*.mp4");
+        mMovieFiles = MiscUtils.getFiles(getFilesDir(), "*.mp4");
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_spinner_item, mMovieFiles);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);

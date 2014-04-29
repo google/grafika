@@ -17,7 +17,7 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.grafika"
-    android:versionCode="28"
+    android:versionCode="29"
     android:versionName="1.0" >
 
     <uses-sdk
@@ -111,7 +111,8 @@
         </activity>
         <activity
             android:name="com.android.grafika.MultiSurfaceActivity"
-            android:label="@string/title_activity_multi_surface_test" >
+            android:label="@string/title_activity_multi_surface_test"
+            android:theme="@android:style/Theme.Holo" >
         </activity>
         <activity
             android:name="com.android.grafika.CodecOpenActivity"
@@ -125,6 +126,11 @@
             android:name="com.android.grafika.ColorBarActivity"
             android:label="@string/title_color_bar"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
+        </activity>
+        <activity
+            android:name="com.android.grafika.ScheduledSwapActivity"
+            android:label="@string/title_scheduled_swap"
+            android:theme="@android:style/Theme.Black" >
         </activity>
     </application>
 

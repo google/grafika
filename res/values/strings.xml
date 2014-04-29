@@ -89,15 +89,37 @@
     <string name="flatShaded">flat shaded</string>
     <string name="multiSurfaceMessage">This is a test!</string>
     <string name="codecOpenMessage">This will open (create+configure) as many AVC codecs as it can.</string>
+    <string name="scheduledSwapRefresh">Refresh period %1$d us</string>
+    <string name="scheduledSwapStatus">Dropped frames: %1$d</string>
+    <string name="scheduledSwapUpdateLabel">Frames/sec: </string>
+    <string name="scheduledSwapAheadLabel">Frames ahead: </string>
 
     <!-- for cameraFilter_spinner; match with CameraCaptureActivity constants -->
-    <string-array name="camera_filter_names">
+    <string-array name="cameraFilterNames">
         <item>Normal</item>
         <item>Black &amp; white</item>
         <item>Filter: blur</item>
         <item>Filter: sharpen</item>
         <item>Filter: edge detect</item>
         <item>Filter: emboss</item>
+    </string-array>
+
+    <!-- for scheduledSwapUpdate_spinner; match with UPDATE_PATTERNS -->
+    <string-array name="scheduledSwapUpdateNames">
+        <item>15 fps</item>
+        <item>24 fps</item>
+        <item>25 fps</item>
+        <item>30 fps</item>
+        <item>60 fps</item>
+        <item>erratic 1/5</item>
+    </string-array>
+
+    <!-- for scheduledSwapAhead_spinner; match with FRAME_AHEAD -->
+    <string-array name="scheduledSwapAheadNames">
+        <item>ASAP</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
     </string-array>
 
     <string name="title_activity_camera_capture">Show + capture camera</string>
@@ -119,5 +141,6 @@
     <string name="title_activity_codec_open">Codec Open Activity</string>
     <string name="title_activity_texture_upload">Texture upload speed test</string>
     <string name="title_color_bar">RGB color bars</string>
+    <string name="title_scheduled_swap">Scheduled swap</string>
 
 </resources>

@@ -123,7 +123,7 @@ public class CameraCaptureActivity extends Activity
     private static final String TAG = MainActivity.TAG;
     private static final boolean VERBOSE = false;
 
-    // Camera filters; must match up with camera_filter_names in strings.xml
+    // Camera filters; must match up with cameraFilterNames in strings.xml
     static final int FILTER_NONE = 0;
     static final int FILTER_BLACK_WHITE = 1;
     static final int FILTER_BLUR = 2;
@@ -153,7 +153,7 @@ public class CameraCaptureActivity extends Activity
 
         Spinner spinner = (Spinner) findViewById(R.id.cameraFilter_spinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.camera_filter_names, android.R.layout.simple_spinner_item);
+                R.array.cameraFilterNames, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         // Apply the adapter to the spinner.
         spinner.setAdapter(adapter);
@@ -304,7 +304,7 @@ public class CameraCaptureActivity extends Activity
     /**
      * onClick handler for "record" button.
      */
-    public void clickToggleRecording(View unused) {
+    public void clickToggleRecording(@SuppressWarnings("unused") View unused) {
         mRecordingEnabled = !mRecordingEnabled;
         mGLView.queueEvent(new Runnable() {
             @Override public void run() {
@@ -448,7 +448,7 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
     private int mIncomingHeight;
 
     private int mCurrentFilter;
-    private int mNewFilter;;
+    private int mNewFilter;
 
 
     /**

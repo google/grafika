@@ -16,7 +16,11 @@
 
 package com.android.grafika;
 
+import android.app.Activity;
+import android.content.Context;
 import android.util.Log;
+import android.view.Display;
+import android.view.WindowManager;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -27,10 +31,10 @@ import java.util.regex.Pattern;
 /**
  * Some handy utilities.
  */
-public class FileUtils {
+public class MiscUtils {
     private static final String TAG = MainActivity.TAG;
 
-    private FileUtils() {}
+    private MiscUtils() {}
 
     /**
      * Obtains a list of files that live in the specified directory and match the glob pattern.
@@ -80,5 +84,20 @@ public class FileUtils {
         }
         //regex.append('$');
         return regex.toString();
+    }
+
+    /**
+     * Obtains the approximate refresh time, in nanoseconds, of the default display associated
+     * with the activity.
+     * <p>
+     * The actual refresh rate can vary slightly (e.g. 58-62fps on a 60fps device).
+     */
+    public static long getDisplayRefreshNsec(Activity activity) {
+        Display display = ((WindowManager)
+                activity.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+        double displayFps = display.getRefreshRate();
+        long refreshNs = Math.round(1000000000L / displayFps);
+        Log.d(TAG, "refresh rate is " + displayFps + " fps --> " + refreshNs + " ns");
+        return refreshNs;
     }
 }

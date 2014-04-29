@@ -123,6 +123,14 @@ Current features
   display, so you'll get different results from recording in landscape vs. portrait.
 - The output is a video-only MP4 file ("fbo-gl-recording.mp4").
 
+[Scheduled swap](src/com/android/grafika/ScheduledSwapActivity.java).  Exercises a SurfaceFlinger feature that allows you to submit buffers to be displayed at a specific time.
+- Requires API 19 (Android 4.4 "KitKat") to do what it's supposed to.  The current implementation
+  doesn't really look any different on API 18 to the naked eye.
+- You can configure the frame delivery timing (e.g. 24fps uses a 3-2 pattern) and how far
+  in advance frames are scheduled.  Selecting "ASAP" disables scheduling.
+- Use systrace with tags `sched gfx view --app=com.android.grafika` to observe the effects.
+- The moving square changes colors when the app is unhappy about timing.
+
 [Show + capture camera](src/com/android/grafika/CameraCaptureActivity.java).  Attempts to record at 720p from the front-facing camera, displaying the preview and recording it simultaneously.
 - Use the record button to toggle recording on and off.
 - Recording continues until stopped.  If you back out and return, recording will start again,
@@ -152,7 +160,7 @@ Current features
 [OpenGL ES Info](src/com/android/grafika/GlesInfoActivity.java).  Dumps version info and extension lists.
 - The "Save" button writes a copy of the output to the app's file area.
 
-[glTexImage2d speed test](src/com/android/grafika/TextureUploadActivity.java).  Simple, unscientific measurement of the time required to upload a 512x512 RGBA texture with `glTexImage2d()`.
+[glTexImage2D speed test](src/com/android/grafika/TextureUploadActivity.java).  Simple, unscientific measurement of the time required to upload a 512x512 RGBA texture with `glTexImage2D()`.
 
 [glReadPixels speed test](src/com/android/grafika/ReadPixelsActivity.java).  Simple, unscientific measurement of the time required for `glReadPixels()` to read a 720p frame.
 
@@ -165,7 +173,7 @@ In no particular order.
 - Update MoviePlayer#doExtract() to improve startup latency
   (http://stackoverflow.com/questions/21440820/).
 - Add camera demo that sends preview to ST and then renders it in a small window that
-  can be flung around / scaled / rotated by touch.
+  can be flung around / scaled / rotated / zoomed by touch.
 - Add a "fat bits" viewer for camera (single SurfaceView; left half has live camera feed
   and a pan rect, right half has 8x pixels)
 - Change the "Simple GL in TextureView" animation.  Or add an epilepsy warning.
@@ -181,11 +189,13 @@ In no particular order.
 - Experiment with alternatives to glReadPixels().  Add a PBO speed test.  (Doesn't seem
   to be a way to play with eglCreateImageKHR from Java.)
 - Do something with ImageReader class (req API 19).
-- Figure out why "double decode" playback is janky.
+- Figure out why "double decode" playback is sometimes janky.
 - Add fps indicator to "Simple GL in TextureView".
 - Capture audio from microphone, record + mux it.
 - Enable preview on front/back cameras simultaneously, display them side-by-side.  (This
   appears to be impossible except on specific devices.)
 - Fix the various aspect ratio problems (camera in/out in "Show + capture" and "Continuous
   capture" activities).
+- Add a test that renders to two different TextureViews using different EGLContexts
+  from a single renderer thread.
 

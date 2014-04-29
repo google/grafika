@@ -63,67 +63,11 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
         Choreographer.FrameCallback {
     private static final String TAG = MainActivity.TAG;
 
-    // A few thoughts about app life cycle and SurfaceView.
-    //
-    // There are two somewhat independent things going on:
-    // (1) Application onCreate / onResume / onPause
-    // (2) Surface created / changed / destroyed
-    //
-    // When the Activity starts, you get callbacks in this order:
-    //  onCreate
-    //  onResume
-    //  surfaceCreated
-    //  surfaceChanged
-    //
-    // If you hit "back", you get:
-    //  onPause
-    //  surfaceDestroyed (called just before the Surface goes away)
-    //
-    // If you rotate the screen, the Activity is torn down and recreated, so you get
-    // the full cycle.  (You can tell it's a "quick" restart by checking isFinishing().)
-    // It *might* be possible to start / stop an activity so quickly that surfaceCreated()
-    // might happen after onPause(), but I'm not sure about that.
-    //
-    // If you tap the power button to blank the screen, however, you only get onPause() --
-    // no surfaceDestroyed().  The Surface remains alive, and rendering can continue (you
-    // even keep getting Choreographer events if you continue to request them).  If you have
-    // a lock screen that forces a specific orientation your Activity can get kicked, but
-    // if not you can come out of screen-blank with the same Surface you had before.
-    //
-    // This raises a fundamental question when using a separate renderer thread with
-    // SurfaceView: should the lifespan of the thread be tied to the Surface or to the
-    // Activity?  The answer is: it depends on what you want to have happen when the screen
-    // goes blank.  There are two basic approaches: (1) start/stop the thread on Activity
-    // start/stop; (2) start/stop the thread on Surface create/destroy.
-    //
-    // #1 interacts well with the app lifecycle.  We start the renderer thread in onResume() and
-    // stop it in onPause().  It gets a bit awkward when creating and configuring the thread
-    // because sometimes the Surface will already exist and sometimes it won't.  We can't simply
-    // forward the Surface callbacks to the thread, because they won't fire again if the
-    // Surface already exists.  So we need to query or cache the Surface state, and forward it
-    // to the renderer thread.  Note we have to be a little careful here passing objects between
-    // threads -- best to pass the Surface or SurfaceHolder through a Handler message, rather
-    // than just stuffing it into the thread, to avoid issues on multi-core systems (cf.
-    // http://developer.android.com/training/articles/smp.html).
-    //
-    // #2 has a certain appeal because the Surface and the renderer are logically intertwined.
-    // We start the thread after the Surface has been created, which avoids the inter-thread
-    // communication concerns.  Surface created / changed messages are simply forwarded.  We
-    // need to make sure rendering stops when the screen goes blank, and resumes when it
-    // un-blanks; this could be a simple matter of telling Choreographer to stop invoking the
-    // frame draw callback.  Our onResume() will need to resume the callbacks if and only if
-    // the renderer thread is running.  It may not be so trivial though -- if we animate based
-    // on elapsed time between frames, we could have a *very* large gap when the next event
-    // arrives, so an explicit pause/resume message may be desirable.
-    //
-    // The above is primarily concerned with how the renderer thread is configured and whether
-    // it's executing.  A related concern is extracting state *from* the thread when the
-    // Activity is killed (in onPause() or onSaveInstanceState()).  Approach #1 will work
-    // best for that, because once the renderer thread has been joined its state can be
-    // accessed without synchronization primitives.
+    // [ This used to have "a few thoughts about app life cycle and SurfaceView".  These
+    //   are now at http://source.android.com/devices/graphics/architecture.html in
+    //   Appendix B. ]
     //
     // This Activity uses approach #2 (Surface-driven).
-    //
 
     // Indexes into the data arrays.
     private static final int SURFACE_SIZE_TINY = 0;
@@ -142,6 +86,7 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
     private int[][] mWindowWidthHeight;
     private boolean mFlatShadingChecked;
 
+    // Rendering code runs on this thread.  The thread's life span is tied to the Surface.
     private RenderThread mRenderThread;
 
     @Override
@@ -327,7 +272,6 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
         if (rh != null) {
             rh.sendSetFlatShading(mFlatShadingChecked);
         }
-
     }
 
     /**

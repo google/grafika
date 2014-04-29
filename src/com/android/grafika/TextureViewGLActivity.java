@@ -49,8 +49,8 @@ import com.android.grafika.gles.WindowSurface;
  * Currently renders frames as fast as possible, without waiting for the consumer.
  * <p>
  * As part of experimenting with the framework, this allows the renderer thread to continue
- * to run as the TextureView is being destroyed.  Normally the renderer would be stopped
- * when the application pauses.
+ * to run as the TextureView is being destroyed (we stop the thread in onDestroy() rather
+ * than onPause()).  Normally the renderer would be stopped when the application pauses.
  */
 public class TextureViewGLActivity extends Activity {
     private static final String TAG = MainActivity.TAG;
@@ -90,6 +90,7 @@ public class TextureViewGLActivity extends Activity {
     protected void onDestroy() {
         Log.d(TAG, "onDestroy");
         super.onDestroy();
+        // Don't do this -- halt the thread in onPause() and wait for it to finish.
         mRenderer.halt();
     }
 
@@ -243,22 +244,22 @@ public class TextureViewGLActivity extends Activity {
         }
 
         @Override   // will be called on UI thread
-        public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
+        public void onSurfaceTextureAvailable(SurfaceTexture st, int width, int height) {
             Log.d(TAG, "onSurfaceTextureAvailable(" + width + "x" + height + ")");
             synchronized (mLock) {
-                mSurfaceTexture = surface;
+                mSurfaceTexture = st;
                 mLock.notify();
             }
         }
 
         @Override   // will be called on UI thread
-        public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+        public void onSurfaceTextureSizeChanged(SurfaceTexture st, int width, int height) {
             Log.d(TAG, "onSurfaceTextureSizeChanged(" + width + "x" + height + ")");
             // TODO: ?
         }
 
         @Override   // will be called on UI thread
-        public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+        public boolean onSurfaceTextureDestroyed(SurfaceTexture st) {
             Log.d(TAG, "onSurfaceTextureDestroyed");
 
             // We set the SurfaceTexture reference to null to tell the Renderer thread that
@@ -287,7 +288,7 @@ public class TextureViewGLActivity extends Activity {
         }
 
         @Override   // will be called on UI thread
-        public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+        public void onSurfaceTextureUpdated(SurfaceTexture st) {
             //Log.d(TAG, "onSurfaceTextureUpdated");
         }
     }

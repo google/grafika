@@ -158,7 +158,8 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
 
         File outputFile = new File(getFilesDir(), "fbo-gl-recording.mp4");
         SurfaceView sv = (SurfaceView) findViewById(R.id.fboActivity_surfaceView);
-        mRenderThread = new RenderThread(sv.getHolder(), new ActivityHandler(this), outputFile);
+        mRenderThread = new RenderThread(sv.getHolder(), new ActivityHandler(this), outputFile,
+                MiscUtils.getDisplayRefreshNsec(this));
         mRenderThread.setName("RecordFBO GL render");
         mRenderThread.start();
         mRenderThread.waitUntilReady();
@@ -251,7 +252,6 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
         String str = getString(R.string.frameRateFormat, tfps / 1000.0f, dropped);
         TextView tv = (TextView) findViewById(R.id.frameRateValue_text);
         tv.setText(str);
-
     }
 
     /**
@@ -437,6 +437,7 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
         private long mPrevTimeNanos;
 
         // FPS / drop counter.
+        private long mRefreshPeriodNanos;
         private long mFpsCountStartNanos;
         private int mFpsCountFrame;
         private int mDroppedFrames;
@@ -461,10 +462,12 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
         /**
          * Pass in the SurfaceView's SurfaceHolder.  Note the Surface may not yet exist.
          */
-        public RenderThread(SurfaceHolder holder, ActivityHandler ahandler, File outputFile) {
+        public RenderThread(SurfaceHolder holder, ActivityHandler ahandler, File outputFile,
+                long refreshPeriodNs) {
             mSurfaceHolder = holder;
             mActivityHandler = ahandler;
             mOutputFile = outputFile;
+            mRefreshPeriodNanos = refreshPeriodNs;
 
             mVideoRect = new Rect();
 
@@ -521,6 +524,15 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
                     } catch (InterruptedException ie) { /* not expected */ }
                 }
             }
+        }
+
+        /**
+         * Shuts everything down.
+         */
+        private void shutdown() {
+            Log.d(TAG, "shutdown");
+            stopEncoder();
+            Looper.myLooper().quit();
         }
 
         /**
@@ -841,10 +853,12 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
 
             update(timeStampNanos);
 
-            long diff = (System.nanoTime() - timeStampNanos) / 1000000;
-            if (diff > 15) {
+            long diff = System.nanoTime() - timeStampNanos;
+            long max = mRefreshPeriodNanos - 2000000;   // if we're within 2ms, don't bother
+            if (diff > max) {
                 // too much, drop a frame
-                Log.d(TAG, "diff is " + diff + ", skipping render");
+                Log.d(TAG, "diff is " + (diff / 1000000.0) + " ms, max " + (max / 1000000.0) +
+                        ", skipping render");
                 mRecordedPrevious = false;
                 mPreviousWasDropped = true;
                 mDroppedFrames++;
@@ -1067,7 +1081,7 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
             mTri.draw(mProgram, mDisplayProjectionMatrix);
             mRect.draw(mProgram, mDisplayProjectionMatrix);
             for (int i = 0; i < 4; i++) {
-                if (mPreviousWasDropped) {
+                if (false && mPreviousWasDropped) {
                     mEdges[i].setColor(1.0f, 0.0f, 0.0f);
                 } else {
                     mEdges[i].setColor(0.5f, 0.5f, 0.5f);
@@ -1091,15 +1105,6 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
             mRecordRect.draw(mProgram, mDisplayProjectionMatrix);
 
             GlUtil.checkGlError("draw done");
-        }
-
-        /**
-         * Shuts everything down.
-         */
-        private void shutdown() {
-            Log.d(TAG, "shutdown");
-            stopEncoder();
-            Looper.myLooper().quit();
         }
     }
 
@@ -1134,7 +1139,6 @@ public class RecordFBOActivity extends Activity implements SurfaceHolder.Callbac
          * Call from UI thread.
          */
         public void sendSurfaceCreated() {
-            // ignore format
             sendMessage(obtainMessage(RenderHandler.MSG_SURFACE_CREATED));
         }
 
