@@ -64,15 +64,14 @@ Current features
 - Name starts with an asterisk so it's at the top of the list of activities.
 
 [Continuous capture](src/com/android/grafika/ContinuousCaptureActivity.java).  Stores video in a circular buffer, saving it when you hit the "capture" button.  (Formerly "Constant capture".)
-- The aspect ratio of the display window does not match the incoming frames, so the
-  images will appear stretched on screen.
 - Currently hard-wired to try to capture 7 seconds of video from the camera at 6MB/sec,
   preferrably 15fps 720p.  That requires a buffer size of about 5MB.
 - The time span of frames currently held in the buffer is displayed.  The actual
   time span saved when you hit "capture" will be slightly less than what is shown because
   we have to start the output on a sync frame, which are configured to appear once per second.
 - Output is a video-only MP4 file ("constant-capture.mp4").  Video is always 1280x720, which
-  usually matches what the camera provides.
+  usually matches what the camera provides; if it doesn't, the recorded video will have the
+  wrong aspect ratio.
 
 [Double decode](src/com/android/grafika/DoubleDecodeActivity.java).  Decodes two video streams side-by-side to a pair of `TextureViews`.
 - Plays the two auto-generated videos.  Note they play at different rates.
@@ -136,9 +135,9 @@ Current features
 - Recording continues until stopped.  If you back out and return, recording will start again,
   with a real-time gap.  If you try to play the movie while it's recording, you will see
   an incomplete file (and probably cause the play movie activity to crash).
-- The preview frames are rendered to a `GLSurfaceView`.  The aspect ratio will likely appear
-  stretched -- the View's size isn't adjusted.  Generally looks best in landscape.  The
-  recorded video is scaled to 640x480, so it will probably look squished.
+- The recorded video is scaled to 640x480, so it will probably look squished.  A real app
+  would either set the recording size equal to the camera input size, or correct the aspect
+  ratio by letter- or pillar-boxing the frames as they are rendered to the encoder.
 - You can select a filter to apply to the preview.  It does not get applied to the recording.
   The shader used for the filters is not optimized, but seems to perform well on most devices
   (the original Nexus 7 (2012) being a notable exception).  Demo
@@ -194,8 +193,6 @@ In no particular order.
 - Capture audio from microphone, record + mux it.
 - Enable preview on front/back cameras simultaneously, display them side-by-side.  (This
   appears to be impossible except on specific devices.)
-- Fix the various aspect ratio problems (camera in/out in "Show + capture" and "Continuous
-  capture" activities).
 - Add a test that renders to two different TextureViews using different EGLContexts
   from a single renderer thread.
 

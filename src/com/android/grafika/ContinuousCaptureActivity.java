@@ -260,6 +260,10 @@ public class ContinuousCaptureActivity extends Activity implements SurfaceHolder
         String previewFacts = mCameraPreviewSize.width + "x" + mCameraPreviewSize.height +
                 " @" + (mCameraPreviewThousandFps / 1000.0f) + "fps";
         Log.i(TAG, "Camera config: " + previewFacts);
+
+        // Set the preview aspect ratio.
+        AspectFrameLayout layout = (AspectFrameLayout) findViewById(R.id.continuousCapture_afl);
+        layout.setAspectRatio((double) mCameraPreviewSize.width / mCameraPreviewSize.height);
     }
 
     /**

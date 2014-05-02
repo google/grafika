@@ -24,14 +24,22 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".CameraCaptureActivity" >
 
-    <android.opengl.GLSurfaceView
-        android:id="@+id/cameraPreviewSurface"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <com.android.grafika.AspectFrameLayout
+        android:id="@+id/cameraPreview_afl"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_alignLeft="@+id/toggleRecording_button"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/toggleRecording_button" />
+        android:layout_below="@+id/toggleRecording_button"
+        android:layout_centerInParent="true" >
+
+        <android.opengl.GLSurfaceView
+            android:id="@+id/cameraPreview_surfaceView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center" />
+    </com.android.grafika.AspectFrameLayout>
 
     <Button
         android:id="@+id/toggleRecording_button"
@@ -53,7 +61,7 @@
         android:id="@+id/cameraParams_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/toggleRecording_button"
+        android:layout_below="@id/toggleRecording_button"
         android:text="[?]"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
@@ -61,17 +69,17 @@
         android:id="@+id/cameraOutputFileLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/cameraParams_text"
-        android:layout_below="@+id/cameraParams_text"
+        android:layout_alignLeft="@id/cameraParams_text"
+        android:layout_below="@id/cameraParams_text"
         android:text="@string/cameraOutputFileLabel_text" />
 
     <TextView
         android:id="@+id/cameraOutputFile_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/cameraOutputFileLabel"
-        android:layout_alignBottom="@+id/cameraOutputFileLabel"
-        android:layout_toRightOf="@+id/cameraOutputFileLabel"
+        android:layout_alignBaseline="@id/cameraOutputFileLabel"
+        android:layout_alignBottom="@id/cameraOutputFileLabel"
+        android:layout_toRightOf="@id/cameraOutputFileLabel"
         android:paddingLeft="4dp"
         android:text="@string/cameraOutputFile_text" />
 

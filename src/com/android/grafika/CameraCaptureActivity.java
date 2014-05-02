@@ -168,7 +168,7 @@ public class CameraCaptureActivity extends Activity
 
         // Configure the GLSurfaceView.  This will start the Renderer thread, with an
         // appropriate EGL context.
-        mGLView = (GLSurfaceView) findViewById(R.id.cameraPreviewSurface);
+        mGLView = (GLSurfaceView) findViewById(R.id.cameraPreview_surfaceView);
         mGLView.setEGLContextClientVersion(2);     // select GLES 2.0
         mRenderer = new CameraSurfaceRenderer(mCameraHandler, sVideoEncoder, outputFile);
         mGLView.setRenderer(mRenderer);
@@ -182,8 +182,12 @@ public class CameraCaptureActivity extends Activity
         Log.d(TAG, "onResume -- acquiring camera");
         super.onResume();
         updateControls();
-        //openCamera(640, 480);      // updates mCameraPreviewWidth/Height
         openCamera(1280, 720);      // updates mCameraPreviewWidth/Height
+
+        // Set the preview aspect ratio.
+        AspectFrameLayout layout = (AspectFrameLayout) findViewById(R.id.cameraPreview_afl);
+        layout.setAspectRatio((double) mCameraPreviewWidth / mCameraPreviewHeight);
+
         mGLView.onResume();
         mGLView.queueEvent(new Runnable() {
             @Override public void run() {

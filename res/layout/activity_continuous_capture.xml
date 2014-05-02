@@ -21,26 +21,35 @@
         android:id="@+id/capturedVideoDesc_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/capture_button"
-        android:layout_alignBottom="@+id/capture_button"
-        android:layout_toRightOf="@+id/capture_button"
+        android:layout_alignBaseline="@id/capture_button"
+        android:layout_alignBottom="@id/capture_button"
+        android:layout_toRightOf="@id/capture_button"
         android:text="@string/secondsOfVideo" />
 
-    <SurfaceView
-        android:id="@+id/continuousCapture_surfaceView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <com.android.grafika.AspectFrameLayout
+        android:id="@+id/continuousCapture_afl"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/capture_button" />
+        android:layout_below="@id/capture_button"
+        android:layout_centerInParent="true" >
+
+        <SurfaceView
+            android:id="@+id/continuousCapture_surfaceView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center" />
+
+    </com.android.grafika.AspectFrameLayout>
 
     <TextView
         android:id="@+id/recording_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignLeft="@+id/continuousCapture_surfaceView"
-        android:layout_alignTop="@+id/continuousCapture_surfaceView"
+        android:layout_alignLeft="@id/continuousCapture_afl"
+        android:layout_alignTop="@id/continuousCapture_afl"
         android:text="@string/nowRecording"
         android:textColor="#f00"
         android:textAppearance="?android:attr/textAppearanceLarge" />

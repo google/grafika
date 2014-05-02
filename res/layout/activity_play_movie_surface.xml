@@ -37,14 +37,14 @@
         android:id="@+id/playMovieFile_spinner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignTop="@+id/play_stop_button"
-        android:layout_toRightOf="@+id/play_stop_button" />
+        android:layout_alignTop="@id/play_stop_button"
+        android:layout_toRightOf="@id/play_stop_button" />
 
     <com.android.grafika.AspectFrameLayout
         android:id="@+id/playMovie_afl"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_below="@+id/play_stop_button"
+        android:layout_below="@id/play_stop_button"
         android:layout_centerInParent="true" >
 
         <SurfaceView
