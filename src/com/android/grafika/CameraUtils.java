@@ -69,7 +69,7 @@ public class CameraUtils {
      * <p>
      * TODO: follow the recipe from http://stackoverflow.com/questions/22639336/#22645327
      *
-     * @return The expected frame rate.
+     * @return The expected frame rate, in thousands of frames per second.
      */
     public static int chooseFixedPreviewFps(Camera.Parameters parms, int desiredThousandFps) {
         List<int[]> supported = parms.getSupportedPreviewFpsRange();

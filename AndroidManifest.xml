@@ -17,7 +17,7 @@
 
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.grafika"
-    android:versionCode="30"
+    android:versionCode="31"
     android:versionName="1.0" >
 
     <uses-sdk
@@ -131,6 +131,11 @@
             android:name="com.android.grafika.ScheduledSwapActivity"
             android:label="@string/title_scheduled_swap"
             android:theme="@android:style/Theme.Black" >
+        </activity>
+        <activity
+            android:name="com.android.grafika.TextureFromCameraActivity"
+            android:label="@string/title_texture_from_camera"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
         </activity>
     </application>
 

@@ -320,7 +320,7 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
         private Object mStartLock = new Object();
         private boolean mReady = false;
 
-        private volatile SurfaceHolder mSurfaceHolder;  // may be updated by UI thread
+        private volatile SurfaceHolder mSurfaceHolder;  // contents may be updated by UI thread
         private EglCore mEglCore;
         private WindowSurface mWindowSurface;
         private FlatShadedProgram mFlatProgram;
@@ -406,6 +406,14 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
                     } catch (InterruptedException ie) { /* not expected */ }
                 }
             }
+        }
+
+        /**
+         * Shuts everything down.
+         */
+        private void shutdown() {
+            Log.d(TAG, "shutdown");
+            Looper.myLooper().quit();
         }
 
         /**
@@ -535,6 +543,10 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
             if (mFlatProgram != null) {
                 mFlatProgram.release();
                 mFlatProgram = null;
+            }
+            if (mTexProgram != null) {
+                mTexProgram.release();
+                mTexProgram = null;
             }
             GlUtil.checkGlError("releaseGl done");
 
@@ -666,14 +678,6 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
 
             GlUtil.checkGlError("draw done");
         }
-
-        /**
-         * Shuts everything down.
-         */
-        private void shutdown() {
-            Log.d(TAG, "shutdown");
-            Looper.myLooper().quit();
-        }
     }
 
 
@@ -707,7 +711,7 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
          * Call from UI thread.
          */
         public void sendSurfaceCreated() {
-            sendMessage(obtainMessage(RenderHandler.MSG_SURFACE_CREATED));
+            sendMessage(obtainMessage(MSG_SURFACE_CREATED));
         }
 
         /**
@@ -718,7 +722,7 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
         public void sendSurfaceChanged(@SuppressWarnings("unused") int format, int width,
                 int height) {
             // ignore format
-            sendMessage(obtainMessage(RenderHandler.MSG_SURFACE_CHANGED, width, height));
+            sendMessage(obtainMessage(MSG_SURFACE_CHANGED, width, height));
         }
 
         /**
@@ -727,7 +731,7 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
          * Call from UI thread.
          */
         public void sendDoFrame(long frameTimeNanos) {
-            sendMessage(obtainMessage(RenderHandler.MSG_DO_FRAME,
+            sendMessage(obtainMessage(MSG_DO_FRAME,
                     (int) (frameTimeNanos >> 32), (int) frameTimeNanos));
         }
 
@@ -736,7 +740,7 @@ public class HardwareScalerActivity extends Activity implements SurfaceHolder.Ca
          */
         public void sendSetFlatShading(boolean useFlatShading) {
             // ignore format
-            sendMessage(obtainMessage(RenderHandler.MSG_FLAT_SHADING, useFlatShading ? 1:0, 0));
+            sendMessage(obtainMessage(MSG_FLAT_SHADING, useFlatShading ? 1:0, 0));
         }
 
         /**

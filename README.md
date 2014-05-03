@@ -154,6 +154,10 @@ Current features
 - Renders as quickly as possible.  On most devices it will exceed 60fps and flicker wildly,
   but in 4.4 ("KitKat") a bug prevents the system from dropping frames.
 
+[Texture from Camera](src/com/android/grafika/TextureFromCameraActivity.java).  Renders Camera preview output with a GLES texture.
+- Adjust the sliders to set the size, rotation, and zoom.  Touch anywhere else to center
+  the rect at the point of the touch.
+
 [Color bars](src/com/android/grafika/ColorBarActivity.java).  Displays RGB color bars.
 
 [OpenGL ES Info](src/com/android/grafika/GlesInfoActivity.java).  Dumps version info and extension lists.
@@ -171,8 +175,6 @@ In no particular order.
 
 - Update MoviePlayer#doExtract() to improve startup latency
   (http://stackoverflow.com/questions/21440820/).
-- Add camera demo that sends preview to ST and then renders it in a small window that
-  can be flung around / scaled / rotated / zoomed by touch.
 - Add a "fat bits" viewer for camera (single SurfaceView; left half has live camera feed
   and a pan rect, right half has 8x pixels)
 - Change the "Simple GL in TextureView" animation.  Or add an epilepsy warning.

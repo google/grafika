@@ -56,10 +56,10 @@ public class Sprite2d {
 
         Matrix.setIdentityM(modelView, 0);
         Matrix.translateM(modelView, 0, mPosX, mPosY, 0.0f);
-        Matrix.scaleM(modelView, 0, mScaleX, mScaleY, 1.0f);
         if (mAngle != 0.0f) {
             Matrix.rotateM(modelView, 0, mAngle, 0.0f, 0.0f, 1.0f);
         }
+        Matrix.scaleM(modelView, 0, mScaleX, mScaleY, 1.0f);
         mMatrixReady = true;
     }
 

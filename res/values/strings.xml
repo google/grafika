@@ -93,6 +93,12 @@
     <string name="scheduledSwapStatus">Dropped frames: %1$d</string>
     <string name="scheduledSwapUpdateLabel">Frames/sec: </string>
     <string name="scheduledSwapAheadLabel">Frames ahead: </string>
+    <string name="tfcCameraParams">Camera params: %1$dx%2$d @%3$.1f fps</string>
+    <string name="tfcRectSize">Rect size (pixels): %1$dx%2$d</string>
+    <string name="tfcZoomArea">Zoom area (pixels): %1$dx%2$d</string>
+    <string name="tfcZoomLabel">Zoom: </string>
+    <string name="tfcSizeLabel">Size: </string>
+    <string name="tfcRotateLabel">Rotate: </string>
 
     <!-- for cameraFilter_spinner; match with CameraCaptureActivity constants -->
     <string-array name="cameraFilterNames">
@@ -142,5 +148,6 @@
     <string name="title_activity_texture_upload">Texture upload speed test</string>
     <string name="title_color_bar">RGB color bars</string>
     <string name="title_scheduled_swap">Scheduled swap</string>
+    <string name="title_texture_from_camera">Texture from camera</string>
 
 </resources>

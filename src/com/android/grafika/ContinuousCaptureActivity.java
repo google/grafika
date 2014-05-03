@@ -51,8 +51,6 @@ import java.lang.ref.WeakReference;
  * notified.  That can happen on an arbitrary thread, so we use it to send a message
  * through our Handler.  That causes us to render the new frame to the display and to
  * our video encoder.
- * <p>
- * TODO: adjust the view aspect ratio to match the incoming frames.
  */
 public class ContinuousCaptureActivity extends Activity implements SurfaceHolder.Callback,
         SurfaceTexture.OnFrameAvailableListener {
@@ -149,7 +147,7 @@ public class ContinuousCaptureActivity extends Activity implements SurfaceHolder
                 }
                 case MSG_BUFFER_STATUS: {
                     long duration = (((long) msg.arg1) << 32) |
-                            (((long) msg.arg2) & 0xffffffffL);
+                                    (((long) msg.arg2) & 0xffffffffL);
                     activity.updateBufferStatus(duration);
                     break;
                 }
@@ -297,7 +295,7 @@ public class ContinuousCaptureActivity extends Activity implements SurfaceHolder
     /**
      * Handles onClick for "capture" button.
      */
-    public void clickCapture(View unused) {
+    public void clickCapture(@SuppressWarnings("unused") View unused) {
         Log.d(TAG, "capture");
         if (mFileSaveInProgress) {
             Log.w(TAG, "HEY: file save is already in progress");

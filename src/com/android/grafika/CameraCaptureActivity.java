@@ -344,7 +344,7 @@ public class CameraCaptureActivity extends Activity
      * Connects the SurfaceTexture to the Camera preview output, and starts the preview.
      */
     private void handleSetSurfaceTexture(SurfaceTexture st) {
-        st.setOnFrameAvailableListener(CameraCaptureActivity.this);
+        st.setOnFrameAvailableListener(this);
         try {
             mCamera.setPreviewTexture(st);
         } catch (IOException ioe) {
