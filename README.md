@@ -168,6 +168,13 @@ Current features
 [glReadPixels speed test](src/com/android/grafika/ReadPixelsActivity.java).  Simple, unscientific measurement of the time required for `glReadPixels()` to read a 720p frame.
 
 
+Known issues
+------------
+
+- Nexus 4 running Android 4.3 (JWR67E): "Show + capture camera" crashes if you select one of
+  the filtered modes.  Appears to be a driver bug (Adreno "Internal compiler error").
+
+
 Feature & fix ideas
 -------------------
 
