@@ -116,6 +116,7 @@
         <item>24 fps</item>
         <item>25 fps</item>
         <item>30 fps</item>
+        <item>48 fps</item>
         <item>60 fps</item>
         <item>erratic 1/5</item>
     </string-array>

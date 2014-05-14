@@ -78,6 +78,7 @@ public class ScheduledSwapActivity extends Activity implements OnItemSelectedLis
         "32",       // 24 fps
         "32322",    // 25 fps
         "2",        // 30 fps
+        "2111",     // 48 fps
         "1",        // 60 fps
         "15"        // erratic, useful for examination with systrace
     };
@@ -245,13 +246,13 @@ public class ScheduledSwapActivity extends Activity implements OnItemSelectedLis
         final int selIndex = spinner.getSelectedItemPosition();
         boolean updated = false;
 
-        if (spinner == (Spinner) findViewById(R.id.scheduledSwapUpdate_spinner)) {
+        if (parent.getId() == R.id.scheduledSwapUpdate_spinner) {
             if (mUpdatePatternIndex != selIndex) {
                 Log.d(TAG, "onItemSelected [update-rate]: " + selIndex);
                 mUpdatePatternIndex = selIndex;
                 updated = true;
             }
-        } else if (spinner == (Spinner) findViewById(R.id.scheduledSwapAhead_spinner)) {
+        } else if (parent.getId() == R.id.scheduledSwapAhead_spinner) {
             if (mFramesAheadIndex != selIndex) {
                 Log.d(TAG, "onItemSelected [frames-ahead]: " + selIndex);
                 mFramesAheadIndex = selIndex;
