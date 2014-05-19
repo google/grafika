@@ -20,6 +20,7 @@ import android.opengl.GLES20;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Process;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -131,9 +132,15 @@ public class ReadPixelsActivity extends Activity {
         @Override
         protected Long doInBackground(Void... params) {
             long result = -1;
-
             EglCore eglCore = null;
             OffscreenSurface surface = null;
+
+            // TODO: this should not use AsyncTask.  The AsyncTask worker thread is run at
+            // a lower priority, making it unsuitable for benchmarks.  We can counteract
+            // it in the current implementation, but this is not guaranteed to work in
+            // future releases.
+            Process.setThreadPriority(Process.THREAD_PRIORITY_FOREGROUND);
+
             try {
                 eglCore = new EglCore(null, 0);
                 surface = new OffscreenSurface(eglCore, mWidth, mHeight);

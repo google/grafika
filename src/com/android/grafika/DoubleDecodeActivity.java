@@ -138,7 +138,7 @@ public class DoubleDecodeActivity extends Activity {
          */
         public void stopPlayback() {
             Log.d(LTAG, "stopPlayback");
-            mCallback.requestStop();
+            mPlayThread.requestStop();
             // TODO: wait for the playback thread to stop so we don't kill the Surface
             //       before the video stops
 
@@ -201,12 +201,13 @@ public class DoubleDecodeActivity extends Activity {
         private final File mFile;
         private final Surface mSurface;
         private final SpeedControlCallback mCallback;
+        private MoviePlayer mMoviePlayer;
 
         /**
-         * Creates thread.
+         * Creates thread and starts execution.
          * <p>
          * The object takes ownership of the Surface, and will access it from the new thread.
-         * When playback completes, the Surface will be destroyed.
+         * When playback completes, the Surface will be released.
          */
         public PlayMovieThread(File file, Surface surface, SpeedControlCallback callback) {
             mFile = file;
@@ -216,12 +217,21 @@ public class DoubleDecodeActivity extends Activity {
             start();
         }
 
+        /**
+         * Asks MoviePlayer to halt playback.  Returns without waiting for playback to halt.
+         * <p>
+         * Call from UI thread.
+         */
+        public void requestStop() {
+            mMoviePlayer.requestStop();
+        }
+
         @Override
         public void run() {
             try {
-                MoviePlayer player = new MoviePlayer(mFile, mSurface);
-                player.setLoopMode(true);
-                player.play(mCallback);
+                mMoviePlayer = new MoviePlayer(mFile, mSurface, mCallback);
+                mMoviePlayer.setLoopMode(true);
+                mMoviePlayer.play();
             } catch (IOException ioe) {
                 Log.e(TAG, "movie playback failed", ioe);
             } finally {

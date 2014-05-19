@@ -180,8 +180,7 @@ Feature & fix ideas
 
 In no particular order.
 
-- Update MoviePlayer#doExtract() to improve startup latency
-  (http://stackoverflow.com/questions/21440820/).
+- Stop using AsyncTask for anything where performance or latency matters.
 - Add a "fat bits" viewer for camera (single SurfaceView; left half has live camera feed
   and a pan rect, right half has 8x pixels)
 - Change the "Simple GL in TextureView" animation.  Or add an epilepsy warning.

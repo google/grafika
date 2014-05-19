@@ -20,6 +20,7 @@ import android.opengl.GLES20;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Process;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -138,6 +139,12 @@ public class TextureUploadActivity extends Activity {
         @Override
         protected Long doInBackground(Void... params) {
             long result = -1;
+
+            // TODO: this should not use AsyncTask.  The AsyncTask worker thread is run at
+            // a lower priority, making it unsuitable for benchmarks.  We can counteract
+            // it in the current implementation, but this is not guaranteed to work in
+            // future releases.
+            Process.setThreadPriority(Process.THREAD_PRIORITY_FOREGROUND);
 
             // This can take a second or two.
             createPixelSources();

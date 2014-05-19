@@ -27,15 +27,16 @@ import android.util.Log;
  * This is not coordinated with VSYNC.  Since we can't control the display's refresh rate, and
  * the source material has time stamps that specify when each frame should be presented,
  * we will have to drop or repeat frames occasionally.
+ * <p>
+ * Thread restrictions are noted in the method descriptions.  The FrameCallback overrides should
+ * only be called from the MoviePlayer.
  */
 public class SpeedControlCallback implements MoviePlayer.FrameCallback {
     private static final String TAG = MainActivity.TAG;
+    private static final boolean CHECK_SLEEP_TIME = false;
 
-    private static final int RUNNING = 0;
-    private static final int STOPPING = 1;
     private static final long ONE_MILLION = 1000000L;
 
-    private volatile int mState = RUNNING;
     private long mPrevPresentUsec;
     private long mPrevMonoUsec;
     private long mFixedFrameDurationUsec;
@@ -47,21 +48,6 @@ public class SpeedControlCallback implements MoviePlayer.FrameCallback {
      */
     public void setFixedPlaybackRate(int fps) {
         mFixedFrameDurationUsec = ONE_MILLION / fps;
-    }
-
-    /**
-     * Requests an immediate stop to playback.
-     * <p>
-     * May be called from an arbitrary thread.
-     */
-    public void requestStop() {
-        mState = STOPPING;
-    }
-
-    // runs on decode thread
-    @Override
-    public boolean isStopRequested() {
-        return mState != RUNNING;
     }
 
     // runs on decode thread
@@ -113,7 +99,7 @@ public class SpeedControlCallback implements MoviePlayer.FrameCallback {
 
             long desiredUsec = mPrevMonoUsec + frameDelta;  // when we want to wake up
             long nowUsec = System.nanoTime() / 1000;
-            while (nowUsec < (desiredUsec - 100) && mState == RUNNING) {
+            while (nowUsec < (desiredUsec - 100) /*&& mState == RUNNING*/) {
                 // Sleep until it's time to wake up.  To be responsive to "stop" commands
                 // we're going to wake up every half a second even if the sleep is supposed
                 // to be longer (which should be rare).  The alternative would be
@@ -128,7 +114,16 @@ public class SpeedControlCallback implements MoviePlayer.FrameCallback {
                     sleepTimeUsec = 500000;
                 }
                 try {
-                    Thread.sleep(sleepTimeUsec / 1000, (int) (sleepTimeUsec % 1000) * 1000);
+                    if (CHECK_SLEEP_TIME) {
+                        long startNsec = System.nanoTime();
+                        Thread.sleep(sleepTimeUsec / 1000, (int) (sleepTimeUsec % 1000) * 1000);
+                        long actualSleepNsec = System.nanoTime() - startNsec;
+                        Log.d(TAG, "sleep=" + sleepTimeUsec + " actual=" + (actualSleepNsec/1000) +
+                                " diff=" + (Math.abs(actualSleepNsec / 1000 - sleepTimeUsec)) +
+                                " (usec)");
+                    } else {
+                        Thread.sleep(sleepTimeUsec / 1000, (int) (sleepTimeUsec % 1000) * 1000);
+                    }
                 } catch (InterruptedException ie) {}
                 nowUsec = System.nanoTime() / 1000;
             }

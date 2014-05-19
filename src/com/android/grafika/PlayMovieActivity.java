@@ -16,7 +16,6 @@
 
 package com.android.grafika;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.app.Activity;
 import android.graphics.Matrix;
@@ -48,14 +47,14 @@ import java.io.IOException;
  *       to have onPause() wait for playback to stop)
  */
 public class PlayMovieActivity extends Activity implements OnItemSelectedListener,
-        TextureView.SurfaceTextureListener {
+        TextureView.SurfaceTextureListener, MoviePlayer.PlayerFeedback {
     private static final String TAG = MainActivity.TAG;
 
     private TextureView mTextureView;
     private String[] mMovieFiles;
     private int mSelectedMovie;
     private boolean mShowStopLabel;
-    private PlayMovieTask mPlayTask;
+    private MoviePlayer.PlayTask mPlayTask;
     private boolean mSurfaceTextureReady = false;
 
     @Override
@@ -145,7 +144,7 @@ public class PlayMovieActivity extends Activity implements OnItemSelectedListene
         if (mShowStopLabel) {
             Log.d(TAG, "stopping movie");
             stopPlayback();
-            // Don't update the controls here -- let the async task do it after the movie has
+            // Don't update the controls here -- let the task thread do it after the movie has
             // actually stopped.
             //mShowStopLabel = false;
             //updateControls();
@@ -165,14 +164,15 @@ public class PlayMovieActivity extends Activity implements OnItemSelectedListene
             MoviePlayer player = null;
             try {
                  player = new MoviePlayer(
-                        new File(getFilesDir(), mMovieFiles[mSelectedMovie]), surface);
+                        new File(getFilesDir(), mMovieFiles[mSelectedMovie]), surface, callback);
             } catch (IOException ioe) {
                 Log.e(TAG, "Unable to play movie", ioe);
                 surface.release();
                 return;
             }
             adjustAspectRatio(player.getVideoWidth(), player.getVideoHeight());
-            mPlayTask = new PlayMovieTask(player, surface, callback);
+
+            mPlayTask = new MoviePlayer.PlayTask(player, this);
             if (((CheckBox) findViewById(R.id.loopPlayback_checkbox)).isChecked()) {
                 mPlayTask.setLoopMode(true);
             }
@@ -191,6 +191,14 @@ public class PlayMovieActivity extends Activity implements OnItemSelectedListene
             mPlayTask.requestStop();
             mPlayTask = null;
         }
+    }
+
+    @Override   // MoviePlayer.PlayerFeedback
+    public void playbackStopped() {
+        Log.d(TAG, "playback stopped");
+        mShowStopLabel = false;
+        mPlayTask = null;
+        updateControls();
     }
 
     /**
@@ -243,65 +251,5 @@ public class PlayMovieActivity extends Activity implements OnItemSelectedListene
         check.setEnabled(!mShowStopLabel);
         check = (CheckBox) findViewById(R.id.loopPlayback_checkbox);
         check.setEnabled(!mShowStopLabel);
-    }
-
-    /**
-     * Plays a movie in an async task thread.  Updates the UI when the movie finishes.
-     */
-    private class PlayMovieTask extends AsyncTask<Void, Void, Void> {
-        private MoviePlayer mPlayer;
-        private Surface mSurface;
-        private SpeedControlCallback mCallback;
-        private boolean mLoop;
-
-        /**
-         * Create task.  The surface will be released when playback finishes.
-         */
-        public PlayMovieTask(MoviePlayer player, Surface surface, SpeedControlCallback callback) {
-            mPlayer = player;
-            mSurface = surface;
-            mCallback = callback;
-        }
-
-        /**
-         * Sets the loop mode.  If true, playback will loop forever.
-         */
-        public void setLoopMode(boolean loopMode) {
-            mLoop = loopMode;
-        }
-
-        /**
-         * Requests that playback stop.
-         */
-        public void requestStop() {
-            mCallback.requestStop();
-        }
-
-        @Override   // async task thread
-        protected Void doInBackground(Void... params) {
-            try {
-                mPlayer.setLoopMode(mLoop);
-                mPlayer.play(mCallback);
-            } catch (IOException ioe) {
-                Log.e(TAG, "movie playback failed", ioe);
-            } finally {
-                mSurface.release();
-            }
-            return null;
-        }
-
-        @Override   // UI thread
-        protected void onProgressUpdate(Void... progress) {
-            // unused
-        }
-
-        @Override   // UI thread
-        protected void onPostExecute(Void result) {
-            // Update the controls after playback completes (or is manually stopped).
-            Log.d(TAG, "playback complete");
-            mShowStopLabel = false;
-            updateControls();
-            mPlayTask = null;
-        }
     }
 }
