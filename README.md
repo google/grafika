@@ -18,16 +18,29 @@ However:
 - It's not intended as a demonstration of the proper way to do things.
   The code may handle edge cases poorly or not at all.  Logging is often
   left enabled at a moderately verbose level.
-- It's not documented.
+- It's barely documented.
 - It's not part of the Android Open Source Project.  We cannot accept
   contributions to Grafika, even if you have an AOSP CLA on file.
 - It's NOT AN OFFICIAL GOOGLE PRODUCT.  It's just a bunch of stuff that
   got thrown together on company time and equipment.
 - It's generally just not supported.
 
-There is some overlap with the code on http://www.bigflake.com/mediacodec/.  The code there largely consists of "headless" CTS tests, which are designed to be robust, self-contained, and largely independent of the usual app lifecycle issues.  Grafika is a conventional app, and makes an effort to handle app issues correctly (like not doing lots of work on the UI thread).
+To some extent, Grafika can be treated as a companion to the
+[Android System-Level Graphics Architecture](http://source.android.com/devices/graphics/architecture.html)
+document.  The doc explains the technology that the examples rely on, and uses some of
+Grafika's activities as examples.  If you want to understand how the code here works, start
+by reading that.
 
-Features are added to Grafika as the need arises, often in response to developer complaints about correctness or performance problems in the platform (either to confirm that the problems exist, or demonstrate an approach that works).
+There is some overlap with the code on http://www.bigflake.com/mediacodec/.
+The code there largely consists of "headless" CTS tests, which are designed
+to be robust, self-contained, and largely independent of the usual app
+lifecycle issues.  Grafika is a conventional app, and makes an effort to
+handle app issues correctly (like not doing lots of work on the UI thread).
+
+Features are added to Grafika as the need arises, often in response to
+developer complaints about correctness or performance problems in the
+platform (either to confirm that the problems exist, or demonstrate an
+approach that works).
 
 There are two areas where some amount of care is taken:
 - Thread safety.  It's really easy to get threads crossed in subtly dangerous ways when
