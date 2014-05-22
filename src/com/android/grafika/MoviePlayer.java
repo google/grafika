@@ -422,6 +422,9 @@ public class MoviePlayer {
         private Thread mThread;
         private LocalHandler mLocalHandler;
 
+        private final Object mStopLock = new Object();
+        private boolean mStopped = false;
+
         /**
          * Prepares new PlayTask.
          *
@@ -460,6 +463,23 @@ public class MoviePlayer {
             mPlayer.requestStop();
         }
 
+        /**
+         * Wait for the player to stop.
+         * <p>
+         * Called from any thread other than the PlayTask thread.
+         */
+        public void waitForStop() {
+            synchronized (mStopLock) {
+                while (!mStopped) {
+                    try {
+                        mStopLock.wait();
+                    } catch (InterruptedException ie) {
+                        // discard
+                    }
+                }
+            }
+        }
+
         @Override
         public void run() {
             try {
@@ -467,6 +487,12 @@ public class MoviePlayer {
             } catch (IOException ioe) {
                 throw new RuntimeException(ioe);
             } finally {
+                // tell anybody waiting on us that we're done
+                synchronized (mStopLock) {
+                    mStopped = true;
+                    mStopLock.notifyAll();
+                }
+
                 // Send message through Handler so it runs on the right thread.
                 mLocalHandler.sendMessage(
                         mLocalHandler.obtainMessage(MSG_PLAY_STOPPED, mFeedback));

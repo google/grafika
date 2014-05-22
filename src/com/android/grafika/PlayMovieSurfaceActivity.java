@@ -115,7 +115,13 @@ public class PlayMovieSurfaceActivity extends Activity implements OnItemSelected
         // We're not keeping track of the state in static fields, so we need to shut the
         // playback down.  Ideally we'd preserve the state so that the player would continue
         // after a device rotation.
-        stopPlayback();
+        //
+        // We want to be sure that the player won't continue to send frames after we pause,
+        // because we're tearing the view down.  So we wait for it to stop here.
+        if (mPlayTask != null) {
+            stopPlayback();
+            mPlayTask.waitForStop();
+        }
     }
 
     @Override
@@ -210,7 +216,6 @@ public class PlayMovieSurfaceActivity extends Activity implements OnItemSelected
     private void stopPlayback() {
         if (mPlayTask != null) {
             mPlayTask.requestStop();
-            mPlayTask = null;
         }
     }
 

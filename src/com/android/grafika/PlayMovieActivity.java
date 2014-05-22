@@ -57,6 +57,8 @@ public class PlayMovieActivity extends Activity implements OnItemSelectedListene
     private MoviePlayer.PlayTask mPlayTask;
     private boolean mSurfaceTextureReady = false;
 
+    private final Object mStopper = new Object();   // used to signal stop
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -93,7 +95,13 @@ public class PlayMovieActivity extends Activity implements OnItemSelectedListene
         // We're not keeping track of the state in static fields, so we need to shut the
         // playback down.  Ideally we'd preserve the state so that the player would continue
         // after a device rotation.
-        stopPlayback();
+        //
+        // We want to be sure that the player won't continue to send frames after we pause,
+        // because we're tearing the view down.  So we wait for it to stop here.
+        if (mPlayTask != null) {
+            stopPlayback();
+            mPlayTask.waitForStop();
+        }
     }
 
     @Override
@@ -184,12 +192,11 @@ public class PlayMovieActivity extends Activity implements OnItemSelectedListene
     }
 
     /**
-     * Requests stoppage if a movie is currently playing.
+     * Requests stoppage if a movie is currently playing.  Does not wait for it to stop.
      */
     private void stopPlayback() {
         if (mPlayTask != null) {
             mPlayTask.requestStop();
-            mPlayTask = null;
         }
     }
 
