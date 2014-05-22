@@ -262,7 +262,10 @@ public class ScheduledSwapActivity extends Activity implements OnItemSelectedLis
             throw new RuntimeException("Unknown spinner");
         }
 
-        if (updated) {
+        if (mRenderThread == null) {
+            // huh
+            Log.d(TAG, "In onItemSelected while the activity is paused");
+        } else if (updated) {
             RenderHandler rh = mRenderThread.getHandler();
             if (rh != null) {
                 rh.sendSetParameters(mUpdatePatternIndex, mFramesAheadIndex);
