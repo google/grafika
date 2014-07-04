@@ -142,6 +142,7 @@
     <string name="title_activity_continuous_capture">Continuous capture</string>
     <string name="title_activity_soft_input_surface">Software Input Surface</string>
     <string name="title_activity_hardware_scaler">Hardware Scaler Activity</string>
+    <string name="title_activity_dual_gl_composite">Dual GL Composite Activity</string>
     <string name="title_activity_gles_info">OpenGL ES Info</string>
     <string name="title_activity_play_movie_surface">Play video (SurfaceView)</string>
     <string name="title_activity_multi_surface_test">Multi-Surface Test</string>

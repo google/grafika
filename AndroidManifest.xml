@@ -102,6 +102,11 @@
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
         </activity>
         <activity
+            android:name="com.android.grafika.DualGLCompositeActivity"
+            android:label="@string/title_activity_hardware_scaler"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
+        </activity>
+        <activity
             android:name="com.android.grafika.GlesInfoActivity"
             android:label="@string/title_activity_gles_info" >
         </activity>
