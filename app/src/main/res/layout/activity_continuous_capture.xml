@@ -1,0 +1,57 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context=".ContinuousCaptureActivity" >
+
+    <Button
+        android:id="@+id/capture_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:onClick="clickCapture"
+        android:text="@string/capture" />
+
+    <TextView
+        android:id="@+id/capturedVideoDesc_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@id/capture_button"
+        android:layout_alignBottom="@id/capture_button"
+        android:layout_toRightOf="@id/capture_button"
+        android:text="@string/secondsOfVideo" />
+
+    <com.android.grafika.AspectFrameLayout
+        android:id="@+id/continuousCapture_afl"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/capture_button"
+        android:layout_centerInParent="true" >
+
+        <SurfaceView
+            android:id="@+id/continuousCapture_surfaceView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center" />
+
+    </com.android.grafika.AspectFrameLayout>
+
+    <TextView
+        android:id="@+id/recording_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@id/continuousCapture_afl"
+        android:layout_alignTop="@id/continuousCapture_afl"
+        android:text="@string/nowRecording"
+        android:textColor="#f00"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+</RelativeLayout>
