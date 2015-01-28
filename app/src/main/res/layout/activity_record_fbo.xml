@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2014 Google Inc. All rights reserved.
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".RecordFBOActivity" >
+
+    <SurfaceView
+        android:id="@+id/fboActivity_surfaceView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true" />
+
+    <Button
+        android:id="@+id/fboRecord_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/fboActivity_surfaceView"
+        android:layout_alignTop="@+id/fboActivity_surfaceView"
+        android:onClick="clickToggleRecording"
+        android:text="@string/toggleRecordingOn" />
+
+    <TextView
+        android:id="@+id/nowRecording_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/fboRecord_button"
+        android:layout_alignBottom="@+id/fboRecord_button"
+        android:layout_toRightOf="@+id/fboRecord_button"
+        android:text="" />
+
+    <TextView
+        android:id="@+id/glesVersionLabel_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/fboRecord_button"
+        android:text="@string/glesVersionLabel"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <TextView
+        android:id="@+id/glesVersionValue_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/glesVersionLabel_text"
+        android:layout_alignBottom="@+id/glesVersionLabel_text"
+        android:layout_toRightOf="@+id/glesVersionLabel_text"
+        android:text="@string/glesVersionValue"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <TextView
+        android:id="@+id/frameRateLabel_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/glesVersionLabel_text"
+        android:text="@string/frameRateLabel"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <TextView
+        android:id="@+id/frameRateValue_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/frameRateLabel_text"
+        android:layout_alignBottom="@+id/frameRateLabel_text"
+        android:layout_toRightOf="@+id/frameRateLabel_text"
+        android:text="---"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <RadioGroup
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_below="@+id/frameRateLabel_text">
+
+        <RadioButton
+            android:id="@+id/recDrawTwice_radio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onRadioButtonClicked"
+            android:text="@string/recDrawTwice" />
+
+        <RadioButton
+            android:id="@+id/recFbo_radio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onRadioButtonClicked"
+            android:text="@string/recOffscreen" />
+
+        <RadioButton
+            android:id="@+id/recFramebuffer_radio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onRadioButtonClicked"
+            android:text="@string/recFramebuffer" />
+    </RadioGroup>
+
+</RelativeLayout>

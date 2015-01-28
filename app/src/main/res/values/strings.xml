@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright 2013 Google Inc. All rights reserved.
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<resources>
+
+    <!-- TODO: organize this a bit -->
+
+    <string name="app_name">Grafika</string>
+    <string name="about_item">About</string>
+    <string name="regenerateContent_item">Regenerate content</string>
+    <string name="selectTest_text">Select Test:</string>
+    <string name="start_button">START</string>
+    <string name="aboutButton_text">About</string>
+    <string name="about_text">\nA random assortment of graphics and media hacks.\n\n
+        [This is a perpetual work in progress.]\n\n
+        Copyright 2013-2014 Google Inc.  All rights reserved.</string>
+    <string name="contentGenerationFailedTitle">Unable to generate content</string>
+    <string name="contentGenerationFailedMsg">Failed to generate content.  Some
+         features may be unavailable.\n\n%1$s</string>
+    <string name="codecOpenCountTitle">Codec open count</string>
+    <string name="codecOpenCountMsg">Opened %1$d codecs.</string>
+    <string name="ok">OK</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="halt">Halt</string>
+    <string name="GC">GC</string>
+    <string name="bounce">Bounce</string>
+    <string name="state_ready">[ready]</string>
+    <string name="state_running">[running]</string>
+    <string name="succeeded">SUCCEEDED</string>
+    <string name="failed">FAILED</string>
+    <string name="gfxRunTest_button">Run test</string>
+    <string name="gfxResultLabel_text">"Result: "</string>
+    <string name="textureRunTest_button">Run test</string>
+    <string name="textureResultLabel_text">"Result: "</string>
+    <string name="videoRunTest_button">Run test (video)</string>
+    <string name="preparing_content">Preparing content&#8230;</string>
+    <string name="workJobName_text">Working&#8230;</string>
+    <string name="running_test">Running test&#8230;</string>
+    <string name="did_not_complete">[did not complete]</string>
+    <string name="usec_per_iteration"> us per iteration</string>
+    <string name="play_button_text">Play</string>
+    <string name="stop_button_text">Stop</string>
+    <string name="cameraOutputFileLabel_text">Output file:</string>
+    <string name="cameraOutputFile_text">[filename]</string>
+    <string name="glTextureViewCaption">GLES rendered into a TextureView</string>
+    <string name="canvasTextureViewCaption">Canvas rendered into a TextureView</string>
+    <string name="toggleReleaseCallbackOff">Toggle release (now: ST callback)</string>
+    <string name="toggleReleaseCallbackOn">Toggle release (now: renderer)</string>
+    <string name="toggleRecordingOn">Start recording</string>
+    <string name="toggleRecordingOff">Stop recording</string>
+    <string name="locked60fps_checkbox">Play at 60fps</string>
+    <string name="loopPlayback_checkbox">Loop playback</string>
+    <string name="rebindHack_checkbox">rebind</string>
+    <string name="hello_world">Hello, world!</string>
+    <string name="frameRateLabel">"Frame rate: "</string>
+    <string name="frameRateFormat">"%1$.3f fps (%2$d dropped)"</string>
+    <string name="glesVersionLabel">"GLES version: "</string>
+    <string name="glesVersionValue">"?"</string>
+    <string name="useBlitFramebuffer">Use glBlitFramebuffer() when recording</string>
+    <string name="nowRecording">" [RECORDING]"</string>
+    <string name="nowSaving">" [saving]"</string>
+    <string name="recDrawTwice">Rec: draw twice</string>
+    <string name="recOffscreen">Rec: FBO blit x2</string>
+    <string name="recFramebuffer">Rec: glBlitFramebuffer [hosed]</string>
+    <string name="capture">Capture</string>
+    <string name="secondsOfVideo">%1$.3f seconds of video</string>
+    <string name="recordingSucceeded">Recording succeeded</string>
+    <string name="recordingFailed">Recording FAILED (err=%1$d)</string>
+    <string name="viewSizeLabel">Initial view size:</string>
+    <string name="surfaceSizeTiny">[tiny]</string>
+    <string name="surfaceSizeSmall">[small]</string>
+    <string name="surfaceSizeMedium">[medium]</string>
+    <string name="surfaceSizeFull">[full]</string>
+    <string name="flatShaded">flat shaded</string>
+    <string name="multiSurfaceMessage">This is a test!</string>
+    <string name="codecOpenMessage">This will open (create+configure) as many AVC codecs as it can.</string>
+    <string name="scheduledSwapRefresh">Refresh period %1$d us</string>
+    <string name="scheduledSwapStatus">Dropped frames: %1$d</string>
+    <string name="scheduledSwapUpdateLabel">Frames/sec: </string>
+    <string name="scheduledSwapAheadLabel">Frames ahead: </string>
+    <string name="tfcCameraParams">Camera params: %1$dx%2$d @%3$.1f fps</string>
+    <string name="tfcRectSize">Rect size (pixels): %1$dx%2$d</string>
+    <string name="tfcZoomArea">Zoom area (pixels): %1$dx%2$d</string>
+    <string name="tfcZoomLabel">Zoom: </string>
+    <string name="tfcSizeLabel">Size: </string>
+    <string name="tfcRotateLabel">Rotate: </string>
+
+    <!-- for cameraFilter_spinner; match with CameraCaptureActivity constants -->
+    <string-array name="cameraFilterNames">
+        <item>Normal</item>
+        <item>Black &amp; white</item>
+        <item>Filter: blur</item>
+        <item>Filter: sharpen</item>
+        <item>Filter: edge detect</item>
+        <item>Filter: emboss</item>
+    </string-array>
+
+    <!-- for scheduledSwapUpdate_spinner; match with UPDATE_PATTERNS -->
+    <string-array name="scheduledSwapUpdateNames">
+        <item>15 fps</item>
+        <item>24 fps</item>
+        <item>25 fps</item>
+        <item>30 fps</item>
+        <item>48 fps</item>
+        <item>60 fps</item>
+        <item>erratic 1/5</item>
+    </string-array>
+
+    <!-- for scheduledSwapAhead_spinner; match with FRAME_AHEAD -->
+    <string-array name="scheduledSwapAheadNames">
+        <item>ASAP</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+
+    <string name="title_activity_camera_capture">Show + capture camera</string>
+    <string name="title_activity_play_movie">Play video (TextureView)</string>
+    <string name="title_activity_read_pixels">glReadPixels speed test</string>
+    <string name="title_activity_texture_view_gl">Basic GL in TextureView</string>
+    <string name="title_activity_texture_view_canvas">Basic Canvas in TextureView</string>
+    <string name="title_activity_live_camera">Live camera (TextureView)</string>
+    <string name="title_activity_record_fbo">Record GL app</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_chor_test">ChorTestActivity</string>
+    <string name="title_activity_double_decode">Double decode</string>
+    <string name="title_activity_continuous_capture">Continuous capture</string>
+    <string name="title_activity_soft_input_surface">Software Input Surface</string>
+    <string name="title_activity_hardware_scaler">Hardware Scaler Activity</string>
+    <string name="title_activity_gles_info">OpenGL ES Info</string>
+    <string name="title_activity_play_movie_surface">Play video (SurfaceView)</string>
+    <string name="title_activity_multi_surface_test">Multi-Surface Test</string>
+    <string name="title_activity_codec_open">Codec Open Activity</string>
+    <string name="title_activity_texture_upload">Texture upload speed test</string>
+    <string name="title_color_bar">RGB color bars</string>
+    <string name="title_scheduled_swap">Scheduled swap</string>
+    <string name="title_texture_from_camera">Texture from camera</string>
+
+</resources>
