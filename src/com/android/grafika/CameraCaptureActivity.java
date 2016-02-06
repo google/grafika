@@ -638,6 +638,9 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
         if (VERBOSE) Log.d(TAG, "onDrawFrame tex=" + mTextureId);
         boolean showBox = false;
 
+        GLES20.glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
+
         // Latch the latest frame.  If there isn't anything new, we'll just re-use whatever
         // was there before.
         mSurfaceTexture.updateTexImage();
