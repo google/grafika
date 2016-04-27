@@ -233,7 +233,7 @@ public class Texture2dProgram {
                 GLES20.GL_CLAMP_TO_EDGE);
         GLES20.glTexParameteri(mTextureTarget, GLES20.GL_TEXTURE_WRAP_T,
                 GLES20.GL_CLAMP_TO_EDGE);
-        GlUtil.checkGlError("glTexParameter");
+        GlUtil.checkGlError("glTexParameter "+mTextureTarget);
 
         return texId;
     }
