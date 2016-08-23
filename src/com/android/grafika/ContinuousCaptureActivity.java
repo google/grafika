@@ -79,6 +79,8 @@ public class ContinuousCaptureActivity extends Activity implements SurfaceHolder
     private MainHandler mHandler;
     private float mSecondsOfVideo;
 
+    private static SurfaceHolder sSurfaceHolder;
+
     /**
      * Custom message handler for main UI thread.
      * <p>
@@ -181,6 +183,8 @@ public class ContinuousCaptureActivity extends Activity implements SurfaceHolder
         // Ideally, the frames from the camera are at the same resolution as the input to
         // the video encoder so we don't have to scale.
         openCamera(VIDEO_WIDTH, VIDEO_HEIGHT, DESIRED_PREVIEW_FPS);
+
+        if(sSurfaceHolder != null) setUp();
     }
 
     @Override
@@ -348,17 +352,47 @@ public class ContinuousCaptureActivity extends Activity implements SurfaceHolder
 
     @Override   // SurfaceHolder.Callback
     public void surfaceCreated(SurfaceHolder holder) {
-        Log.d(TAG, "surfaceCreated holder=" + holder);
+        Log.d(TAG, "surfaceCreated holder=" + holder + " (static=" + sSurfaceHolder + ")");
+        if (sSurfaceHolder != null) {
+            throw new RuntimeException("sSurfaceHolder is already set");
+        }
 
-        // Set up everything that requires an EGL context.
-        //
-        // We had to wait until we had a surface because you can't make an EGL context current
-        // without one, and creating a temporary 1x1 pbuffer is a waste of time.
-        //
-        // The display surface that we use for the SurfaceView, and the encoder surface we
-        // use for video, use the same EGL context.
+        sSurfaceHolder = holder;
+    }
+
+    @Override   // SurfaceHolder.Callback
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        Log.d(TAG, "surfaceChanged fmt=" + format + " size=" + width + "x" + height +
+                " holder=" + holder);
+        setUp();
+        updateControls();
+    }
+
+    @Override   // SurfaceHolder.Callback
+    public void surfaceDestroyed(SurfaceHolder holder) {
+        Log.d(TAG, "surfaceDestroyed holder=" + holder);
+        sSurfaceHolder = null;
+    }
+
+    @Override   // SurfaceTexture.OnFrameAvailableListener; runs on arbitrary thread
+    public void onFrameAvailable(SurfaceTexture surfaceTexture) {
+        //Log.d(TAG, "frame available");
+        mHandler.sendEmptyMessage(MainHandler.MSG_FRAME_AVAILABLE);
+    }
+
+    /**
+     * Set up everything that requires an EGL context.
+     * We had to wait until we had a surface because you can't make an EGL context current
+     * without one, and creating a temporary 1x1 pbuffer is a waste of time.
+     *
+     * The display surface that we use for the SurfaceView, and the encoder surface we
+     * use for video, use the same EGL context.
+    */
+    private void setUp() {
+        assert sSurfaceHolder != null;
+
         mEglCore = new EglCore(null, EglCore.FLAG_RECORDABLE);
-        mDisplaySurface = new WindowSurface(mEglCore, holder.getSurface(), false);
+        mDisplaySurface = new WindowSurface(mEglCore, sSurfaceHolder.getSurface(), false);
         mDisplaySurface.makeCurrent();
 
         mFullFrameBlit = new FullFrameRect(
@@ -374,36 +408,16 @@ public class ContinuousCaptureActivity extends Activity implements SurfaceHolder
             throw new RuntimeException(ioe);
         }
         mCamera.startPreview();
-
         // TODO: adjust bit rate based on frame rate?
         // TODO: adjust video width/height based on what we're getting from the camera preview?
-        //       (can we guarantee that camera preview size is compatible with AVC video encoder?)
+        // (can we guarantee that camera preview size is compatible with AVC video encoder?)
         try {
             mCircEncoder = new CircularEncoder(VIDEO_WIDTH, VIDEO_HEIGHT, 6000000,
-                    mCameraPreviewThousandFps / 1000, 7, mHandler);
+-                    mCameraPreviewThousandFps / 1000, 7, mHandler);
         } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
         mEncoderSurface = new WindowSurface(mEglCore, mCircEncoder.getInputSurface(), true);
-
-        updateControls();
-    }
-
-    @Override   // SurfaceHolder.Callback
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        Log.d(TAG, "surfaceChanged fmt=" + format + " size=" + width + "x" + height +
-                " holder=" + holder);
-    }
-
-    @Override   // SurfaceHolder.Callback
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        Log.d(TAG, "surfaceDestroyed holder=" + holder);
-    }
-
-    @Override   // SurfaceTexture.OnFrameAvailableListener; runs on arbitrary thread
-    public void onFrameAvailable(SurfaceTexture surfaceTexture) {
-        //Log.d(TAG, "frame available");
-        mHandler.sendEmptyMessage(MainHandler.MSG_FRAME_AVAILABLE);
     }
 
     /**
