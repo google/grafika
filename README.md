@@ -110,7 +110,7 @@ Current features
 - Uses the default (rear-facing) camera.  If the device has no default camera (e.g.
   Nexus 7 (2012)), the Activity will crash.
 
-[Multi-surface test](src/com/android/grafika/MultiSurfaceTest.java).  Simple activity with three overlapping SurfaceViews, one marked secure.
+[Multi-surface test](src/com/android/grafika/MultiSurfaceActivity.java).  Simple activity with three overlapping SurfaceViews, one marked secure.
 - Useful for examining HWC behavior with multiple static layers, and
   screencap / screenrecord behavior with a secure surface.  (If you record the screen one
   of the circles should be missing, and capturing the screen should just show black.)
