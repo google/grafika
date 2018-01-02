@@ -17,11 +17,19 @@
 package com.android.grafika;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.support.annotation.NonNull;
 import android.util.Log;
+import android.view.Display;
+import android.view.Surface;
 import android.view.TextureView;
+import android.view.WindowManager;
+import android.widget.Toast;
 
 import java.io.IOException;
 
@@ -34,32 +42,26 @@ public class LiveCameraActivity extends Activity implements TextureView.SurfaceT
     private static final String TAG = MainActivity.TAG;
 
     private Camera mCamera;
-    private TextureView mTextureView;
+    private SurfaceTexture mSurfaceTexture;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        mTextureView = new TextureView(this);
-        mTextureView.setSurfaceTextureListener(this);
+        TextureView textureView = new TextureView(this);
+        textureView.setSurfaceTextureListener(this);
 
-        setContentView(mTextureView);
+        setContentView(textureView);
     }
 
     @Override
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-        mCamera = Camera.open();
-        if (mCamera == null) {
-            // Seeing this on Nexus 7 2012 -- I guess it wants a rear-facing camera, but
-            // there isn't one.  TODO: fix
-            throw new RuntimeException("Default camera not available");
-        }
 
-        try {
-            mCamera.setPreviewTexture(surface);
-            mCamera.startPreview();
-        } catch (IOException ioe) {
-            // Something bad happened
+        mSurfaceTexture = surface;
+        if (!CameraPermissionHelper.hasCameraPermission(this)) {
+            CameraPermissionHelper.requestCameraPermission(this);
+        } else {
+            startPreview();
         }
     }
 
@@ -79,5 +81,44 @@ public class LiveCameraActivity extends Activity implements TextureView.SurfaceT
     public void onSurfaceTextureUpdated(SurfaceTexture surface) {
         // Invoked every time there's a new Camera preview frame
         //Log.d(TAG, "updated, ts=" + surface.getTimestamp());
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (!CameraPermissionHelper.hasCameraPermission(this)) {
+            Toast.makeText(this,
+                    "Camera permission is needed to run this application", Toast.LENGTH_LONG).show();
+                CameraPermissionHelper.launchPermissionSettings(this);
+            finish();
+        } else {
+            startPreview();
+        }
+    }
+
+    private void startPreview() {
+        mCamera = Camera.open();
+        if (mCamera == null) {
+            // Seeing this on Nexus 7 2012 -- I guess it wants a rear-facing camera, but
+            // there isn't one.  TODO: fix
+            throw new RuntimeException("Default camera not available");
+        }
+
+        try {
+            mCamera.setPreviewTexture(mSurfaceTexture);
+            Display display = ((WindowManager)getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
+
+            if(display.getRotation() == Surface.ROTATION_0) {
+                mCamera.setDisplayOrientation(90);
+            }
+            if(display.getRotation() == Surface.ROTATION_270) {
+                mCamera.setDisplayOrientation(180);
+            }
+            mCamera.startPreview();
+        } catch (IOException ioe) {
+            // Something bad happened
+            Log.e(TAG,"Exception starting preview", ioe);
+        }
     }
 }

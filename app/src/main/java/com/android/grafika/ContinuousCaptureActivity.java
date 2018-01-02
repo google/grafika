@@ -22,10 +22,14 @@ import android.opengl.GLES20;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.NonNull;
 import android.util.Log;
+import android.view.Display;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -178,9 +182,18 @@ public class ContinuousCaptureActivity extends Activity implements SurfaceHolder
     protected void onResume() {
         super.onResume();
 
-        // Ideally, the frames from the camera are at the same resolution as the input to
-        // the video encoder so we don't have to scale.
-        openCamera(VIDEO_WIDTH, VIDEO_HEIGHT, DESIRED_PREVIEW_FPS);
+        if (!CameraPermissionHelper.hasCameraPermission(this)) {
+            CameraPermissionHelper.requestCameraPermission(this);
+        } else  {
+            if (mCamera == null) {
+                // Ideally, the frames from the camera are at the same resolution as the input to
+                // the video encoder so we don't have to scale.
+                openCamera(VIDEO_WIDTH, VIDEO_HEIGHT, DESIRED_PREVIEW_FPS);
+            }
+            if (mEglCore != null) {
+                startPreview();
+            }
+        }
     }
 
     @Override
@@ -259,9 +272,21 @@ public class ContinuousCaptureActivity extends Activity implements SurfaceHolder
                 " @" + (mCameraPreviewThousandFps / 1000.0f) + "fps";
         Log.i(TAG, "Camera config: " + previewFacts);
 
-        // Set the preview aspect ratio.
         AspectFrameLayout layout = (AspectFrameLayout) findViewById(R.id.continuousCapture_afl);
-        layout.setAspectRatio((double) cameraPreviewSize.width / cameraPreviewSize.height);
+
+        Display display = ((WindowManager)getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
+
+        if(display.getRotation() == Surface.ROTATION_0) {
+            mCamera.setDisplayOrientation(90);
+            layout.setAspectRatio((double) cameraPreviewSize.height / cameraPreviewSize.width);
+        } else if(display.getRotation() == Surface.ROTATION_270) {
+            layout.setAspectRatio((double) cameraPreviewSize.height / cameraPreviewSize.width);
+            mCamera.setDisplayOrientation(180);
+        } else {
+            // Set the preview aspect ratio.
+            layout.setAspectRatio((double) cameraPreviewSize.width / cameraPreviewSize.height);
+        }
+
     }
 
     /**
@@ -367,13 +392,19 @@ public class ContinuousCaptureActivity extends Activity implements SurfaceHolder
         mCameraTexture = new SurfaceTexture(mTextureId);
         mCameraTexture.setOnFrameAvailableListener(this);
 
-        Log.d(TAG, "starting camera preview");
-        try {
-            mCamera.setPreviewTexture(mCameraTexture);
-        } catch (IOException ioe) {
-            throw new RuntimeException(ioe);
+        startPreview();
+    }
+
+    private void startPreview() {
+        if (mCamera != null) {
+            Log.d(TAG, "starting camera preview");
+            try {
+                mCamera.setPreviewTexture(mCameraTexture);
+            } catch (IOException ioe) {
+                throw new RuntimeException(ioe);
+            }
+            mCamera.startPreview();
         }
-        mCamera.startPreview();
 
         // TODO: adjust bit rate based on frame rate?
         // TODO: adjust video width/height based on what we're getting from the camera preview?
@@ -404,6 +435,19 @@ public class ContinuousCaptureActivity extends Activity implements SurfaceHolder
     public void onFrameAvailable(SurfaceTexture surfaceTexture) {
         //Log.d(TAG, "frame available");
         mHandler.sendEmptyMessage(MainHandler.MSG_FRAME_AVAILABLE);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (!CameraPermissionHelper.hasCameraPermission(this)) {
+            Toast.makeText(this,
+                    "Camera permission is needed to run this application", Toast.LENGTH_LONG).show();
+            CameraPermissionHelper.launchPermissionSettings(this);
+            finish();
+        } else {
+            openCamera(VIDEO_WIDTH, VIDEO_HEIGHT, DESIRED_PREVIEW_FPS);
+        }
     }
 
     /**

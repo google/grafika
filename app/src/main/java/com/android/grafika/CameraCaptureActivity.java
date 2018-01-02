@@ -19,11 +19,17 @@ package com.android.grafika;
 import android.opengl.EGL14;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
+import android.view.Display;
+import android.view.Surface;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
@@ -33,6 +39,7 @@ import android.widget.TextView;
 import android.app.Activity;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
+import android.widget.Toast;
 
 import com.android.grafika.gles.FullFrameRect;
 import com.android.grafika.gles.Texture2dProgram;
@@ -182,11 +189,15 @@ public class CameraCaptureActivity extends Activity
         Log.d(TAG, "onResume -- acquiring camera");
         super.onResume();
         updateControls();
-        openCamera(1280, 720);      // updates mCameraPreviewWidth/Height
 
-        // Set the preview aspect ratio.
-        AspectFrameLayout layout = (AspectFrameLayout) findViewById(R.id.cameraPreview_afl);
-        layout.setAspectRatio((double) mCameraPreviewWidth / mCameraPreviewHeight);
+        if (CameraPermissionHelper.hasCameraPermission(this)) {
+            if (mCamera == null) {
+                openCamera(1280, 720);      // updates mCameraPreviewWidth/Height
+            }
+
+        } else {
+            CameraPermissionHelper.requestCameraPermission(this);
+        }
 
         mGLView.onResume();
         mGLView.queueEvent(new Runnable() {
@@ -219,6 +230,19 @@ public class CameraCaptureActivity extends Activity
         mCameraHandler.invalidateHandler();     // paranoia
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (!CameraPermissionHelper.hasCameraPermission(this)) {
+            Toast.makeText(this,
+                    "Camera permission is needed to run this application", Toast.LENGTH_LONG).show();
+            CameraPermissionHelper.launchPermissionSettings(this);
+            finish();
+        } else {
+            openCamera(1280, 720);      // updates mCameraPreviewWidth/Height
+
+        }
+    }
     // spinner selected
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
@@ -291,6 +315,22 @@ public class CameraCaptureActivity extends Activity
 
         mCameraPreviewWidth = mCameraPreviewSize.width;
         mCameraPreviewHeight = mCameraPreviewSize.height;
+
+
+        AspectFrameLayout layout = (AspectFrameLayout) findViewById(R.id.cameraPreview_afl);
+
+        Display display = ((WindowManager)getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
+
+        if(display.getRotation() == Surface.ROTATION_0) {
+            mCamera.setDisplayOrientation(90);
+            layout.setAspectRatio((double) mCameraPreviewHeight / mCameraPreviewWidth);
+        } else if(display.getRotation() == Surface.ROTATION_270) {
+            layout.setAspectRatio((double) mCameraPreviewHeight/ mCameraPreviewWidth);
+            mCamera.setDisplayOrientation(180);
+        } else {
+            // Set the preview aspect ratio.
+            layout.setAspectRatio((double) mCameraPreviewWidth / mCameraPreviewHeight);
+        }
     }
 
     /**
@@ -633,6 +673,7 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
         Log.d(TAG, "onSurfaceChanged " + width + "x" + height);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Override
     public void onDrawFrame(GL10 unused) {
         if (VERBOSE) Log.d(TAG, "onDrawFrame tex=" + mTextureId);
