@@ -190,13 +190,13 @@ public class CameraCaptureActivity extends Activity
         super.onResume();
         updateControls();
 
-        if (CameraPermissionHelper.hasCameraPermission(this)) {
+        if (PermissionHelper.hasCameraPermission(this)) {
             if (mCamera == null) {
                 openCamera(1280, 720);      // updates mCameraPreviewWidth/Height
             }
 
         } else {
-            CameraPermissionHelper.requestCameraPermission(this);
+            PermissionHelper.requestCameraPermission(this, false);
         }
 
         mGLView.onResume();
@@ -233,10 +233,10 @@ public class CameraCaptureActivity extends Activity
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (!CameraPermissionHelper.hasCameraPermission(this)) {
+        if (!PermissionHelper.hasCameraPermission(this)) {
             Toast.makeText(this,
                     "Camera permission is needed to run this application", Toast.LENGTH_LONG).show();
-            CameraPermissionHelper.launchPermissionSettings(this);
+            PermissionHelper.launchPermissionSettings(this);
             finish();
         } else {
             openCamera(1280, 720);      // updates mCameraPreviewWidth/Height

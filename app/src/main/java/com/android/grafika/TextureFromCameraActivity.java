@@ -147,8 +147,8 @@ public class TextureFromCameraActivity extends Activity implements SurfaceHolder
         Log.d(TAG, "onResume BEGIN");
         super.onResume();
 
-        if (!CameraPermissionHelper.hasCameraPermission(this)) {
-            CameraPermissionHelper.requestCameraPermission(this);
+        if (!PermissionHelper.hasCameraPermission(this)) {
+            PermissionHelper.requestCameraPermission(this, false);
             return;
         }
         mRenderThread = new RenderThread(mHandler);

@@ -182,8 +182,8 @@ public class ContinuousCaptureActivity extends Activity implements SurfaceHolder
     protected void onResume() {
         super.onResume();
 
-        if (!CameraPermissionHelper.hasCameraPermission(this)) {
-            CameraPermissionHelper.requestCameraPermission(this);
+        if (!PermissionHelper.hasCameraPermission(this)) {
+            PermissionHelper.requestCameraPermission(this, false);
         } else  {
             if (mCamera == null) {
                 // Ideally, the frames from the camera are at the same resolution as the input to
@@ -440,10 +440,10 @@ public class ContinuousCaptureActivity extends Activity implements SurfaceHolder
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (!CameraPermissionHelper.hasCameraPermission(this)) {
+        if (!PermissionHelper.hasCameraPermission(this)) {
             Toast.makeText(this,
                     "Camera permission is needed to run this application", Toast.LENGTH_LONG).show();
-            CameraPermissionHelper.launchPermissionSettings(this);
+            PermissionHelper.launchPermissionSettings(this);
             finish();
         } else {
             openCamera(VIDEO_WIDTH, VIDEO_HEIGHT, DESIRED_PREVIEW_FPS);

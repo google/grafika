@@ -137,6 +137,8 @@
             android:label="@string/title_texture_from_camera"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
         </activity>
+        <activity android:name=".ScreenRecordActivity"
+                  android:label="Screen Recording"/>
     </application>
 
 </manifest>
