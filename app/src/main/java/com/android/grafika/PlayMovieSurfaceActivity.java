@@ -79,10 +79,19 @@ public class PlayMovieSurfaceActivity extends Activity implements OnItemSelected
     private MoviePlayer.PlayTask mPlayTask;
     private boolean mSurfaceHolderReady = false;
 
+    /**
+     * Overridable  method to get layout id.  Any provided layout needs to include
+     * the same views (or compatible) as active_play_movie_surface
+     *
+     */
+    protected int getContentViewId() {
+        return R.layout.activity_play_movie_surface;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_play_movie_surface);
+        setContentView(getContentViewId());
 
         mSurfaceView = (SurfaceView) findViewById(R.id.playMovie_surface);
         mSurfaceView.getHolder().addCallback(this);

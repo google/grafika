@@ -6,7 +6,7 @@ Welcome to Grafika, a dumping ground for Android graphics & media hacks.
 Grafika is:
 - A collection of hacks exercising graphics features.
 - An SDK app, developed for API 18 (Android 4.3).  While some of the code
-  may work with older versions of Android, no effort will be made to
+  may work with older versions of Android, some sporatic work is done to
   support them.
 - Open source (Apache 2 license), copyright by Google.  So you can use the
   code according to the terms of the license (see "LICENSE").
@@ -58,16 +58,10 @@ The first time Grafika starts, two videos are generated (gen-eight-rects, gen-sl
 If you want to experiment with the generation code, you can cause them to be re-generated
 from the main activity menu ("Regenerate content").
 
-Some features of Grafika may not work on an emulator, notably anything that involves
-encoding video.  The problem is that the software AVC encoder doesn't support
-`createInputSurface()`, and all of Grafika's video encoding features currently make
-use of that.  Very little works in the AOSP emulator, even with `-gpu on`.
-
-
 Current features
 ----------------
 
-[* Play video (TextureView)](src/com/android/grafika/PlayMovieActivity.java).  Plays the video track from an MP4 file.
+[* Play video (TextureView)](app/src/main/java/com/android/grafika/PlayMovieActivity.java).  Plays the video track from an MP4 file.
 - Only sees files in `/data/data/com.android.grafika/files/`.  All of the activities that
   create video leave their files there.  You'll also find two automatically-generated videos
   (gen-eight-rects.mp4 and gen-slides.mp4).
@@ -76,7 +70,7 @@ Current features
 - Uses a `TextureView` for output.
 - Name starts with an asterisk so it's at the top of the list of activities.
 
-[Continuous capture](src/com/android/grafika/ContinuousCaptureActivity.java).  Stores video in a circular buffer, saving it when you hit the "capture" button.  (Formerly "Constant capture".)
+[Continuous capture](app/src/main/java/com/android/grafika/ContinuousCaptureActivity.java).  Stores video in a circular buffer, saving it when you hit the "capture" button.  (Formerly "Constant capture".)
 - Currently hard-wired to try to capture 7 seconds of video from the camera at 6MB/sec,
   preferrably 15fps 720p.  That requires a buffer size of about 5MB.
 - The time span of frames currently held in the buffer is displayed.  The actual
@@ -86,7 +80,7 @@ Current features
   usually matches what the camera provides; if it doesn't, the recorded video will have the
   wrong aspect ratio.
 
-[Double decode](src/com/android/grafika/DoubleDecodeActivity.java).  Decodes two video streams side-by-side to a pair of `TextureViews`.
+[Double decode](app/src/main/java/com/android/grafika/DoubleDecodeActivity.java).  Decodes two video streams side-by-side to a pair of `TextureViews`.
 - Plays the two auto-generated videos.  Note they play at different rates.
 - The video decoders don't stop when the screen is rotated.  We retain the `SurfaceTexture`
   and just attach it to the new `TextureView`.  Useful for avoiding expensive codec reconfigures.
@@ -97,7 +91,7 @@ Current features
 - Unlike most activities in Grafika, this provides different layouts for portrait and landscape.
   The videos are scaled to fit.
 
-[Hardware scaler exerciser](src/com/android/grafika/HardwareScalerActivity.java).  Shows GL rendering with on-the-fly surface size changes.
+[Hardware scaler exerciser](app/src/main/java/com/android/grafika/HardwareScalerActivity.java).  Shows GL rendering with on-the-fly surface size changes.
 - The motivation behind the feature this explores is described in a developer blog post:
   http://android-developers.blogspot.com/2013/09/using-hardware-scaler-for-performance.html
 - You will see one frame rendered incorrectly when changing sizes.  This is because the
@@ -105,12 +99,12 @@ Current features
   actually change until we latch the next buffer.  This is straightforward to fix (left as
   an exercise for the reader).
 
-[Live camera (TextureView)](src/com/android/grafika/LiveCameraActivity.java).  Directs the camera preview to a `TextureView`.
+[Live camera (TextureView)](app/src/main/java/com/android/grafika/LiveCameraActivity.java).  Directs the camera preview to a `TextureView`.
 - This comes more or less verbatim from the [TextureView](http://developer.android.com/reference/android/view/TextureView.html) documentation.
 - Uses the default (rear-facing) camera.  If the device has no default camera (e.g.
   Nexus 7 (2012)), the Activity will crash.
 
-[Multi-surface test](src/com/android/grafika/MultiSurfaceTest.java).  Simple activity with three overlapping SurfaceViews, one marked secure.
+[Multi-surface test](app/src/main/java/com/android/grafika/MultiSurfaceTest.java).  Simple activity with three overlapping SurfaceViews, one marked secure.
 - Useful for examining HWC behavior with multiple static layers, and
   screencap / screenrecord behavior with a secure surface.  (If you record the screen one
   of the circles should be missing, and capturing the screen should just show black.)
@@ -118,11 +112,11 @@ Current features
   update as quickly as possible, which may be slower than the display refresh rate because
   the circle is rendered in software.  The frame rate will be reported in logcat.
 
-[Play video (SurfaceView)](src/com/android/grafika/PlayMovieSurfaceActivity.java).  Plays the video track from an MP4 file.
+[Play video (SurfaceView)](app/src/main/java/com/android/grafika/PlayMovieSurfaceActivity.java).  Plays the video track from an MP4 file.
 - Works very much like "Play video (TextureView)", though not all features are present.
   See the class comment for a list of advantages to using SurfaceView.
 
-[Record GL app](src/com/android/grafika/RecordFBOActivity.java).  Simultaneously draws to the display and to a video encoder with OpenGL ES, using framebuffer objects to avoid re-rendering.
+[Record GL app](app/src/main/java/com/android/grafika/RecordFBOActivity.java).  Simultaneously draws to the display and to a video encoder with OpenGL ES, using framebuffer objects to avoid re-rendering.
 - It can write to the video encoder three different ways: (1) draw twice; (2) draw offscreen and
   blit twice; (3) draw onscreen and blit framebuffer.  #3 doesn't work yet.
 - The renderer is trigged by Choreographer to update every vsync.  If we get too far behind,
@@ -135,7 +129,11 @@ Current features
   display, so you'll get different results from recording in landscape vs. portrait.
 - The output is a video-only MP4 file ("fbo-gl-recording.mp4").
 
-[Scheduled swap](src/com/android/grafika/ScheduledSwapActivity.java).  Exercises a SurfaceFlinger feature that allows you to submit buffers to be displayed at a specific time.
+[Record Screen using MediaProjectionManager](app/src/main/java/com/android/grafika/ScreenRecordActivity.java).
+Records the screen to a movie using the MediaProjectionManager.  This API
+requires API level 23 (Marshmallow) or greater.
+
+[Scheduled swap](app/src/main/java/com/android/grafika/ScheduledSwapActivity.java).  Exercises a SurfaceFlinger feature that allows you to submit buffers to be displayed at a specific time.
 - Requires API 19 (Android 4.4 "KitKat") to do what it's supposed to.  The current implementation
   doesn't really look any different on API 18 to the naked eye.
 - You can configure the frame delivery timing (e.g. 24fps uses a 3-2 pattern) and how far
@@ -143,7 +141,7 @@ Current features
 - Use systrace with tags `sched gfx view --app=com.android.grafika` to observe the effects.
 - The moving square changes colors when the app is unhappy about timing.
 
-[Show + capture camera](src/com/android/grafika/CameraCaptureActivity.java).  Attempts to record at 720p from the front-facing camera, displaying the preview and recording it simultaneously.
+[Show + capture camera](app/src/main/java/com/android/grafika/CameraCaptureActivity.java).  Attempts to record at 720p from the front-facing camera, displaying the preview and recording it simultaneously.
 - Use the record button to toggle recording on and off.
 - Recording continues until stopped.  If you back out and return, recording will start again,
   with a real-time gap.  If you try to play the movie while it's recording, you will see
@@ -157,28 +155,28 @@ Current features
   here: http://www.youtube.com/watch?v=kH9kCP2T5Gg
 - The output is a video-only MP4 file ("camera-test.mp4").
 
-[Simple Canvas in TextureView](src/com/android/grafika/TextureViewCanvasActivity.java).  Exercises software rendering to a `TextureView` with a `Canvas`.
+[Simple Canvas in TextureView](app/src/main/java/com/android/grafika/TextureViewCanvasActivity.java).  Exercises software rendering to a `TextureView` with a `Canvas`.
 - Renders as quickly as possible.  Because it's using software rendering, this will likely
   run more slowly than the "Simple GL in TextureView" activity.
 - Toggles the use of a dirty rect every 64 frames.  When enabled, the dirty rect extends
   horizontally across the screen.
 
-[Simple GL in TextureView](src/com/android/grafika/TextureViewGLActivity.java).  Demonstates simple use of GLES in a `TextureView`, rather than a `GLSurfaceView`.
+[Simple GL in TextureView](app/src/main/java/com/android/grafika/TextureViewGLActivity.java).  Demonstates simple use of GLES in a `TextureView`, rather than a `GLSurfaceView`.
 - Renders as quickly as possible.  On most devices it will exceed 60fps and flicker wildly,
   but in 4.4 ("KitKat") a bug prevents the system from dropping frames.
 
-[Texture from Camera](src/com/android/grafika/TextureFromCameraActivity.java).  Renders Camera preview output with a GLES texture.
+[Texture from Camera](app/src/main/java/com/android/grafika/TextureFromCameraActivity.java).  Renders Camera preview output with a GLES texture.
 - Adjust the sliders to set the size, rotation, and zoom.  Touch anywhere else to center
   the rect at the point of the touch.
 
-[Color bars](src/com/android/grafika/ColorBarActivity.java).  Displays RGB color bars.
+[Color bars](app/src/main/java/com/android/grafika/ColorBarActivity.java).  Displays RGB color bars.
 
-[OpenGL ES Info](src/com/android/grafika/GlesInfoActivity.java).  Dumps version info and extension lists.
+[OpenGL ES Info](app/src/main/java/com/android/grafika/GlesInfoActivity.java).  Dumps version info and extension lists.
 - The "Save" button writes a copy of the output to the app's file area.
 
-[glTexImage2D speed test](src/com/android/grafika/TextureUploadActivity.java).  Simple, unscientific measurement of the time required to upload a 512x512 RGBA texture with `glTexImage2D()`.
+[glTexImage2D speed test](app/src/main/java/com/android/grafika/TextureUploadActivity.java).  Simple, unscientific measurement of the time required to upload a 512x512 RGBA texture with `glTexImage2D()`.
 
-[glReadPixels speed test](src/com/android/grafika/ReadPixelsActivity.java).  Simple, unscientific measurement of the time required for `glReadPixels()` to read a 720p frame.
+[glReadPixels speed test](app/src/main/java/com/android/grafika/ReadPixelsActivity.java).  Simple, unscientific measurement of the time required for `glReadPixels()` to read a 720p frame.
 
 
 Known issues
@@ -203,7 +201,6 @@ In no particular order.
   single-frame advance / rewind (requires seeking to nearest sync frame and decoding frames
   until target is reached).
 - Convert a series of PNG images to video.
-- Use virtual displays to record app activity.
 - Play continuous video from a series of MP4 files with different characteristics.  Will
   probably require "preloading" the next movie to keep playback seamless.
 - Experiment with alternatives to glReadPixels().  Add a PBO speed test.  (Doesn't seem

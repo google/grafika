@@ -17,12 +17,9 @@
 package com.android.grafika;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
-import android.net.Uri;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.Display;
@@ -58,8 +55,8 @@ public class LiveCameraActivity extends Activity implements TextureView.SurfaceT
     public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
 
         mSurfaceTexture = surface;
-        if (!CameraPermissionHelper.hasCameraPermission(this)) {
-            CameraPermissionHelper.requestCameraPermission(this);
+        if (!PermissionHelper.hasCameraPermission(this)) {
+            PermissionHelper.requestCameraPermission(this, false);
         } else {
             startPreview();
         }
@@ -87,10 +84,10 @@ public class LiveCameraActivity extends Activity implements TextureView.SurfaceT
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (!CameraPermissionHelper.hasCameraPermission(this)) {
+        if (!PermissionHelper.hasCameraPermission(this)) {
             Toast.makeText(this,
                     "Camera permission is needed to run this application", Toast.LENGTH_LONG).show();
-                CameraPermissionHelper.launchPermissionSettings(this);
+                PermissionHelper.launchPermissionSettings(this);
             finish();
         } else {
             startPreview();
