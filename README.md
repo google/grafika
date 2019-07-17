@@ -72,7 +72,7 @@ Current features
 
 [Continuous capture](app/src/main/java/com/android/grafika/ContinuousCaptureActivity.java).  Stores video in a circular buffer, saving it when you hit the "capture" button.  (Formerly "Constant capture".)
 - Currently hard-wired to try to capture 7 seconds of video from the camera at 6MB/sec,
-  preferrably 15fps 720p.  That requires a buffer size of about 5MB.
+  preferably 15fps 720p.  That requires a buffer size of about 5MB.
 - The time span of frames currently held in the buffer is displayed.  The actual
   time span saved when you hit "capture" will be slightly less than what is shown because
   we have to start the output on a sync frame, which are configured to appear once per second.
