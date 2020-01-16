@@ -14,19 +14,20 @@
      limitations under the License.
 -->
 
-<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+			xmlns:app="http://schemas.android.com/apk/res-auto" >
 
     <item
         android:id="@+id/regenerateContent_item"
         android:onClick="clickRegenerateContent"
         android:orderInCategory="90"
-        android:showAsAction="never"
+        app:showAsAction="never"
         android:title="@string/regenerateContent_item"/>
         
     <item
         android:id="@+id/about_item"
         android:orderInCategory="100"
-        android:showAsAction="never"
+        app:showAsAction="never"
         android:title="@string/about_item"
         android:onClick="clickAbout" />
     

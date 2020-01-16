@@ -19,7 +19,7 @@ android {
   compileSdkVersion 28
   defaultConfig {
     applicationId "com.google.grafika"
-    minSdkVersion 14
+    minSdkVersion 18
     targetSdkVersion 28
   }
 }
