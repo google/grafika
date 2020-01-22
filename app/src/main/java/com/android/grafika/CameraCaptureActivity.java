@@ -16,11 +16,15 @@
 
 package com.android.grafika;
 
+import android.app.Activity;
+import android.graphics.SurfaceTexture;
+import android.hardware.Camera;
 import android.opengl.EGL14;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
@@ -34,11 +38,9 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.app.Activity;
-import android.graphics.SurfaceTexture;
-import android.hardware.Camera;
 import android.widget.Toast;
 
 import com.android.grafika.gles.FullFrameRect;
@@ -138,6 +140,7 @@ public class CameraCaptureActivity extends Activity
     static final int FILTER_EDGE_DETECT = 4;
     static final int FILTER_EMBOSS = 5;
 
+    private EditText mSegmentDurationEditText;
     private GLSurfaceView mGLView;
     private CameraSurfaceRenderer mRenderer;
     private Camera mCamera;
@@ -154,9 +157,11 @@ public class CameraCaptureActivity extends Activity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_camera_capture);
 
-        File outputFile = new File(getFilesDir(), "camera-test.mp4");
+        File outputFile = new File(getExternalFilesDir(Environment.DIRECTORY_DCIM), "camera-test.mp4");
         TextView fileText = (TextView) findViewById(R.id.cameraOutputFile_text);
         fileText.setText(outputFile.toString());
+
+        mSegmentDurationEditText = findViewById(R.id.segmentDuration_edit);
 
         Spinner spinner = (Spinner) findViewById(R.id.cameraFilter_spinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
@@ -353,6 +358,7 @@ public class CameraCaptureActivity extends Activity
         mGLView.queueEvent(new Runnable() {
             @Override public void run() {
                 // notify the renderer that we want to change the encoder's state
+                mRenderer.setSegmentDuration(Integer.parseInt(mSegmentDurationEditText.getText().toString()));
                 mRenderer.changeRecordingState(mRecordingEnabled);
             }
         });
@@ -494,7 +500,7 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
     private int mCurrentFilter;
     private int mNewFilter;
 
-
+    private int mSegmentDuration;
     /**
      * Constructs CameraSurfaceRenderer.
      * <p>
@@ -692,7 +698,7 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
                     Log.d(TAG, "START recording");
                     // start recording
                     mVideoEncoder.startRecording(new TextureMovieEncoder.EncoderConfig(
-                            mOutputFile, 640, 480, 1000000, EGL14.eglGetCurrentContext()));
+                            mOutputFile, 640, 480, 1000000, EGL14.eglGetCurrentContext(), mSegmentDuration));
                     mRecordingStatus = RECORDING_ON;
                     break;
                 case RECORDING_RESUMED:
@@ -770,5 +776,13 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
         GLES20.glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT);
         GLES20.glDisable(GLES20.GL_SCISSOR_TEST);
+    }
+
+    public int getSegmentDuration() {
+        return mSegmentDuration;
+    }
+
+    public void setSegmentDuration(int segmentDuration) {
+        this.mSegmentDuration = segmentDuration;
     }
 }

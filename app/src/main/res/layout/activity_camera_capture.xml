@@ -31,7 +31,7 @@
         android:layout_alignLeft="@+id/toggleRecording_button"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:layout_below="@+id/toggleRecording_button"
+        android:layout_below="@+id/segmentDuration_edit"
         android:layout_centerInParent="true" >
 
         <android.opengl.GLSurfaceView
@@ -49,6 +49,22 @@
         android:text="@string/toggleRecordingOn"
         android:onClick="clickToggleRecording" />
 
+    <TextView
+        android:id="@+id/outputSegment_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/toggleRecording_button"
+        android:text="Output Segment Duration:"/>
+
+    <EditText
+        android:id="@+id/segmentDuration_edit"
+        android:text="0"
+        android:layout_width="60dp"
+        android:inputType="numberDecimal"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/toggleRecording_button"
+        android:layout_toRightOf="@id/outputSegment_text"/>
+
     <Spinner
         android:id="@+id/cameraFilter_spinner"
         android:layout_width="wrap_content"
@@ -61,7 +77,7 @@
         android:id="@+id/cameraParams_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/toggleRecording_button"
+        android:layout_alignTop="@id/cameraPreview_afl"
         android:text="[?]"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 

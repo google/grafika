@@ -153,7 +153,7 @@ requires API level 23 (Marshmallow) or greater.
   The shader used for the filters is not optimized, but seems to perform well on most devices
   (the original Nexus 7 (2012) being a notable exception).  Demo
   here: http://www.youtube.com/watch?v=kH9kCP2T5Gg
-- The output is a video-only MP4 file ("camera-test.mp4").
+- The output is a video-only MP4 file ("camera-test.mp4") or you can store the video in sequential segmented files ("camera-test-1.mp4", "camera-test-2.mp4", ...). For storing in multiple files, you must set `Output Segment Duration` in UI.
 
 [Simple Canvas in TextureView](app/src/main/java/com/android/grafika/TextureViewCanvasActivity.java).  Exercises software rendering to a `TextureView` with a `Canvas`.
 - Renders as quickly as possible.  Because it's using software rendering, this will likely
