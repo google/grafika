@@ -16,10 +16,9 @@
 
 package com.android.grafika;
 
-import android.os.Bundle;
 import android.app.ListActivity;
 import android.content.Intent;
-import android.util.Log;
+import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -80,7 +79,7 @@ public class MainActivity extends ListActivity {
             "Exercises SurfaceFlinger PTS handling",
             "ScheduledSwapActivity" },
         { "Show + capture camera",
-            "Shows camera preview, records when requested",
+            "Shows camera preview, records when requested. You can record in a single file or sequential segmented files",
             "CameraCaptureActivity" },
         { "Simple GL in TextureView",
             "Renders with GL as quickly as possible",

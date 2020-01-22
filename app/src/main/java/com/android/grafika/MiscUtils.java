@@ -100,4 +100,14 @@ public class MiscUtils {
         Log.d(TAG, "refresh rate is " + displayFps + " fps --> " + refreshNs + " ns");
         return refreshNs;
     }
+
+    /**
+     * Calculate the greatest common divisor (gcd) of two integer
+     */
+    public static int gcd(int a, int b)
+    {
+        if (b == 0)
+            return a;
+        return gcd(b, a % b);
+    }
 }

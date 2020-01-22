@@ -52,12 +52,23 @@ public class VideoEncoderCore {
     private MediaCodec.BufferInfo mBufferInfo;
     private int mTrackIndex;
     private boolean mMuxerStarted;
-
+    private final File mOutputFile;
+    private int mSegmentIndex = 1;
+    private final long mSegmentDurationUsec;
+    private long mLastPresentationTimeUs = -1;
 
     /**
      * Configures encoder and muxer state, and prepares the input Surface.
      */
     public VideoEncoderCore(int width, int height, int bitRate, File outputFile)
+            throws IOException {
+        this(width, height, bitRate, outputFile, 0);
+    }
+
+    /**
+     * Configures encoder and muxer state, and prepares the input Surface.
+     */
+    public VideoEncoderCore(int width, int height, int bitRate, File outputFile, int segmentDurationSec)
             throws IOException {
         mBufferInfo = new MediaCodec.BufferInfo();
 
@@ -69,7 +80,7 @@ public class VideoEncoderCore {
                 MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);
         format.setInteger(MediaFormat.KEY_BIT_RATE, bitRate);
         format.setInteger(MediaFormat.KEY_FRAME_RATE, FRAME_RATE);
-        format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, IFRAME_INTERVAL);
+        format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, MiscUtils.gcd(IFRAME_INTERVAL, segmentDurationSec));
         if (VERBOSE) Log.d(TAG, "format: " + format);
 
         // Create a MediaCodec encoder, and configure it with our format.  Get a Surface
@@ -85,7 +96,9 @@ public class VideoEncoderCore {
         //
         // We're not actually interested in multiplexing audio.  We just want to convert
         // the raw H.264 elementary stream we get from MediaCodec into a .mp4 file.
-        mMuxer = new MediaMuxer(outputFile.toString(),
+        mSegmentDurationUsec = segmentDurationSec * 1000000;
+        mOutputFile = outputFile;
+        mMuxer = new MediaMuxer(getNextOutputFileName(),
                 MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
 
         mTrackIndex = -1;
@@ -97,6 +110,23 @@ public class VideoEncoderCore {
      */
     public Surface getInputSurface() {
         return mInputSurface;
+    }
+
+    /**
+     * Returns sequential new filename if segmentDuration be grater than 0
+     */
+    private String getNextOutputFileName() {
+        if(mSegmentDurationUsec > 0) {
+            String ext = "";
+            String fileName = mOutputFile.getName();
+            int extIndex = fileName.lastIndexOf('.');
+            if(extIndex > 0) {
+                ext = fileName.substring(extIndex);
+                fileName = fileName.substring(0, extIndex);
+            }
+            return new File(mOutputFile.getParent(), fileName + "-" + mSegmentIndex++ + ext).toString();
+        } else
+            return mOutputFile.toString();
     }
 
     /**
@@ -188,6 +218,29 @@ public class VideoEncoderCore {
                     // adjust the ByteBuffer values to match BufferInfo (not needed?)
                     encodedData.position(mBufferInfo.offset);
                     encodedData.limit(mBufferInfo.offset + mBufferInfo.size);
+
+                    if(mLastPresentationTimeUs == -1)
+                        mLastPresentationTimeUs = mBufferInfo.presentationTimeUs;
+
+                    if(mSegmentDurationUsec > 0 && (mBufferInfo.flags & MediaCodec.BUFFER_FLAG_KEY_FRAME) > 0 &&
+                            mBufferInfo.presentationTimeUs - mLastPresentationTimeUs >= mSegmentDurationUsec) {
+                        mLastPresentationTimeUs = mBufferInfo.presentationTimeUs;
+
+                        mMuxer.stop();
+                        mMuxer.release();
+                        mMuxer = null;
+
+                        try {
+                            String newMuxerPath = getNextOutputFileName();
+                            if (VERBOSE) Log.d(TAG, "creating new muxer: " + newMuxerPath);
+                            mMuxer = new MediaMuxer(newMuxerPath,
+                                    MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
+                        } catch (IOException e) {
+                            throw new RuntimeException("Can not create new muxer", e);
+                        }
+                        mTrackIndex = mMuxer.addTrack(mEncoder.getOutputFormat());
+                        mMuxer.start();
+                    }
 
                     mMuxer.writeSampleData(mTrackIndex, encodedData, mBufferInfo);
                     if (VERBOSE) {
