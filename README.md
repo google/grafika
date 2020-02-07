@@ -6,7 +6,7 @@ Welcome to Grafika, a dumping ground for Android graphics & media hacks.
 Grafika is:
 - A collection of hacks exercising graphics features.
 - An SDK app, developed for API 18 (Android 4.3).  While some of the code
-  may work with older versions of Android, some sporatic work is done to
+  may work with older versions of Android, some sporadic work is done to
   support them.
 - Open source (Apache 2 license), copyright by Google.  So you can use the
   code according to the terms of the license (see "LICENSE").
