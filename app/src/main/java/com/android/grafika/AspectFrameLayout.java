@@ -92,8 +92,7 @@ public class AspectFrameLayout extends FrameLayout {
                 initialWidth += horizPadding;
                 initialHeight += vertPadding;
                 widthMeasureSpec = MeasureSpec.makeMeasureSpec(initialWidth, MeasureSpec.EXACTLY);
-                heightMeasureSpec = MeasureSpec.makeMeasureSpec(initialHeight, MeasureSpec.EXACTLY);
-            }
+                
         }
 
         //Log.d(TAG, "set width=[" + MeasureSpec.toString(widthMeasureSpec) +
