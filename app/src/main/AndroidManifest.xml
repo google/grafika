@@ -33,6 +33,7 @@
         <!-- android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar" > -->
         <activity
             android:name="com.android.grafika.MainActivity"
+            android:exported="true"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
