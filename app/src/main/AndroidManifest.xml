@@ -24,6 +24,9 @@
     <uses-permission android:name="android.permission.CAMERA" />
 
     <uses-feature android:glEsVersion="0x00020000" android:required="true" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
     <application
         android:allowBackup="true"
