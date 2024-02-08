@@ -41,7 +41,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name="com.android.grafika.WeijingActivity"
+            android:name="com.android.grafika.TriangleActivity"
             android:label="@string/title_activity_my_activity" >
         </activity>
         <activity

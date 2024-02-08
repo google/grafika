@@ -49,9 +49,9 @@ public class MainActivity extends ListActivity {
      * the activity class.
      */
     private static final String[][] TESTS = {
-        { "Weijing Activity",
-            "Weijing Activity",
-            "WeijingActivity" },
+        { "Triangle Activity",
+            "Draw a triangle via OpenGL",
+            "TriangleActivity" },
         { "* Play video (TextureView)",
             "Plays .mp4 videos created by Grafika",
             "PlayMovieActivity" },
@@ -172,7 +172,7 @@ public class MainActivity extends ListActivity {
             testList.add(tmp);
         }
 
-        Collections.sort(testList, TEST_LIST_COMPARATOR);
+//        Collections.sort(testList, TEST_LIST_COMPARATOR);
 
         return testList;
     }
