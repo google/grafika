@@ -129,6 +129,7 @@
         <item>3</item>
     </string-array>
 
+    <string name="title_activity_my_activity">My Activity</string>
     <string name="title_activity_camera_capture">Show + capture camera</string>
     <string name="title_activity_play_movie">Play video (TextureView)</string>
     <string name="title_activity_read_pixels">glReadPixels speed test</string>

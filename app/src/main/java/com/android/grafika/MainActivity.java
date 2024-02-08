@@ -49,6 +49,9 @@ public class MainActivity extends ListActivity {
      * the activity class.
      */
     private static final String[][] TESTS = {
+        { "Weijing Activity",
+            "Weijing Activity",
+            "WeijingActivity" },
         { "* Play video (TextureView)",
             "Plays .mp4 videos created by Grafika",
             "PlayMovieActivity" },
